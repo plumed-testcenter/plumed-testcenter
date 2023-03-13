@@ -68,22 +68,22 @@ jobs:
         CXX="mpic++" .ci/install.plumed version=master suffix=_master repo=$PWD/plumed2.git
         ccache -s
 
-  - name: Install interface code
-    run: |
-       python build_workflow/check.py
-       tests/${{matrix.replica}}/install.${{matrix.replica}}
+    - name: Install interface code
+      run: |
+         python build_workflow/check.py
+         tests/${{matrix.replica}}/install.${{matrix.replica}}
 
-  - name: Test code
-    run: | 
-       python tests/${{matrix.replica}}/runtests.py
-       tar cf testout.tar $(find . -name "*.md")
+    - name: Test code
+      run: | 
+         python tests/${{matrix.replica}}/runtests.py
+         tar cf testout.tar $(find . -name "*.md")
 
-  - name: Upload artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: testout-content${{matrix.replica}}
-        path: testout.tar
-        retention-days: 1
+    - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: testout-content${{matrix.replica}}
+          path: testout.tar
+          retention-days: 1
 
   # This is the job that uploads the website
   upload:
