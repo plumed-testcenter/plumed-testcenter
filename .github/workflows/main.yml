@@ -75,3 +75,35 @@ jobs:
          tests/${{matrix.replica}}/install.sh mode=static
          # Build runtime interface to (what will be) master version of PLUMED
          tests/${{matrix.replica}}/install.sh mode=runtime suffix=_master
+
+    - name: Test code
+      run: | 
+         #python tests/${{matrix.replica}}/runtests.py
+         tar cf testout.tar $(find . -name "*.md")
+
+    - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: testout-content${{matrix.replica}}
+          path: testout.tar
+          retention-days: 1
+
+  # This is the job that uploads the website
+  upload:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    needs: build
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+    - name: Download artifacts
+      uses: actions/download-artifact@v3
+    - name: Upload
+      env:
+        PLUMED_TESTCENTER_GITHUB_TOKEN: ${{ secrets.PLUMED_TESTCENTER_GITHUB_TOKEN }}
+      run: |
+        bash .ci/push _config.yml _layouts _data assets pigeon.png
+
+
