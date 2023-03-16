@@ -18,7 +18,7 @@ done
 # Cloning the lammps repository
 repo=https://github.com/lammps/lammps.git
 echo "cloning repoisitory $repo"
-git clone $repo lammmps$suffix
+git clone $repo lammps$suffix
 
 # Finding the latest stable version of lammps to build
 cd lammps$suffix
