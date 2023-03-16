@@ -82,11 +82,11 @@ jobs:
          tar cf testout.tar $(find . -name "*.md")
 
     - name: Upload artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: testout-content${{matrix.replica}}
-          path: testout.tar
-          retention-days: 1
+      uses: actions/upload-artifact@v3
+      with:
+        name: testout-content${{matrix.replica}}
+        path: testout.tar
+        retention-days: 1
 
   # This is the job that uploads the website
   upload:
