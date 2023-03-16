@@ -21,7 +21,7 @@ echo "cloning repoisitory $repo"
 git clone $repo lammmps$suffix
 
 # Finding the latest stable version of lammps to build
-cd lammps
+cd lammps$suffix
 version=$(git tag --sort=-creatordate | grep stable | head -n 1)
 echo "installing latest stable lammps $version"
 git checkout $version
