@@ -1,5 +1,5 @@
-What code will I learn about here?
-----------------------------------
+What code is tested here?
+-------------------------
 PLUMED is an open-source, community-developed library that provides a wide range of different methods, which include:
 
 * enhanced-sampling algorithms
