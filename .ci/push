@@ -60,6 +60,8 @@ if [[ "${GITHUB_REF##*/}" = test ]] ; then
   rm CNAME
 fi
 
+ls
+
 git add --all .
 # >/dev/null to avoid excessive noise on travis log
 git commit -m "Update to @$hash" >/dev/null
