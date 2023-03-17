@@ -19,8 +19,8 @@ def buildBrowsePage( tested ) :
    f.write("Browse the tests\n")
    f.write("-----------------\n")
    f.write("The codes that are currently tested by PLUMED-TESTCENTER are listed below.  PLUMED-TESTCENTER monitors whether the current and development versions of the code can be used to complete the tests for each of these codes.\n")
-   f.write("| Name of Program  | Compiles | Passes tests |\n")
-   f.write("|:----------------:|:--------:|:------------:|\n")
+   f.write("| Name of Program  | Compiles | Passes tests | \n")
+   f.write("|:----------------:|:--------:|:------------:| \n")
    for code in os.listdir("tests") :
        of = open( "tests/" + code + "/install.md", "w+" )
        of.write("Compiling " + code + "\n")
