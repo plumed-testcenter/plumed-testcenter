@@ -5,7 +5,7 @@ def buildInstallPage( code ) :
    of = open( "tests/" + code + "/install.md", "w+" )
    of.write("Compiling " + code + "\n")
    of.write("------------------------\n \n")
-   of.write("To compile " + code + " and PLUMED the following bash script was used\n \n")
+   of.write("To compile " + code + " and PLUMED the following bash script was used.  " + code + " was statically linked with the latest stable version of PLUMED. In a separate build, the master version of PLUMED was linked to " + code + " as a runtime library. \n \n")
    of.write("```bash\n")
    sf = open("tests/" + code + "/install.sh" ,"r")
    inp = sf.read()
