@@ -107,6 +107,7 @@ jobs:
       run: |
         # This builds the page with the results of the tests
         python build.py
+        ls 
         bash .ci/push _config.yml _layouts _data assets pigeon.png
 
 

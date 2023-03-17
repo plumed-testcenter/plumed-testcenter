@@ -1,6 +1,7 @@
 import os
 
 def checkWorkflow() : 
+   print("Checking Workflow")
    f = open(".github/workflows/main.yml","r")
    inp = f.read()
    f.close()
@@ -13,6 +14,7 @@ def checkWorkflow() :
              ValueError("Tests have not been updated. Run the command create_workflow.py in create_workflow directory and commit the changes to .github/actions/main.yml")
 
 def buildBrowsePage( tested ) :
+   print("Building browse page")
    f = open("browse.md","w+")
    f.write("Browse the tests\n")
    f.write("-----------------\n")
