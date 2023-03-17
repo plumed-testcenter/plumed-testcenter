@@ -45,4 +45,5 @@ if __name__ == "__main__":
    # Check that the workflow matches with the directories
    checkWorkflow()
    # Build the page with all the MD codes
-   buildBrowsePage()
+   stable_version = "2.7"
+   buildBrowsePage( ("v"+ stable_version,"master") )
