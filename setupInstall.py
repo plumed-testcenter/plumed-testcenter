@@ -19,5 +19,12 @@ if __name__ == "__main__":
      opts, args = getopt.getopt(argv,"hc:",["code="])
    except:
        print('setupInstall.py -c <code>')
+
+   for opt, arg in opts:
+       if opt in ['-h'] :
+          print('setupInstall.py -c <code>')
+          sys.exit()
+       elif opt in ["-c", "--code"]:
+          code = arg
    # Setup compile page
    buildInstallPage(code)
