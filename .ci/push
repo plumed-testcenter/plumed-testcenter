@@ -48,6 +48,8 @@ EOF
 
 # add general informations
 cat Info.md >> README.md
+# copy the browse file here
+cp $root/browse.md .
 
 # cp $root/nest.png .
 # cp $root/pigeon.png .
@@ -59,8 +61,6 @@ if [[ "${GITHUB_REF##*/}" = test ]] ; then
   echo "baseurl: /test-site" >> _config.yml
   rm CNAME
 fi
-
-ls
 
 git add --all .
 # >/dev/null to avoid excessive noise on travis log
