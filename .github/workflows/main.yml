@@ -70,7 +70,8 @@ jobs:
 
     - name: Install interface code
       run: |
-         python build_workflow/check.py
+         echo Building ${{matrix.replica}}
+         # python build_workflow/check.py
          # # Build static interface to latest stable version of PLUMED
          # tests/${{matrix.replica}}/install.sh mode=static
          # # Build runtime interface to (what will be) master version of PLUMED
@@ -104,6 +105,8 @@ jobs:
       env:
         PLUMED_TESTCENTER_GITHUB_TOKEN: ${{ secrets.PLUMED_TESTCENTER_GITHUB_TOKEN }}
       run: |
+        # This builds the page with the results of the tests
+        python build.py
         bash .ci/push _config.yml _layouts _data assets pigeon.png
 
 

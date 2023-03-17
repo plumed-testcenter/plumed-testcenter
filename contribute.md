@@ -1,2 +1,2 @@
-How to contribute a new lesson to the PLUMED-TESTCENTER
----------------------------------------------------
+How to contribute tests to the PLUMED-TESTCENTER
+------------------------------------------------
