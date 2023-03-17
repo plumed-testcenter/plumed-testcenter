@@ -74,6 +74,7 @@ jobs:
          tests/${{matrix.replica}}/install.sh mode=static
          # Build runtime interface to (what will be) master version of PLUMED
          tests/${{matrix.replica}}/install.sh mode=runtime suffix=_master
+         python setupInstall.py -c ${{matrix.replica}} 
 
     - name: Test code
       run: | 
