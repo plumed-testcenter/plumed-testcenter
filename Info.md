@@ -23,11 +23,11 @@
   new research and promote the highest possible standards of scientific reproducibility.
   More information can be found [here](http://www.plumed-nest.org/consortium.md).
 
-* __How to check your code works with PLUMED using PLUMED-TESTCENTER
+* __How to check your code works with PLUMED using PLUMED-TESTCENTER__
 
   The list of codes that are tested here can be found [here](browse.md).
 
-* __How to contribute lessons to PLUMED-TESTCENTER
+* __How to contribute lessons to PLUMED-TESTCENTER__
 
   Testing matters! If your work relies on using PLUMED and some other code together you should consider submitting some tests
   here. You may have your own tests but if you take the time to contribute here the website ensures your tests are run frequently.
