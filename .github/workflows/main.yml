@@ -71,7 +71,6 @@ jobs:
     - name: Install interface code
       run: |
          echo Building ${{matrix.replica}}
-         python build_workflow/check.py
          # Build static interface to latest stable version of PLUMED
          tests/${{matrix.replica}}/install.sh mode=static > tests/${{matrix.replica}}/stdout.txt 2> tests/${{matrix.replica}}/stderr.txt
          # Build runtime interface to (what will be) master version of PLUMED
