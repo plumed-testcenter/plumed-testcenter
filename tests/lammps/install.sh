@@ -3,7 +3,7 @@
 set -e
 set -x
 
-plumed_mode="static"
+mode="static"
 suffix=""
 
 for opt
@@ -30,9 +30,11 @@ git checkout $version
 mkdir build
 cd build
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$HOME/opt/lib/pkgconfig
-cmake -D PKG_MANYBODY=yes -D PKG_KSPACE=yes -D PKG_MOLECULE=yes -D PKG_RIGID=yes -D PKG_USER-PLUMED=yes -D PLUMED_MODE=$plumed_mode ../cmake
+cmake -D PKG_MANYBODY=yes -D PKG_KSPACE=yes -D PKG_MOLECULE=yes -D PKG_RIGID=yes -D PKG_USER-PLUMED=yes -D PLUMED_MODE=$mode ../cmake
 make
 if [ ! -f ./lmp ] ; then
-     exit 1
+     echo install_plumed$suffix: broken >> info.yml
+else 
+     echo install_plumed$suffix: working >> info.yml
 fi
 cp ./lmp $HOME/opt/bin/lammps$suffix
