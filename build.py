@@ -1,3 +1,4 @@
+import yaml
 import os
 
 def checkWorkflow() : 
@@ -19,10 +20,13 @@ def buildBrowsePage( tested ) :
    f.write("Browse the tests\n")
    f.write("-----------------\n")
    f.write("The codes that are currently tested by PLUMED-TESTCENTER are listed below.  PLUMED-TESTCENTER monitors whether the current and development versions of the code can be used to complete the tests for each of these codes.\n \n")
-   f.write("| Name of Program  | Compiles | Passes tests | \n")
-   f.write("|:----------------:|:--------:|:------------:| \n")
+   f.write("| Name of Program  | Short description | Compiles | Passes tests | \n")
+   f.write("|:----------------:|:-----------------:|:--------:|:------------:| \n")
    for code in os.listdir("tests") :
        compile_badge, test_badge = "", ""
+       stram=open("tests/" + code + "/info.yml", "r")
+       info=yaml.load(stram,Loader=yaml.BaseLoader)
+       stram.close()
        for i in range(len(tested)):
            compile_badge = compile_badge + ' [![tested on ' + tested[i] + '](https://img.shields.io/badge/' + tested[i] + '-'
            compile_badge = compile_badge + 'passing-green.svg'
@@ -30,7 +34,7 @@ def buildBrowsePage( tested ) :
            test_badge = test_badge + ' [![tested on ' + tested[i] + '](https://img.shields.io/badge/' + tested[i] + '-'
            test_badge = test_badge + 'passing-green.svg'
            test_badge = test_badge + ')](www.youtube.com)'
-       f.write("| [" + code + "](www.youtube.com) | " + compile_badge + " | " + test_badge + " | \n")  
+       f.write("| [" + code + "](" + info["link"] +") | " + info["description"] + " | " + compile_badge + " | " + test_badge + " | \n")  
    f.write(" \n")
    f.write("**Building PLUMED**\n")
    f.write(" \n")

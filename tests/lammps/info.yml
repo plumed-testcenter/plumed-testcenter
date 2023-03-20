@@ -1,0 +1,5 @@
+name: lammps
+description: The Large-scale Atomic/Molecular Massively Parallel Simulator. An MD code that is often used for materials modelling.
+link: https://www.lammps.org
+master_exe: ~/opt/bin/lammps_master
+stable_exe: ~/opt/bin/lammps

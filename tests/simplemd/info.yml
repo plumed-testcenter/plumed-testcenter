@@ -1,0 +1,5 @@
+name: simplemd
+description: A Lennard Jones molecular dynamics code that is part of PLUMED. 
+link: https://www.plumed.org/doc-master/user-doc/html/simplemd.html
+master_exe: plumed_master simplemd < in 
+stable_exe: plumed simplemd < in 
