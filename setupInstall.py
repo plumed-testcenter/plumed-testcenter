@@ -11,10 +11,10 @@ def zip(path):
 
 def buildInstallPage( code ) :
    # Zip all the logs
-   zip("tests/" + code + "/stdout.txt.zip")
-   zip("tests/" + code + "/stderr.txt.zip")
-   zip("tests/" + code + "/stdout_master.txt.zip")
-   zip("tests/" + code + "/stderr_master.txt.zip")
+   zip("tests/" + code + "/stdout.txt")
+   zip("tests/" + code + "/stderr.txt")
+   zip("tests/" + code + "/stdout_master.txt")
+   zip("tests/" + code + "/stderr_master.txt")
    of = open( "tests/" + code + "/install.md", "w+" )
    of.write("Compiling " + code + "\n")
    of.write("------------------------\n \n")
