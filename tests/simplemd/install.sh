@@ -18,7 +18,7 @@ done
 echo Hello simplemd world
 
 if [ "$suffix" == "_master" ] ; then
-   echo install_plumed$suffix: broken >> info.yml
+   echo install_plumed$suffix: broken >> tests/simplemd/info.yml
 else 
-   echo install_plumed$suffix: working >> info.yml
+   echo install_plumed$suffix: working >> tests/simplemd/info.yml
 fi
