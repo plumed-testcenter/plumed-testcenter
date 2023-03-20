@@ -36,7 +36,7 @@ def buildBrowsePage( stable_version, tested ) :
            if tested[i]==stable_version : compile_status=info["install_plumed_" + tested[i] ]
            if compile_status=="working" : compile_badge = compile_badge + 'passing-green.svg'
            elif compile_status=="broken" : compile_badge = compile_badge + 'failed-red.svg'
-           else ValueError("found invalid compilation status for " + code + " should be working or broken")
+           else : ValueError("found invalid compilation status for " + code + " should be working or broken")
            compile_badge = compile_badge + ')](tests/' + code + '/install.html)'
            test_badge = test_badge + ' [![tested on ' + tested[i] + '](https://img.shields.io/badge/' + tested[i] + '-'
            test_badge = test_badge + 'passing-green.svg'
