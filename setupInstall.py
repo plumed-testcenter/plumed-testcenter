@@ -1,6 +1,7 @@
 import os
 import sys
 import getopt
+import subprocess
 import zipfile
 
 def zip(path):
@@ -18,7 +19,12 @@ def buildInstallPage( code ) :
    of = open( "tests/" + code + "/install.md", "w+" )
    of.write("Compiling " + code + "\n")
    of.write("------------------------\n \n")
-   of.write("To compile " + code + " and PLUMED the following bash script was used.  " + code + " was statically linked with the latest stable version of PLUMED. In a separate build, the master version of PLUMED was linked to " + code + " as a runtime library. \n \n")
+   stable_version=subprocess.check_output('plumed info --version', shell=True).decode('utf-8').strip()
+   # Save the stable version of plumed to a file to pass to the update.py script (not classy Gareth)
+   vf = open("stable_version.md", "w+")
+   vf.write( stable_version )
+   vf.close() 
+   of.write("To compile " + code + " and PLUMED the following bash script was used.  " + code + " was statically linked with the v" + stable_version + " of PLUMED. In a separate build, the master version of PLUMED was linked to " + code + " as a runtime library. \n \n")
    of.write("Build with stable version download: [zipped raw stdout](tests/" + code + "/stdout.txt.zip)  - [zipped raw stderr](tests/" + code + "/stderr.txt.zip) \n")
    of.write("Build with master version download: [zipped raw stdout](tests/" + code + "/stdout_master.txt.zip)  - [zipped raw stderr](tests/" + "/stderr_master.txt.zip) \n\n")
    of.write("```bash\n")

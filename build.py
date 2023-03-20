@@ -1,5 +1,4 @@
 import yaml
-import subprocess
 import os
 from datetime import date
 
@@ -58,5 +57,7 @@ if __name__ == "__main__":
    # Check that the workflow matches with the directories
    checkWorkflow()
    # Build the page with all the MD codes
-   stable_version=subprocess.check_output('plumed info --version', shell=True).decode('utf-8').strip()
+   vf = open("stable_version.md", "w+")
+   stable_version=vf.read()
+   vf.close()  
    buildBrowsePage( "v"+ stable_version, ("v"+ stable_version,"master") )
