@@ -72,10 +72,10 @@ jobs:
       run: |
          echo Building ${{matrix.replica}} with stable plumed
          # Build static interface to latest stable version of PLUMED
-         tests/${{matrix.replica}}/install.sh mode=static > tests/${{matrix.replica}}/stdout.txt 2> tests/${{matrix.replica}}/stderr.txt
+         tests/${{matrix.replica}}/install.sh mode=static #> tests/${{matrix.replica}}/stdout.txt 2> tests/${{matrix.replica}}/stderr.txt
          echo Building ${{matrix.replica}} with master plumed
          # Build runtime interface to (what will be) master version of PLUMED
-         tests/${{matrix.replica}}/install.sh mode=runtime suffix=_master > tests/${{matrix.replica}}/stdout_master.txt 2> tests/${{matrix.replica}}/stderr_master.txt
+         tests/${{matrix.replica}}/install.sh mode=runtime suffix=_master # > tests/${{matrix.replica}}/stdout_master.txt 2> tests/${{matrix.replica}}/stderr_master.txt
          echo Running setup install for ${{matrix.replica}}
          # And setup the installation pages with logs and details of scripts
          python setupInstall.py -c ${{matrix.replica}} 
