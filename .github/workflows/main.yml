@@ -83,7 +83,8 @@ jobs:
     - name: Test code
       run: | 
          #python tests/${{matrix.replica}}/runtests.py
-         tar cf testout.tar $(find . -name "*.md") $(find . -name "*.png")  $(find . -name "*.txt.zip") $(find . -name "*.yml")
+         tar cf testout.tar tests/${{matrix.replica}}
+         #tar cf testout.tar $(find . -name "*.md") $(find . -name "*.png")  $(find . -name "*.txt.zip") $(find . -name "*.yml")
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
