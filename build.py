@@ -28,7 +28,6 @@ def buildBrowsePage( stable_version, tested ) :
        compile_badge, test_badge = "", ""
        stram=open("tmp/extract/tests/" + code + "/info.yml", "r")
        info=yaml.load(stram,Loader=yaml.BaseLoader)
-       print( "INFO FOR", code, info )
        stram.close()
        for i in range(len(tested)):
            compile_badge = compile_badge + ' [![tested on ' + tested[i] + '](https://img.shields.io/badge/' + tested[i] + '-'
@@ -58,7 +57,8 @@ if __name__ == "__main__":
    # Check that the workflow matches with the directories
    checkWorkflow()
    # Build the page with all the MD codes
-   vf = open("stable_version.md", "w+")
+   vf = open("tmp/extract/stable_version.md", "w+")
    stable_version=vf.read()
    vf.close()  
+   print("FOUND STABLE VERSION", stable_version )
    buildBrowsePage( "v"+ stable_version, ("v"+ stable_version,"master") )
