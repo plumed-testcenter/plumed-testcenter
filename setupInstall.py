@@ -16,7 +16,6 @@ def buildInstallPage( code ) :
    zip("tests/" + code + "/stderr.txt")
    zip("tests/" + code + "/stdout_master.txt")
    zip("tests/" + code + "/stderr_master.txt")
-   print("Zipped files")
    of = open( "tests/" + code + "/install.md", "w+" )
    of.write("Compiling " + code + "\n")
    of.write("------------------------\n \n")
@@ -25,7 +24,6 @@ def buildInstallPage( code ) :
    vf = open("stable_version.md", "w+")
    vf.write( stable_version )
    vf.close() 
-   print("Wrote stable version")
    of.write("To compile " + code + " and PLUMED the following bash script was used.  " + code + " was statically linked with the v" + stable_version + " of PLUMED. In a separate build, the master version of PLUMED was linked to " + code + " as a runtime library. \n \n")
    of.write("Build with stable version download: [zipped raw stdout](tests/" + code + "/stdout.txt.zip)  - [zipped raw stderr](tests/" + code + "/stderr.txt.zip) \n")
    of.write("Build with master version download: [zipped raw stdout](tests/" + code + "/stdout_master.txt.zip)  - [zipped raw stderr](tests/" + "/stderr_master.txt.zip) \n\n")
@@ -50,5 +48,4 @@ if __name__ == "__main__":
        elif opt in ["-c", "--code"]:
           code = arg
    # Setup compile page
-   print("Building install page for", code )
    buildInstallPage(code)

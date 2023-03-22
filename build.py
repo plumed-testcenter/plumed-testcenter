@@ -57,7 +57,7 @@ if __name__ == "__main__":
    # Check that the workflow matches with the directories
    checkWorkflow()
    # Build the page with all the MD codes
-   vf = open("tmp/extract/stable_version.md", "w+")
+   vf = open("tmp/extract/stable_version.md", "r")
    stable_version=vf.read()
    vf.close()  
    print("FOUND STABLE VERSION", stable_version )
