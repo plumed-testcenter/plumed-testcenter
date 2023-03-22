@@ -113,6 +113,6 @@ jobs:
         # This builds the page with the results of the tests
         python build.py
         # This pushes everything to the final website 
-        bash .ci/push _config.yml _layouts _data assets pigeon.png
+        bash .ci/push _config.yml _layouts _data assets pigeon.png plumed.md nest.png contribute.md browse.md Info.md treadmill.png
 
 
