@@ -72,9 +72,7 @@ jobs:
       run: |
          echo Building ${{matrix.replica}} with stable plumed
          # Build static interface to latest stable version of PLUMED
-         tests/${{matrix.replica}}/install.sh mode=static  # > tests/${{matrix.replica}}/stdout.txt 2> tests/${{matrix.replica}}/stderr.txt
-         touch tests/${{matrix.replica}}/stdout.txt
-         touch tests/${{matrix.replica}}/stderr.txt 
+         tests/${{matrix.replica}}/install.sh mode=static > tests/${{matrix.replica}}/stdout.txt 2> tests/${{matrix.replica}}/stderr.txt
          echo Building ${{matrix.replica}} with master plumed
          # Build runtime interface to (what will be) master version of PLUMED
          tests/${{matrix.replica}}/install.sh mode=runtime suffix=_master > tests/${{matrix.replica}}/stdout_master.txt 2> tests/${{matrix.replica}}/stderr_master.txt
@@ -85,7 +83,7 @@ jobs:
     - name: Test code
       run: | 
          #python tests/${{matrix.replica}}/runtests.py
-         tar cf testout.tar $(find . -name "*.md") $(find . -name "*.png")  $(find . -name "*.txt.zip")
+         tar cf testout.tar $(find . -name "*.md") $(find . -name "*.png")  $(find . -name "*.txt.zip") $(find . -name "*.yml")
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
