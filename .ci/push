@@ -26,11 +26,8 @@ tar cf all.tar $@
 
 cd tmp/$$
 tar xf ../../all.tar
-# Unzip tar files from all replicas
-for file in `ls ../../testout-content*/testout.tar` ; do
-    tar xf $file
-done
-#cat _data/codes*.yml > _data/codes.yml
+# Copy what was extracted in previous step
+mv ../extract/* .
 
 export GIT_BOT_EMAIL=giovanni.bussi+plumedbot@gmail.com
 

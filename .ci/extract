@@ -1,0 +1,9 @@
+#! /bin/bash
+
+root="$PWD"
+mkdir -p tmp/extract
+cd tmp/extract
+for file in `ls ../../testout-content*/testout.tar` ; do
+    tar xf $file
+done
+cd $root

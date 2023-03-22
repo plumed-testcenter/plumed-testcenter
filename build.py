@@ -26,7 +26,7 @@ def buildBrowsePage( stable_version, tested ) :
    f.write("|:----------------:|:-----------------:|:--------:|:------------:| \n")
    for code in os.listdir("tests") :
        compile_badge, test_badge = "", ""
-       stram=open("tests/" + code + "/info.yml", "r")
+       stram=open("tmp/extract/tests/" + code + "/info.yml", "r")
        info=yaml.load(stram,Loader=yaml.BaseLoader)
        print( "INFO FOR", code, info )
        stram.close()

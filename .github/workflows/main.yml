@@ -108,8 +108,11 @@ jobs:
       env:
         PLUMED_TESTCENTER_GITHUB_TOKEN: ${{ secrets.PLUMED_TESTCENTER_GITHUB_TOKEN }}
       run: |
+        # This extracts the data that was uploaded to the artifacts
+        bash .ci/extract
         # This builds the page with the results of the tests
         python build.py
+        # This pushes everything to the final website 
         bash .ci/push _config.yml _layouts _data assets pigeon.png
 
 
