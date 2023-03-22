@@ -36,6 +36,6 @@ make
 if [ ! -f ./lmp ] ; then
      echo install_plumed$suffix: broken >> $basedir/tests/lammps/info.yml
 else 
-     echo install_plumed$suffix: working >> $baesdir/tests/lammps/info.yml
+     echo install_plumed$suffix: working >> $basedir/tests/lammps/info.yml
 fi
 cp ./lmp $HOME/opt/bin/lammps$suffix
