@@ -5,6 +5,7 @@ set -x
 
 mode="static"
 suffix=""
+basedir=`pwd`
 
 for opt
 do
@@ -33,8 +34,8 @@ export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$HOME/opt/lib/pkgconfig
 cmake -D PKG_MANYBODY=yes -D PKG_KSPACE=yes -D PKG_MOLECULE=yes -D PKG_RIGID=yes -D PKG_USER-PLUMED=yes -D PLUMED_MODE=$mode ../cmake
 make
 if [ ! -f ./lmp ] ; then
-     echo install_plumed$suffix: broken >> tests/lammps/info.yml
+     echo install_plumed$suffix: broken >> $basedir/tests/lammps/info.yml
 else 
-     echo install_plumed$suffix: working >> tests/lammps/info.yml
+     echo install_plumed$suffix: working >> $basdir/tests/lammps/info.yml
 fi
 cp ./lmp $HOME/opt/bin/lammps$suffix

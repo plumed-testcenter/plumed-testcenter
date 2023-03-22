@@ -5,6 +5,7 @@ set -x
 
 mode="static"
 suffix=""
+basedir=`pwd`
 
 for opt
 do
@@ -18,7 +19,7 @@ done
 echo Hello simplemd world
 
 if [ "$suffix" == "_master" ] ; then
-   echo install_plumed$suffix: broken >> tests/simplemd/info.yml
+   echo install_plumed$suffix: broken >> $basedir/tests/simplemd/info.yml
 else 
-   echo install_plumed$suffix: working >> tests/simplemd/info.yml
+   echo install_plumed$suffix: working >> $basedir/tests/simplemd/info.yml
 fi
