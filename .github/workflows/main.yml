@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        replica: ["simplemd", "lammps"]
+        replica: ["simplemd", "lammps", "quantum_espresso"]
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -44,6 +44,16 @@ jobs:
         echo "PYTHONPATH=$HOME/opt/lib/plumed/python:$PYTHONPATH" >> $GITHUB_ENV
         # needed to avoid MPI warning
         echo "OMPI_MCA_btl=^openib" >> $GITHUB_ENV
+
+    - name: Install generic packages
+      run: |
+        sudo apt-get update -qq
+        sudo apt-get install -y libatlas-base-dev
+        sudo apt-get install -y libfftw3-dev
+        sudo apt-get install -y gsl-bin
+        sudo apt-get install -y libgsl0-dev
+        sudo apt-get install -y gfortran
+        sudo apt-get install -y ccache
 
     - name: Install PLUMED software
       run: |
