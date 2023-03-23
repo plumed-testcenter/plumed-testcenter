@@ -1,7 +1,7 @@
 import yaml
 import os
 from datetime import date
-from buildTestPages import buildTestPages
+#from buildTestPages import buildTestPages
 
 def checkWorkflow() : 
    print("Checking Workflow")
@@ -64,4 +64,4 @@ if __name__ == "__main__":
    vf.close()  
    buildBrowsePage( "v"+ stable_version, ("v"+ stable_version,"master") )
    # Build all the pages that describe the tests
-   buildTestPages( "pages" )
+   #buildTestPages( "pages" )
