@@ -1,6 +1,7 @@
 import yaml
 import os
 from datetime import date
+from buildTestPages import buildTestPages
 
 def checkWorkflow() : 
    print("Checking Workflow")
@@ -20,7 +21,7 @@ def buildBrowsePage( stable_version, tested ) :
    f = open("browse.md","w+")
    f.write("Browse the tests\n")
    f.write("-----------------\n")
-   f.write("The cdes listed below below were tested on " + date.today().strftime("%B %d, %Y") + ". ")
+   f.write("The codes listed below below were tested on " + date.today().strftime("%B %d, %Y") + ". ")
    f.write("PLUMED-TESTCENTER tested whether the current and development versions of the code can be used to complete the tests for each of these codes.\n \n")
    f.write("| Name of Program  | Short description | Compiles | Passes tests | \n")
    f.write("|:----------------:|:-----------------:|:--------:|:------------:| \n")
@@ -53,6 +54,7 @@ def buildBrowsePage( stable_version, tested ) :
    f.write("```\n")
    f.close()
 
+
 if __name__ == "__main__":
    # Check that the workflow matches with the directories
    checkWorkflow()
@@ -60,5 +62,6 @@ if __name__ == "__main__":
    vf = open("tmp/extract/stable_version.md", "r")
    stable_version=vf.read()
    vf.close()  
-   print("FOUND STABLE VERSION", stable_version )
    buildBrowsePage( "v"+ stable_version, ("v"+ stable_version,"master") )
+   # Build all the pages that describe the tests
+   buildTestPages( "pages" )

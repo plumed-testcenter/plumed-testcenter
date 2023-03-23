@@ -82,8 +82,10 @@ jobs:
 
     - name: Test code
       run: | 
-         #python tests/${{matrix.replica}}/runtests.py
-         tar cf testout.tar tests/${{matrix.replica}} stable_version.md
+         # Run the tests of the code
+         python runtests.py -c ${{matrix.replica}}
+         # Build tarball for upload 
+         tar cf testout.tar tests/${{matrix.replica}}/*.md tests/${{matrix.replica}}/*.yml stable_version.md
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
@@ -113,6 +115,6 @@ jobs:
         # This builds the page with the results of the tests
         python build.py
         # This pushes everything to the final website 
-        bash .ci/push _config.yml _layouts _data assets pigeon.png plumed.md nest.png contribute.md browse.md Info.md treadmill.png
+        bash .ci/push _config.yml _layouts _data assets pages pigeon.png plumed.md nest.png contribute.md browse.md Info.md treadmill.png
 
 
