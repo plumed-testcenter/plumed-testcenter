@@ -59,7 +59,7 @@ def runTests(code,version) :
    of.write("Testing " + code + "\n")
    of.write("------------------------\n \n")
    stable_version=subprocess.check_output('plumed info --version', shell=True).decode('utf-8').strip()
-   of.write("The tests described in the following table were performed on _" + date.today().strftime("%B %d, %Y") + "_ to test whether the interface between " + code + " and ")
+   of.write("The tests described in the following table were performed on __" + date.today().strftime("%B %d, %Y") + "__ to test whether the interface between " + code + " and ")
    if version=="master" : of.write("the master version of PLUMED is working correctly.\n\n") 
    else : of.write("v" + stable_version + " of PLUMED is working correctly.\n\n")
    if info["virial"]=="no" : of.write("WARNING: " + code + " does not pass the virial to PLUMED and it is thus not possible to run NPT simulations with this code\n\n")

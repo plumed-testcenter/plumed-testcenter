@@ -20,7 +20,7 @@ def buildBrowsePage( stable_version, tested ) :
    f = open("browse.md","w+")
    f.write("Browse the tests\n")
    f.write("-----------------\n")
-   f.write("The codes listed below below were tested on _" + date.today().strftime("%B %d, %Y") + "_. ")
+   f.write("The codes listed below below were tested on __" + date.today().strftime("%B %d, %Y") + "__. ")
    f.write("PLUMED-TESTCENTER tested whether the current and development versions of the code can be used to complete the tests for each of these codes.\n \n")
    f.write("| Name of Program  | Short description | Compiles | Passes tests | \n")
    f.write("|:-----------------|:------------------|:--------:|:------------:| \n")
