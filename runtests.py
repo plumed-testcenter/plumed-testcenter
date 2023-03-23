@@ -53,7 +53,7 @@ def runTests(code,version) :
 
    fname = "testout.md";
    if version=="master" : fname = "testout_" + version + ".md"
-   else if version!="stable" : ValueError("version should be master or stable")
+   elif : version!="stable" : ValueError("version should be master or stable")
 
    of = open("tests/" + code + "/" + fname, "w+")
    of.write("Testing " + code + "\n")

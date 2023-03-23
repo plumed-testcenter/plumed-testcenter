@@ -87,7 +87,7 @@ jobs:
          # Run the tests of the code with the master version of PLUMED
          python runtests.py -c ${{matrix.replica}} -v master
          # Build tarball for upload 
-         tar cf testout.tar tests/${{matrix.replica}}/*.md tests/${{matrix.replica}}/*.yml stable_version.md pages
+         tar cf testout.tar tests/${{matrix.replica}}/*.md tests/${{matrix.replica}}/*.yml tests/${{matrix.replica}}/*.zip stable_version.md pages
 
     - name: Upload artifact
       uses: actions/upload-artifact@v3
