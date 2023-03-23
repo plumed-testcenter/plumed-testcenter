@@ -7,6 +7,9 @@ mode="static"
 suffix=""
 basedir=`pwd`
 
+# Copying arguments from input
+# Mode is how plumed is linked static/runtime
+# Suffix is which version of plumed to use stable/master
 for opt
 do
 case "$opt" in
@@ -33,6 +36,8 @@ cd build
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$HOME/opt/lib/pkgconfig
 cmake -D PKG_MANYBODY=yes -D PKG_KSPACE=yes -D PKG_MOLECULE=yes -D PKG_RIGID=yes -D PKG_USER-PLUMED=yes -D PLUMED_MODE=$mode ../cmake
 make
+
+# Checking that lammps has been built correctly
 if [ ! -f ./lmp ] ; then
      echo install_plumed$suffix: broken >> $basedir/tests/lammps/info.yml
 else 
