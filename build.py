@@ -1,7 +1,6 @@
 import yaml
 import os
 from datetime import date
-#from buildTestPages import buildTestPages
 
 def checkWorkflow() : 
    print("Checking Workflow")
@@ -21,10 +20,10 @@ def buildBrowsePage( stable_version, tested ) :
    f = open("browse.md","w+")
    f.write("Browse the tests\n")
    f.write("-----------------\n")
-   f.write("The codes listed below below were tested on " + date.today().strftime("%B %d, %Y") + ". ")
+   f.write("The codes listed below below were tested on _" + date.today().strftime("%B %d, %Y") + "_. ")
    f.write("PLUMED-TESTCENTER tested whether the current and development versions of the code can be used to complete the tests for each of these codes.\n \n")
    f.write("| Name of Program  | Short description | Compiles | Passes tests | \n")
-   f.write("|:----------------:|:-----------------:|:--------:|:------------:| \n")
+   f.write("|:-----------------|:------------------|:--------:|:------------:| \n")
    for code in os.listdir("tests") :
        compile_badge, test_badge = "", ""
        stram=open("tmp/extract/tests/" + code + "/info.yml", "r")
@@ -40,7 +39,8 @@ def buildBrowsePage( stable_version, tested ) :
            compile_badge = compile_badge + ')](tests/' + code + '/install.html)'
            test_badge = test_badge + ' [![tested on ' + tested[i] + '](https://img.shields.io/badge/' + tested[i] + '-'
            test_badge = test_badge + 'passing-green.svg'
-           test_badge = test_badge + ')](tests/' + code + '/testout.html)'
+           if tested[i]!=stable_version : test_badge = test_badge + ')](tests/' + code + '/testout_' + tested[i] + '.html)' 
+           else : test_badge = test_badge + ')](tests/' + code + '/testout.html)'
        f.write("| [" + code + "](" + info["link"] +") | " + info["description"] + " | " + compile_badge + " | " + test_badge + " | \n")  
    f.write(" \n")
    f.write("**Building PLUMED**\n")
@@ -63,5 +63,3 @@ if __name__ == "__main__":
    stable_version=vf.read()
    vf.close()  
    buildBrowsePage( "v"+ stable_version, ("v"+ stable_version,"master") )
-   # Build all the pages that describe the tests
-   #buildTestPages( "pages" )
