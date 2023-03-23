@@ -40,7 +40,7 @@ def buildBrowsePage( stable_version, tested ) :
            compile_badge = compile_badge + ')](tests/' + code + '/install.html)'
            test_badge = test_badge + ' [![tested on ' + tested[i] + '](https://img.shields.io/badge/' + tested[i] + '-'
            test_badge = test_badge + 'passing-green.svg'
-           test_badge = test_badge + ')](tests/' + code '/testout.html)'
+           test_badge = test_badge + ')](tests/' + code + '/testout.html)'
        f.write("| [" + code + "](" + info["link"] +") | " + info["description"] + " | " + compile_badge + " | " + test_badge + " | \n")  
    f.write(" \n")
    f.write("**Building PLUMED**\n")
