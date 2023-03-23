@@ -16,7 +16,7 @@ PRINT ARG=v FILE=volume
 We then run a second constant pressure MD simulation at a pressure of 1001 bar and with the following PLUMED restraint 
 applied:
 
-```
+```plumed
 v: VOLUME 
 # slope should be just 10 times the Avogadro constant:
 RESTRAINT AT=0.0 ARG=v SLOPE=-60.2214129
