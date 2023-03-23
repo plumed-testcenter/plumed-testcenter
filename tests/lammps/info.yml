@@ -3,3 +3,10 @@ description: The Large-scale Atomic/Molecular Massively Parallel Simulator. An M
 link: https://www.lammps.org
 master_exe: ~/opt/bin/lammps_master
 stable_exe: ~/opt/bin/lammps
+tests: 
+   positions: yes
+   timestep: yes
+   mass_charge: yes
+   forces: yes
+   virial: yes
+   energy: yes
