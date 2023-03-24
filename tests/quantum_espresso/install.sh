@@ -39,4 +39,4 @@ if [ ! -f $home/opt/bin/pw.x ] ; then
 else 
      echo install_plumed$suffix: working >> $basedir/tests/lammps/info.yml
 fi
-cp ./pw.x $HOME/opt/bin/pw$suffix
+cp $home/opt/bin/pw.x $HOME/opt/bin/pw$suffix
