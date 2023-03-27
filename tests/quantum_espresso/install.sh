@@ -34,9 +34,9 @@ make pw
 make install
 
 # Checking that lammps has been built correctly
-if [ ! -f $home/opt/bin/pw.x ] ; then
+if [ ! -f $HOME/opt/bin/pw.x ] ; then
      echo install_plumed$suffix: broken >> $basedir/tests/lammps/info.yml
 else 
      echo install_plumed$suffix: working >> $basedir/tests/lammps/info.yml
+     cp $HOME/opt/bin/pw.x $HOME/opt/bin/pw$suffix
 fi
-cp $home/opt/bin/pw.x $HOME/opt/bin/pw$suffix
