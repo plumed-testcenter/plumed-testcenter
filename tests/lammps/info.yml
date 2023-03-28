@@ -6,7 +6,8 @@ stable_exe: ~/opt/bin/lammps
 tests: 
    positions: yes
    timestep: yes
-   mass_charge: yes
+   mass: yes
+   charge: yes
    forces: yes
    virial: yes
    energy: yes

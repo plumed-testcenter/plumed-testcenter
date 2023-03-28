@@ -6,7 +6,8 @@ stable_exe: plumed simplemd < in
 tests: 
    positions: yes
    timestep: yes
-   mass_charge: yes
+   mass: yes
+   charge: no
    forces: yes
    virial: no
    energy: yes

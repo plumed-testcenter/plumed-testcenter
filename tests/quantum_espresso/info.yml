@@ -4,9 +4,10 @@ link: https://www.quantum-espresso.org
 master_exe: ~/opt/bin/pw_master
 stable_exe: ~/opt/bin/pw
 tests: 
-   positions: no
-   timestep: no
-   mass_charge: no
+   positions: yes
+   timestep: yes
+   mass: yes
+   charge: no
    forces: no 
    virial: no
    energy: no
