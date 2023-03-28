@@ -68,8 +68,8 @@ def runTests(code,version,runner) :
 
    if info["positions"]=="yes" or info["timestep"]=="yes" or info["mass"]=="yes" or info["charge"]=="yes" : 
       plumed_inpt = "DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz\n"
-      if info["mass"]=="yes" or info["charge"]=="yes" : plumed_inpt = plmed_inpt + "DUMPMASSCHARGE FILE=mq_plumed\n"
-      if info["timestep"]=="yes" : plumed_inpt = plmed_inpt + "t1: TIME\nPRINT ARG=t1 FILE=colvar\n"
+      if info["mass"]=="yes" or info["charge"]=="yes" : plumed_inpt = plumed_inpt + "DUMPMASSCHARGE FILE=mq_plumed\n"
+      if info["timestep"]=="yes" : plumed_inpt = plumed_inpt + "t1: TIME\nPRINT ARG=t1 FILE=colvar\n"
       # runner.runCode( plumed_inpt )
   
    val1, val2 = 0.1, 0.1
