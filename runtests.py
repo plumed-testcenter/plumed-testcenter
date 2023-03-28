@@ -146,6 +146,6 @@ if __name__ == "__main__" :
    d = importlib.import_module( "tests." + code, "mdcode" )
    # And create the class that interfaces with the MD code output
    runner = d.mdcode()
-   print("Running tests for ", runner.getName(self) )
+   print("Running tests for ", runner.getName() )
    # Now run the tests 
    runTests( code, version, runner )
