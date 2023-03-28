@@ -4,6 +4,7 @@ import yaml
 import getopt
 import subprocess
 import numpy as np
+import importlib
 from datetime import date
 from PlumedToHTML import test_plumed, get_html
 
