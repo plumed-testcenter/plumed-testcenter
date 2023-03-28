@@ -109,7 +109,7 @@ def getBadge( sucess, filen, code, version ) :
    badge = '[![tested on ' + version + '](https://img.shields.io/badge/' + version + '-'
    if sucess : badge = badge + 'passing-green.svg'
    else : badge = badge + 'failed-red.svg'
-   return badge + + ')](tests/' + code + '/' + filen + '_' + version + '.html)'
+   return badge + ')](tests/' + code + '/' + filen + '_' + version + '.html)'
 
 def check( val1, val2 ) :
    if np.random.uniform(0,1)<0.5 : return True
