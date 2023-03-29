@@ -62,8 +62,8 @@ def runTests(code,version,runner) :
    of.write("------------------------\n \n")
    stable_version=subprocess.check_output('plumed info --version', shell=True).decode('utf-8').strip()
    of.write("The tests described in the following table were performed on __" + date.today().strftime("%B %d, %Y") + "__ to test whether the interface between " + code + " and ")
-   if version=="master" : of.write("the master version of PLUMED is working correctly.\n\n") 
-   else : of.write("v" + stable_version + " of PLUMED is working correctly.\n\n")
+   if version=="stable" : version = "v" + stable_version
+   of.write("the " + version + " version of PLUMED is working correctly.\n\n") 
    if info["virial"]=="no" : of.write("WARNING: " + code + " does not pass the virial to PLUMED and it is thus not possible to run NPT simulations with this code\n\n")
 
    if info["positions"]=="yes" or info["timestep"]=="yes" or info["mass"]=="yes" or info["charge"]=="yes" : 
@@ -72,7 +72,7 @@ def runTests(code,version,runner) :
       if info["timestep"]=="yes" : plumed_inpt = plumed_inpt + "t1: TIME\nPRINT ARG=t1 FILE=colvar\n"
       # runner.runCode( plumed_inpt )
   
-   val1, val2 = 0.1, 0.1
+   val1, val2 = 0.1, 0.1  
    of.write("| Description of test | Status | \n")
    of.write("|:--------------------|:------:| \n")
    if info["positions"]=="yes" :
@@ -103,6 +103,14 @@ def runTests(code,version,runner) :
          of.write("| [PLUMED forces on potential energy passed correctly](../../pages/engforce.html) | " + getBadge( check( val1, val2 ), "engforce", code, version) + " | \n") 
       if info["virial"]=="yes" : 
          of.write("| [PLUMED contribution to virial due to force on potential energy passed correctly](../../pages/engforce.html) | " + getBadge( check( val1, val2 ), "engvir", code, version) + " | \n") 
+   of.close()
+   # Read output file to get status
+   ifn, of = open("tests/" + code + "/" + fname, "r"), open("tests/" + code + "/info.yml", "a")
+   inp = inf.read()
+   ifn.close()
+   if "passing-green.svg" in inp and "failed-red.svg" in inp : of.write("test_plumed" + version + ": partial\n")
+   elif "passing-green.svg" in inp : of.write("test_plumed" + version + ": working \n")
+   elif "failed-red.svg" in inp : of.write("test_plumed" + version + ": broken \n")
    of.close()
 
 def getBadge( sucess, filen, code, version ) :

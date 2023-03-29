@@ -38,7 +38,10 @@ def buildBrowsePage( stable_version, tested ) :
            else : ValueError("found invalid compilation status for " + code + " should be working or broken")
            compile_badge = compile_badge + ')](tests/' + code + '/install.html)'
            test_badge = test_badge + ' [![tested on ' + tested[i] + '](https://img.shields.io/badge/' + tested[i] + '-'
-           test_badge = test_badge + 'passing-green.svg'
+           test_status = info["test_plumed" + tested[i]]
+           if test_status=="working" : test_badge = test_badge + 'passing-green.svg'
+           elif test_status=="partial" : test_badge = test_badge + 'partial-yellow.svg'
+           elif test_status=="broken" : test_badge = test_badge + 'failed-red.svg'
            if tested[i]!=stable_version : test_badge = test_badge + ')](tests/' + code + '/testout_' + tested[i] + '.html)' 
            else : test_badge = test_badge + ')](tests/' + code + '/testout.html)'
        f.write("| [" + code + "](" + info["link"] +") | " + info["description"] + " | " + compile_badge + " | " + test_badge + " | \n")  
