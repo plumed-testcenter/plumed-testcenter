@@ -92,7 +92,7 @@ def runTests(code,version,runner) :
    if info["charge"]=="yes" :
       md_charges = 0.1 # runner.getCharges()
       pl_charges = 0.1 # np.loadtxt("tests/" + code + "/mq_plumed")[2]  
-      of.write("| [MD code charges passed correctly](../../pages/mass_charge.html) | " + getBadge( check( md_charge, pl_charge ), "charge", code, version) + " | \n")
+      of.write("| [MD code charges passed correctly](../../pages/mass_charge.html) | " + getBadge( check( md_charges, pl_charges ), "charge", code, version) + " | \n")
    if info["forces"]=="yes" :
       of.write("| [PLUMED forces passed correctly](../../pages/forces.html) | " + getBadge( check( val1, val2 ), "forces", code, version) + " | \n")
    if info["virial"]=="yes" :
