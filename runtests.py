@@ -106,7 +106,7 @@ def runTests(code,version,runner) :
    of.close()
    # Read output file to get status
    ifn, of = open("tests/" + code + "/" + fname, "r"), open("tests/" + code + "/info.yml", "a")
-   inp = inf.read()
+   inp = ifn.read()
    ifn.close()
    if "passing-green.svg" in inp and "failed-red.svg" in inp : of.write("test_plumed" + version + ": partial\n")
    elif "passing-green.svg" in inp : of.write("test_plumed" + version + ": working \n")
