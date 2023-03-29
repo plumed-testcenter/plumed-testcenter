@@ -102,7 +102,7 @@ def runTests(code,version,runner) :
       if info["forces"]=="yes" :
          of.write("| [PLUMED forces on potential energy passed correctly](../../pages/engforce.html) | " + getBadge( check( val1, val2 ), "engforce", code, version) + " | \n") 
       if info["virial"]=="yes" : 
-         of.write("| [PLUMED contribution to virial due to force on potential energy passed correctly](../../pages/engforce.html) | " + + getBadge( check( val1, val2 ), "engvir", code, version) + + " | \n") 
+         of.write("| [PLUMED contribution to virial due to force on potential energy passed correctly](../../pages/engforce.html) | " + getBadge( check( val1, val2 ), "engvir", code, version) + " | \n") 
    of.close()
 
 def getBadge( sucess, filen, code, version ) :
