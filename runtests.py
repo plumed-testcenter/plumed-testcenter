@@ -60,9 +60,9 @@ def buildTestPages( directory ) :
 
 def runMDCalc( name, code, runner, params ) :
     # Copy all the input needed for the MD calculation
-    shutil.copytree("tests/" + code + "/input", "tests/" + code + "/" + name ) 
+    shutil.copytree("tests/" + code + "/input", "tests/" + code + "/" + name + "_" + params["version"] ) 
     # Change to the directory to run the calculation
-    with cd("tests/" + code + "/" + name ) :
+    with cd("tests/" + code + "/" + name + "_" + params["version"] ) :
        # Output the plumed file  
        of = open("plumed.dat","w+")
        of.write(params["plumed"])
@@ -70,7 +70,7 @@ def runMDCalc( name, code, runner, params ) :
        # Now run the MD calculation
        runner.runMD( params )
     # Make a zip archive that contains the input and output
-    shutil.make_archive("tests/" + code + "/" + name, 'zip', "tests/" + code + "/" + name )
+    shutil.make_archive("tests/" + code + "/" + name + "_" + params["version"], 'zip', "tests/" + code + "/" + name + "_" + params["version"] )
 
 def runTests(code,version,runner) :
    # Read in the information on the tests that should be run for this code
