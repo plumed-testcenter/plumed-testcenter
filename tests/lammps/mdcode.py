@@ -32,7 +32,7 @@ class mdcode :
        of.write("group           ref id 37\n")
        of.write("group           colvar union one two ref\n")
        of.write("fix             2 all plumed plumedfile plumed.dat outfile p.log\n")
-       of.write("fix             1 all nvt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + mdparams["friction"] + " tchain 1\n")
+       of.write("fix             1 all nvt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["friction"]) + " tchain 1\n")
        of.write("fix             2a ref setforce 0.0 0.0 0.0\n")
        of.write("fix             4 all shake 0.0001 10 100 b 4 6 8 10 12 14 18 a 31\n")
        of.write("thermo_style    custom step temp etotal pe ke epair ebond f_2\n")
