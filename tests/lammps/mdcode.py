@@ -40,7 +40,7 @@ class mdcode :
        of.write("dump            dd all xyz 10 lammps.xyz\n")
        of.write("variable        step equal step\n")
        of.write("variable        pe equal pe\n")
-       of.write("fix             5 all print 10 "$(v_step) $(v_pe)" file lammps_energy\n")
+       of.write("fix             5 all print 1 \"$(v_step) $(v_pe)\" file lammps_energy\n")
        of.write("dump            mq all custom 200 mq_lammps id mass q\n")
        of.write("run             " + str(mdparams["nsteps"]) + "\n")
        of.close()

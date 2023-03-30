@@ -4,7 +4,7 @@ link: https://www.plumed.org/doc-master/user-doc/html/simplemd.html
 tests: 
    positions: yes
    timestep: yes
-   mass: no
+   mass: yes
    charge: no
    forces: yes
    virial: no

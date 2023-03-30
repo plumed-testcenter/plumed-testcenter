@@ -96,7 +96,8 @@ def runTests(code,version,runner) :
    params["stable_version"] = usestable
    if info["positions"]=="yes" or info["timestep"]=="yes" or info["mass"]=="yes" or info["charge"]=="yes" : 
       params["plumed"] = "DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz\n"
-      if info["mass"]=="yes" or info["charge"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed\n"
+      if info["mass"]=="yes" and info["charge"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed\n"
+      elif info["mass"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed ONLY_MASSES\n"
       if info["timestep"]=="yes" : params["plumed"] = params["plumed"] + "t1: TIME\nPRINT ARG=t1 FILE=colvar\n"
       params["nsteps"] = 10
       runMDCalc( "basic", code, runner, params )
