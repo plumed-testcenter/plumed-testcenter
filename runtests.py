@@ -2,11 +2,22 @@ import os
 import sys
 import yaml
 import getopt
+import shutil
 import subprocess
 import numpy as np
 import importlib
 from datetime import date
+from contextlib import contextmanager
 from PlumedToHTML import test_plumed, get_html
+
+@contextmanager
+def cd(newdir):
+    prevdir = os.getcwd()
+    os.chdir(os.path.expanduser(newdir))
+    try:
+        yield
+    finally:
+        os.chdir(prevdir)
 
 def processMarkdown( filename ) :
     if not os.path.exists(filename) :
@@ -47,13 +58,27 @@ def buildTestPages( directory ) :
    for page in os.listdir(directory) :
        if ".md" in page : processMarkdown( directory + "/" + page )
 
+def runMDCalc( name, code, runner, params ) :
+    # Copy all the input needed for the MD calculation
+    shutil.copytree("tests/" + code + "/input", "tests/" + code + "/" + name ) 
+    # Change to the directory to run the calculation
+    with cd("tests/" + code + "/" + name ) :
+       # Output the plumed file  
+       of = open("plumed.dat","w+")
+       of.write(params["plumed"])
+       of.close() 
+       # Now run the MD calculation
+       runner.runMD( params )
+    # Make a zip archive that contains the input and output
+    shutil.make_archive("tests/" + code + "/" + name, 'zip', "tests/" + code + "/" + name )
+
 def runTests(code,version,runner) :
    # Read in the information on the tests that should be run for this code
    stram=open("tests/" + code + "/info.yml", "r")
    info=yaml.load(stram,Loader=yaml.BaseLoader)["tests"]
    stram.close()
 
-   fname = "testout.md";
+   fname, usestable = "testout.md", version=="stable"
    if version=="master" : fname = "testout_" + version + ".md"
    elif version!="stable" : ValueError("version should be master or stable")
 
@@ -66,11 +91,15 @@ def runTests(code,version,runner) :
    of.write("the " + version + " version of PLUMED is working correctly.\n\n") 
    if info["virial"]=="no" : of.write("WARNING: " + code + " does not pass the virial to PLUMED and it is thus not possible to run NPT simulations with this code\n\n")
 
+   params = runner.setParams()
+   params["version"] = version
+   params["stable_version"] = usestable
    if info["positions"]=="yes" or info["timestep"]=="yes" or info["mass"]=="yes" or info["charge"]=="yes" : 
-      plumed_inpt = "DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz\n"
-      if info["mass"]=="yes" or info["charge"]=="yes" : plumed_inpt = plumed_inpt + "DUMPMASSCHARGE FILE=mq_plumed\n"
-      if info["timestep"]=="yes" : plumed_inpt = plumed_inpt + "t1: TIME\nPRINT ARG=t1 FILE=colvar\n"
-      # runner.runCode( plumed_inpt )
+      params["plumed"] = "DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz\n"
+      if info["mass"]=="yes" or info["charge"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed\n"
+      if info["timestep"]=="yes" : params["plumed"] = params["plumed"] + "t1: TIME\nPRINT ARG=t1 FILE=colvar\n"
+      params["nsteps"] = 10
+      runMDCalc( "basic", code, runner, params )
   
    val1, val2 = 0.1, 0.1  
    of.write("| Description of test | Status | \n")
