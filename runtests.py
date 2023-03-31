@@ -161,7 +161,7 @@ def getBadge( sucess, filen, code, version ) :
    return badge + ')](tests/' + code + '/' + filen + '_' + version + '.html)'
 
 def writeReportPage( filen, code, version, md_fail, zipfiles, description, ref, data ) :
-   of = open("tests/" + code + "/" + filen + "_" + version + ".md")
+   of = open("tests/" + code + "/" + filen + "_" + version + ".md", "w+" )
    of.write( description + "\n")
    of.write("------------------\n\n")
    if len(zipfiles)==1 : 
