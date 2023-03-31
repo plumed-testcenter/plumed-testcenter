@@ -131,7 +131,8 @@ def runTests(code,version,runner) :
       writeReportPage( "charge", code, version, basic_md_failed, ["basic"], "Charges", codepos, plumedpos ) 
       of.write("| [MD code charges passed correctly](../../pages/mass_charge.html) | " + getBadge( check( basic_md_failed, md_charges, pl_charges ), "charge", code, version) + " | \n")
    if info["forces"]=="yes" :
-      of.write("| [PLUMED forces passed correctly](../../pages/forces.html) | " + getBadge( check( val1, val2 ), "forces", code, version) + " | \n")
+      md_failed = True
+      of.write("| [PLUMED forces passed correctly](../../pages/forces.html) | " + getBadge( check( md_failed, val1, val2 ), "forces", code, version) + " | \n")
    if info["virial"]=="yes" :
       md_failed = True
       of.write("| [PLUMED virial passed correctly](../../pages/virial.html) | " + getBadge( check( md_failed, val1, val2 ), "virial", code, version) + " | \n")
