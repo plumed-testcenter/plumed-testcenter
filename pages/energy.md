@@ -9,9 +9,12 @@ e: ENERGY
 PRINT ARG=e FILE=colvar
 ```
 
-The python function `checkEnergy` that you can read in the file `test.py` then checks whether the potential energy that PLUMED has received is the same 
-as the potential energy in the MD code.  
+We can then also output the energy from the MD code and check this matches the value output by PLUMED.  We ran a short trajectory to 
+test that the energy is passed correctly.
 
-Notice that the command above outputs energies in kJ/mol and that many MD codes will output energies in a different unit.  If you are writing tests
-you should thus ensure that energies output by the MD code are converted into kJ/mol in the `getEnergy` functions that you write.  
-In other words all unit appropriate conversions must be done _before_ checks against the PLUMED energy.
+# Trajectory
+
+# Results
+
+The table below contains the energies that were output by PLUMED and the energies that were ouptut by the Md code.  If the PLUMED interface is 
+working correctly these two sets of numbers should be identical.

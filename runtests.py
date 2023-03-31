@@ -110,41 +110,41 @@ def runTests(code,version,runner) :
       codepos = 0.1 # runner.getPositions()
       plumedpos = 0.1 # io.read("tests/" + code + "/plumed.xyz")
       writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], "Number of atoms", codepos, plumedpos ) 
-      of.write("| [MD code number of atoms passed correctly](../../pages/positions.html) | " + getBadge( check(basic_md_failed, codepos, plumedpos), "natoms", code, version) + "| \n") 
-      writeReportPage( "pos", code, version, basic_md_failed, ["basic"], "Positions", codepos, plumedpos )
-      of.write("| [MD code positions passed correctly](../../pages/positions.html) | " + getBadge( check(basic_md_failed, codepos, plumedpos), "pos", code, version) + "| \n")
+      of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "natoms", code, version) + "| \n") 
+      writeReportPage( "positions", code, version, basic_md_failed, ["basic"], "Positions", codepos, plumedpos )
+      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "pos", code, version) + "| \n")
       writeReportPage( "cell", code, version, basic_md_failed, ["basic"], "Cell vectors", codepos, plumedpos )
-      of.write("| [MD code cell vectors passed correctly](../../pages/positions.html) | " + getBadge( check(basic_md_failed, codepos, plumedpos), "cell", code, version) + " | \n")
+      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "cell", code, version) + " | \n")
    if info["timestep"]=="yes" :
       md_tstep = 0.1 # runner.getTimeStep()
       plumed_times = 0.1 #np.loadtxt("tests/" + code + "/colvar")[0]
       writeReportPage( "timestep", code, version, basic_md_failed, ["basic"], "Timestep", codepos, plumedpos )
-      of.write("| [MD timestep passed correctly](../../pages/timestep.html) | " + getBadge( checkTimestepMatch(basic_md_failed, md_tstep,plumed_times), "timestep", code, version) + " | \n")
+      of.write("| MD timestep passed correctly | " + getBadge( checkTimestepMatch(basic_md_failed, md_tstep,plumed_times), "timestep", code, version) + " | \n")
    if info["mass"]=="yes" : 
       md_masses = 0.1 # runner.getMasses()
       pl_masses = 0.1 # np.loadtxt("tests/" + code + "/mq_plumed")[1]
       writeReportPage( "mass", code, version, basic_md_failed, ["basic"], "Masses", codepos, plumedpos ) 
-      of.write("| [MD code masses passed correctly](../../pages/mass_charge.html) | " + getBadge( check( basic_md_failed, md_masses, pl_masses ), "mass", code, version) + " | \n")
+      of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, md_masses, pl_masses ), "mass", code, version) + " | \n")
    if info["charge"]=="yes" :
       md_charges = 0.1 # runner.getCharges()
       pl_charges = 0.1 # np.loadtxt("tests/" + code + "/mq_plumed")[2]  
       writeReportPage( "charge", code, version, basic_md_failed, ["basic"], "Charges", codepos, plumedpos ) 
-      of.write("| [MD code charges passed correctly](../../pages/mass_charge.html) | " + getBadge( check( basic_md_failed, md_charges, pl_charges ), "charge", code, version) + " | \n")
+      of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, md_charges, pl_charges ), "charge", code, version) + " | \n")
    if info["forces"]=="yes" :
       md_failed = True
-      of.write("| [PLUMED forces passed correctly](../../pages/forces.html) | " + getBadge( check( md_failed, val1, val2 ), "forces", code, version) + " | \n")
+      of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2 ), "forces", code, version) + " | \n")
    if info["virial"]=="yes" :
       md_failed = True
-      of.write("| [PLUMED virial passed correctly](../../pages/virial.html) | " + getBadge( check( md_failed, val1, val2 ), "virial", code, version) + " | \n")
+      of.write("| PLUMED virial passed correctly | " + getBadge( check( md_failed, val1, val2 ), "virial", code, version) + " | \n")
    if info["energy"]=="yes" :
       md_failed = True 
-      of.write("| [MD code potential energy passed correctly](../../pages/energy.html) | " + getBadge( check( md_failed, val1, val2 ), "energy", code, version) + " | \n") 
+      of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "energy", code, version) + " | \n") 
       if info["forces"]=="yes" :
          md_failed = True
-         of.write("| [PLUMED forces on potential energy passed correctly](../../pages/engforce.html) | " + getBadge( check( md_failed, val1, val2 ), "engforce", code, version) + " | \n") 
+         of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engforce", code, version) + " | \n") 
       if info["virial"]=="yes" :
          md_failed = True 
-         of.write("| [PLUMED contribution to virial due to force on potential energy passed correctly](../../pages/engforce.html) | " + getBadge( check( md_failed, val1, val2 ), "engvir", code, version) + " | \n") 
+         of.write("| PLUMED contribution to virial due to force on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engvir", code, version) + " | \n") 
    of.close()
    # Read output file to get status
    ifn, of = open("tests/" + code + "/" + fname, "r"), open("tests/" + code + "/info.yml", "a")
@@ -159,22 +159,29 @@ def getBadge( sucess, filen, code, version ) :
    badge = '[![tested on ' + version + '](https://img.shields.io/badge/' + version + '-'
    if sucess : badge = badge + 'passing-green.svg'
    else : badge = badge + 'failed-red.svg'
-   return badge + ')](tests/' + code + '/' + filen + '_' + version + '.html)'
+   return badge + ')](' + filen + '_' + version + '.html)'
 
 def writeReportPage( filen, code, version, md_fail, zipfiles, description, ref, data ) :
+   # Read in the file
+   f = open( "pages/" + filen + ".md", "r" )
+   inp = f.read()
+   f.close()
+   # Now output the file 
    of = open("tests/" + code + "/" + filen + "_" + version + ".md", "w+" )
-   of.write( description + "\n")
-   of.write("------------------\n\n")
-   if len(zipfiles)==1 : 
-       of.write("Input and output files for the test calculation are available in this [zip archive](" + zipfiles[0] + "_" + version + ".zip) \n\n")
-   elif len(zipfiles)==2 : 
-       of.write("This test involved checking that two different calculations gave equivalent results \n")
-       of.write("Input and output files for the first calculation are available in this [zip archive](" + zipfiles[0] + "_" + version + ".zip) \n")
-       of.write("Input and output files for the second calculation are available in this [zip archive](" + zipfiles[1] + "_" + version + ".zip) \n\n")
-
-   if md_fail : of.write("The calculation was not sucessful and no data was generated for comparison\n")
-   else :
-      of.write("If the calculations run correctly the data in the left hand columns of the table should be the same as the data in the right columns\n")
+   for line in inp.splitlines() :
+       if "Trajectory" in line and "#" in line : 
+           if len(zipfiles)!=1 : ValueError("wrong number of trajectories")
+           of.write(line + "\n")
+           of.write("Input and output files for the test calculation are available in this [zip archive](" + zipfiles[0] + "_" + version + ".zip) \n\n")
+       elif "Trajectories" in line and "#" in line :
+           if len(zipfiles)!=2 : ValueError("wrong number of trajectories")
+           of.write(line + "\n")
+           of.write("Input and output files for the first calculation described above are available in this [zip archive](" + zipfiles[0] + "_" + version + ".zip) \n")
+           of.write("Input and output files for the second calculation described above are available in this [zip archive](" + zipfiles[1] + "_" + version + ".zip) \n\n") 
+       elif "Results" in line and "#" in line and md_fail :
+           of.write(line + "\n")
+           of.write("Calculations were not sucessful and no data was generated for comparison\n")  
+       else : of.write(line + "\n")
    of.close()
 
 def check( md_failed, val1, val2 ) :
@@ -204,6 +211,8 @@ if __name__ == "__main__" :
 
    # Build all the pages that describe the tests for this code
    buildTestPages( "tests/" + code )
+   # Copy the engforce file 
+   shutil.copy("pages/engforce.md","pages/engvir.md")
    # Build the default test pages
    buildTestPages( "pages" )
    # Create an __init__.py module for the desired code

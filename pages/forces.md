@@ -19,5 +19,9 @@ dd: DISTANCE ATOMS=1,2
 PRINT ARG=dd FILE=mdcode_restraint FMT=%8.4f
 ```
 
-The test passes if the time series for the distance in the file `plumed_restraint` is the same as the time series in the file
-`mdcode_restraint`.
+# Trajectories
+
+# Results
+
+The table below contains the PLUMED outputs from the two calculations described above.  
+If the PLUMED interface is working correctly these two sets of numbers should be identical.

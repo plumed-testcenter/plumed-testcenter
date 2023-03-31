@@ -24,6 +24,12 @@ PRINT ARG=e FILE=energy2
 RESTRAINT AT=0.0 ARG=e SLOPE=0.1
 ```
 
-When forces are passed correctly the time series of the energies from these two calculations should be identical.
+When forces are passed correctly the time series of the energies from these two calculations should be identical. An NPT version of this calculation 
+is performed as well as an NVT calculation if the virial is passed to PLUMED.
 
-Notice, finally, that similar tests are performed for a simulations that are run at constant volume and at constant pressure.
+# Trajectories
+
+# Results
+
+The table below contains the PLUMED outputs from the two calculations described above.
+If the PLUMED interface is working correctly these two sets of numbers should be identical.

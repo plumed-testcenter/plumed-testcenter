@@ -26,3 +26,10 @@ PRINT ARG=v FILE=volume2
 The PLUMED restraint in this second calculation applies a negative pressure of 1000bar, which should compensate the fact that the 
 second calculation was run at higher pressure.  The time series for the volumes that are output by the files `volume` and `volume2`
 above should thus be close to identicial. 
+
+# Trajectories
+
+# Results
+
+The table below contains the PLUMED outputs from the two calculations described above.
+If the PLUMED interface is working correctly these two sets of numbers should be identical.
