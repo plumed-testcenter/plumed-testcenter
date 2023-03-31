@@ -181,7 +181,8 @@ def check( md_failed, val1, val2 ) :
    if np.random.uniform(0,1)<0.5 : return True
    return False
 
-def checkTimestepMatch( val1, val2 ) :
+def checkTimestepMatch( md_failed, val1, val2 ) :
+   if md_failed : return False
    return True
 
 if __name__ == "__main__" :
