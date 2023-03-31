@@ -35,3 +35,4 @@ class mdcode :
        with open("stdout","w") as stdout:
         with open("stderr","w") as stderr:
            plumed_out = subprocess.run(cmd, text=True, input=inp, stdout=stdout, stderr=stderr )
+       return plumed_out.returncode

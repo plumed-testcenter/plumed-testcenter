@@ -38,3 +38,4 @@ class mdcode :
        of.write("K_POINTS {automatic} \n")
        of.write(" 1 1 1 0 0 0 \n")
        of.close()
+       return False

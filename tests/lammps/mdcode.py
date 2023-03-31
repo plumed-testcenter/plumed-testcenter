@@ -44,4 +44,4 @@ class mdcode :
        of.write("dump            mq all custom 200 mq_lammps id mass q\n")
        of.write("run             " + str(mdparams["nsteps"]) + "\n")
        of.close()
-
+       return False
