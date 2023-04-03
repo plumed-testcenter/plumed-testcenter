@@ -67,6 +67,7 @@ jobs:
         pip install numpy
         pip install nbformat
         pip install PlumedToHTML
+        pip install MDAnalysis
         git clone --bare https://github.com/plumed/plumed2.git
         sudo ln -s ccache /usr/local/bin/mpic++
         export PATH=/usr/lib/ccache:${PATH}
