@@ -45,5 +45,5 @@ class mdcode :
        # Now run the calculation using subprocess
        with open("stdout","w") as stdout:
         with open("stderr","w") as stderr:
-           plumed_out = subprocess.run([executible, "-plumed"], text=True, input=inp, stdout=stdout, stderr=stderr )
+           out = subprocess.run([executible, "-plumed"], text=True, input=inp, stdout=stdout, stderr=stderr )
        return out.returncode
