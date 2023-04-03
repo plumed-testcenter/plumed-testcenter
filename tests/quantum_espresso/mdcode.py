@@ -1,3 +1,4 @@
+import numpy as np
 import subprocess
 
 class mdcode :
@@ -47,3 +48,6 @@ class mdcode :
         with open("stderr","w") as stderr:
            out = subprocess.run([executible, "-plumed"], text=True, input=inp, stdout=stdout, stderr=stderr )
        return out.returncode
+
+   def getTimestep( self ) :
+       return 0.005*(6.62607015E-34/2*np.pi/4.3597447222071E-18)*1E12

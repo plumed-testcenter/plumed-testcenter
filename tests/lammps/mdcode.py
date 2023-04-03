@@ -53,3 +53,6 @@ class mdcode :
         with open("stderr","w") as stderr:
           out = subprocess.run([executible], text=True, input=inp, stdout=stdout, stderr=stderr )
        return out.returncode
+
+   def getTimestep( self ) :
+       return 0.002

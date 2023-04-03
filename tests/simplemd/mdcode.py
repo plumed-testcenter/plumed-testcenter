@@ -36,3 +36,6 @@ class mdcode :
         with open("stderr","w") as stderr:
            plumed_out = subprocess.run(cmd, text=True, input=inp, stdout=stdout, stderr=stderr )
        return plumed_out.returncode
+
+   def getTimestep( self ) :
+       return 0.005

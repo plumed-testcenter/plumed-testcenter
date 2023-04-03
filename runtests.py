@@ -116,10 +116,10 @@ def runTests(code,version,runner) :
       writeReportPage( "cell", code, version, basic_md_failed, ["basic"], "Cell vectors", codepos, plumedpos )
       of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "cell", code, version) + " | \n")
    if info["timestep"]=="yes" :
-      md_tstep = 0.1 # runner.getTimeStep()
-      plumed_times = 0.1 #np.loadtxt("tests/" + code + "/colvar")[0]
-      writeReportPage( "timestep", code, version, basic_md_failed, ["basic"], "Timestep", codepos, plumedpos )
-      of.write("| MD timestep passed correctly | " + getBadge( checkTimestepMatch(basic_md_failed, md_tstep,plumed_times), "timestep", code, version) + " | \n")
+      md_tstep = runner.getTimestep()
+      plumedtimes = np.loadtxt("tests/" + code + "/basic_" + version + "/colvar")[:,1]
+      writeReportPage( "timestep", code, version, basic_md_failed, ["basic"], "Timestep", md_tstep, plumedtimes[1]-plumedtimes[0] )
+      of.write("| MD timestep passed correctly | " + getBadge( check(basic_md_failed, md_tstep, plumedtimes[1]-plumedtimes[0]), "timestep", code, version) + " | \n")
    if info["mass"]=="yes" : 
       md_masses = 0.1 # runner.getMasses()
       pl_masses = 0.1 # np.loadtxt("tests/" + code + "/mq_plumed")[1]
@@ -182,16 +182,21 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, description, ref, 
            of.write(line + "\n")
            of.write("Calculations were not sucessful and no data was generated for comparison\n")  
        else : of.write(line + "\n")
+   if not md_fail and hasattr(data, "__len__") : 
+      if len(zipfiles)==1 : of.write("\n| PLUMED output | MD code output | \n")
+      else : of.write("| First result | Second result | \n")
+      of.write("|:-------------|:--------------| \n")
+      for d in range(len(ref)) : of.write("|" + str(ref[i]) + " | " + str(data[i]) + " | \n")
+   elif not md_fail : 
+      if len(zipfiles)==1 : of.write("\n| PLUMED output | MD code output | \n")
+      else : of.write("| First result | Second result | \n")
+      of.write("|:-------------|:--------------| \n")
+      of.write("| " + str(ref) + " | " + str(data) + " | \n")
    of.close()
 
 def check( md_failed, val1, val2 ) :
    if md_failed : return False
-   if np.random.uniform(0,1)<0.5 : return True
-   return False
-
-def checkTimestepMatch( md_failed, val1, val2 ) :
-   if md_failed : return False
-   return True
+   return np.array_equal( val1, val2 )
 
 if __name__ == "__main__" :
    code, version, argv = "", "", sys.argv[1:]
