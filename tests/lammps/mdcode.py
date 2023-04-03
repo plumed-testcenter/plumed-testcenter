@@ -13,35 +13,43 @@ class mdcode :
        return params
   
    def runMD( self, mdparams ) :
+       inp = "units           real\n"
+       inp = inp + "atom_style      full\n"
+       inp = inp + "pair_style      lj/charmm/coul/long 8.0 10.0 10.0\n"
+       inp = inp + "bond_style      harmonic\n"
+       inp = inp + "angle_style     charmm\n"
+       inp = inp + "dihedral_style  charmm\n"
+       inp = inp + "improper_style  harmonic\n"
+       inp = inp + "kspace_style    pppm 0.0001\n"
+       inp = inp + "read_data       data.peptide\n"
+       inp = inp + "neighbor        2.0 bin\n"
+       inp = inp + "neigh_modify    delay 5\n"
+       inp = inp + "timestep        " + str(mdparams["tstep"]) + "\n"
+       inp = inp + "group           peptide type <= 12\n"
+       inp = inp + "group           one id 2 4 5 6\n"
+       inp = inp + "group           two id 80 82 83 84\n"
+       inp = inp + "group           ref id 37\n"
+       inp = inp + "group           colvar union one two ref\n"
+       inp = inp + "fix             2 all plumed plumedfile plumed.dat outfile p.log\n"
+       inp = inp + "fix             1 all nvt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["friction"]) + " tchain 1\n"
+       inp = inp + "fix             2a ref setforce 0.0 0.0 0.0\n"
+       inp = inp + "fix             4 all shake 0.0001 10 100 b 4 6 8 10 12 14 18 a 31\n"
+       inp = inp + "thermo_style    custom step temp etotal pe ke epair ebond f_2\n"
+       inp = inp + "thermo          10\n"
+       inp = inp + "dump            dd all xyz 10 lammps.xyz\n"
+       inp = inp + "variable        step equal step\n"
+       inp = inp + "variable        pe equal pe\n"
+       inp = inp + "fix             5 all print 1 \"$(v_step) $(v_pe)\" file lammps_energy\n"
+       inp = inp + "dump            mq all custom 200 mq_lammps id mass q\n"
+       inp = inp + "run             " + str(mdparams["nsteps"]) + "\n"
        of = open("in.peptide-plumed","w+")
-       of.write("units           real\n")
-       of.write("atom_style      full\n")
-       of.write("pair_style      lj/charmm/coul/long 8.0 10.0 10.0\n")
-       of.write("bond_style      harmonic\n")
-       of.write("angle_style     charmm\n")
-       of.write("dihedral_style  charmm\n")
-       of.write("improper_style  harmonic\n")
-       of.write("kspace_style    pppm 0.0001\n")
-       of.write("read_data       data.peptide\n")
-       of.write("neighbor        2.0 bin\n")
-       of.write("neigh_modify    delay 5\n")
-       of.write("timestep        " + str(mdparams["tstep"]) + "\n")
-       of.write("group           peptide type <= 12\n")
-       of.write("group           one id 2 4 5 6\n")
-       of.write("group           two id 80 82 83 84\n")
-       of.write("group           ref id 37\n")
-       of.write("group           colvar union one two ref\n")
-       of.write("fix             2 all plumed plumedfile plumed.dat outfile p.log\n")
-       of.write("fix             1 all nvt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["friction"]) + " tchain 1\n")
-       of.write("fix             2a ref setforce 0.0 0.0 0.0\n")
-       of.write("fix             4 all shake 0.0001 10 100 b 4 6 8 10 12 14 18 a 31\n")
-       of.write("thermo_style    custom step temp etotal pe ke epair ebond f_2\n")
-       of.write("thermo          10\n")
-       of.write("dump            dd all xyz 10 lammps.xyz\n")
-       of.write("variable        step equal step\n")
-       of.write("variable        pe equal pe\n")
-       of.write("fix             5 all print 1 \"$(v_step) $(v_pe)\" file lammps_energy\n")
-       of.write("dump            mq all custom 200 mq_lammps id mass q\n")
-       of.write("run             " + str(mdparams["nsteps"]) + "\n")
+       of.write(inp)
        of.close()
-       return False
+       # Work out the name of the lammps executable
+       executible = "lammps_" + mdparams["version"] 
+       if mdparams["stable_version"] : executible = "lammps"
+       # Now run the calculation using subprocess
+       with open("stdout","w") as stdout:
+        with open("stderr","w") as stderr:
+          out = subprocess.run([executible], text=True, input=inp, stdout=stdout, stderr=stderr )
+       return out.returncode
