@@ -1,3 +1,5 @@
+import numpy as np
+import MDAnalysis as mda
 import subprocess
 
 class mdcode :
@@ -36,7 +38,7 @@ class mdcode :
        inp = inp + "fix             4 all shake 0.0001 10 100 b 4 6 8 10 12 14 18 a 31\n"
        inp = inp + "thermo_style    custom step temp etotal pe ke epair ebond f_2\n"
        inp = inp + "thermo          10\n"
-       inp = inp + "dump            dd all xyz 10 lammps.xyz\n"
+       inp = inp + "dump            dd all xyz 1 lammps.xyz\n"
        inp = inp + "variable        step equal step\n"
        inp = inp + "variable        pe equal pe\n"
        inp = inp + "fix             5 all print 1 \"$(v_step) $(v_pe)\" file lammps_energy\n"
@@ -56,3 +58,15 @@ class mdcode :
 
    def getTimestep( self ) :
        return 0.002
+
+   def getNumberOfAtoms( self, rundir ) :
+       natoms, traj = [], mda.coordinates.XYZ.XYZReader( rundir + "/lammps.xyz")
+       for frame in traj.trajectory : natoms.append( frame.positions.shape[0] )
+       return natoms
+
+   def getPositions( self, rundir ) :
+       first, traj = True, mda.coordinates.XYZ.XYZReader( rundir + "/lammps.xyz")
+       for frame in traj.trajectory :
+          if first : pos, first = frame.positions, False
+          else : pos = np.concatenate( (pos, frame.positions), axis=0 )
+       return pos

@@ -6,6 +6,7 @@ import shutil
 import subprocess
 import numpy as np
 import importlib
+import MDAnalysis as mda
 from datetime import date
 from contextlib import contextmanager
 from PlumedToHTML import test_plumed, get_html
@@ -107,14 +108,23 @@ def runTests(code,version,runner) :
    of.write("| Description of test | Status | \n")
    of.write("|:--------------------|:------:| \n")
    if info["positions"]=="yes" :
-      codepos = 0.1 # runner.getPositions()
-      plumedpos = 0.1 # io.read("tests/" + code + "/plumed.xyz")
-      writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], "Number of atoms", codepos, plumedpos ) 
-      of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "natoms", code, version) + "| \n") 
+      # Get the trajectory that was output by PLUMED
+      plumedtraj = mda.coordinates.XYZ.XYZReader("tests/" + code + "/basic_" + version + "/plumed.xyz")
+      # Get the number of atoms in each frame from plumed trajectory
+      plumednatoms, codenatoms = [], runner.getNumberOfAtoms( "tests/" + code + "/basic_" + version )
+      for frame in plumedtraj.trajectory : plumednatoms.append( frame.positions.shape[0] )
+      writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], "Number of atoms", codenatoms, plumednatoms ) 
+      of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, codenatoms, plumednatoms), "natoms", code, version) + "| \n") 
+      # Concatenate all the trajectory frames
+      codepos, first = runner.getPositions( "tests/" + code + "/basic_" + version ), True 
+      for frame in plumedtraj.trajectory :
+          if first : plumedpos, first = frame.positions, False
+          else : plumedpos = np.concatenate( (plumedpos, frame.positions), axis=0 )
       writeReportPage( "positions", code, version, basic_md_failed, ["basic"], "Positions", codepos, plumedpos )
       of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "pos", code, version) + "| \n")
-      writeReportPage( "cell", code, version, basic_md_failed, ["basic"], "Cell vectors", codepos, plumedpos )
-      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "cell", code, version) + " | \n")
+      codecell, plumedcell = 0.1, 0.1
+      writeReportPage( "cell", code, version, basic_md_failed, ["basic"], "Cell vectors", codecell, plumedcell )
+      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codecell, plumedcell), "cell", code, version) + " | \n")
    if info["timestep"]=="yes" :
       md_tstep = runner.getTimestep()
       plumedtimes = np.loadtxt("tests/" + code + "/basic_" + version + "/colvar")[:,1]
@@ -186,7 +196,7 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, description, ref, 
       if len(zipfiles)==1 : of.write("\n| PLUMED output | MD code output | \n")
       else : of.write("| First result | Second result | \n")
       of.write("|:-------------|:--------------| \n")
-      for d in range(len(ref)) : of.write("|" + str(ref[i]) + " | " + str(data[i]) + " | \n")
+      for i in range(len(ref)) : of.write("|" + str(ref[i]) + " | " + str(data[i]) + " | \n")
    elif not md_fail : 
       if len(zipfiles)==1 : of.write("\n| PLUMED output | MD code output | \n")
       else : of.write("| First result | Second result | \n")

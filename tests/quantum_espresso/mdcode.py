@@ -51,3 +51,11 @@ class mdcode :
 
    def getTimestep( self ) :
        return 0.005*(6.62607015E-34/2*np.pi/4.3597447222071E-18)*1E12
+
+   def getNumberOfAtoms( self, rundir ) :
+       natoms = []
+       return natoms
+       
+   def getPositions( self, rundir ) :
+       pos = []
+       return pos

@@ -1,3 +1,5 @@
+import numpy as np
+import MDAnalysis as mda
 import subprocess
 
 class mdcode :
@@ -39,3 +41,15 @@ class mdcode :
 
    def getTimestep( self ) :
        return 0.005
+
+   def getNumberOfAtoms( self, rundir ) :
+       natoms, traj = [], mda.coordinates.XYZ.XYZReader( rundir + "/trajectory.xyz") 
+       for frame in traj.trajectory : natoms.append( frame.positions.shape[0] )
+       return natoms 
+
+   def getPositions( self, rundir ) :
+       first, traj = True, mda.coordinates.XYZ.XYZReader( rundir + "/trajectory.xyz") 
+       for frame in traj.trajectory :
+          if first : pos, first = frame.positions, False
+          else : pos = np.concatenate( (pos, frame.positions), axis=0 )
+       return pos
