@@ -134,7 +134,7 @@ def runTests(code,version,runner) :
       if not basic_md_failed :
          plumedtimes = np.loadtxt("tests/" + code + "/basic_" + version + "/colvar")[:,1]
          md_tstep, plumed_tstep = runner.getTimestep(), plumedtimes[1]-plumedtimes[0]
-         for i in range(1,len(plumedtimes) : 
+         for i in range(1,len(plumedtimes)) : 
              if plumedtimes[i]-plumedtimes[i-1]!=plumed_tstep : ValueError("Timestep should be the same for all MD steps")
       writeReportPage( "timestep", code, version, basic_md_failed, ["basic"], "Timestep", md_tstep, plumed_tstep )
       of.write("| MD timestep passed correctly | " + getBadge( check(basic_md_failed, md_tstep, plumed_tstep), "timestep", code, version) + " | \n")
