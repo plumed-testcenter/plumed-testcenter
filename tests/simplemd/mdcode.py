@@ -54,6 +54,18 @@ class mdcode :
           else : pos = np.concatenate( (pos, frame.positions), axis=0 )
        return pos
 
+   def getCell( self, rundir ) :
+       nframes = len( self.getNumberOfAtoms( rundir ) )
+       cell = np.zeros([nframes,9])
+       f = open( rundir + "/trajectory.xyz", "r" )
+       lines = f.read().splitlines()
+       f.close()
+       natoms = int( lines[0] )
+       for i in range(nframes) : 
+           cellstr = lines[i*(2+natoms)+1].split() 
+           cell[i,0], cell[i,4], cell[i,8] = float(cellstr[0]), float(cellstr[1]), float(cellstr[2])
+       return cell
+
    def getMasses( self, rundir ) :
        natoms = self.getNumberOfAtoms( rundir )
        return np.ones( natoms[0] )

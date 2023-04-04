@@ -60,6 +60,9 @@ class mdcode :
        pos = []
        return pos
 
+   def getCell( self, rundir ) :
+       return []
+
    def getMasses( self, rundir ) :
        return []
 

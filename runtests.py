@@ -97,7 +97,8 @@ def runTests(code,version,runner) :
    params["version"] = version
    params["stable_version"], basic_md_failed = usestable, True
    if info["positions"]=="yes" or info["timestep"]=="yes" or info["mass"]=="yes" or info["charge"]=="yes" : 
-      params["plumed"] = "DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz\n"
+      params["plumed"] = "DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz PRECISION=7\n"
+      params["plumed"] = params["plumed"] + "c: CELL \n PRINT ARG=c.* FILE=cell_data\n"
       if info["mass"]=="yes" and info["charge"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed\n"
       elif info["mass"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed ONLY_MASSES\n"
       if info["timestep"]=="yes" : params["plumed"] = params["plumed"] + "t1: TIME\nPRINT ARG=t1 FILE=colvar\n"
@@ -108,7 +109,7 @@ def runTests(code,version,runner) :
    of.write("| Description of test | Status | \n")
    of.write("|:--------------------|:------:| \n")
    if info["positions"]=="yes" :
-      plumednatoms, codenatoms, codepos, plumedpos = [], [], [], []
+      plumednatoms, codenatoms, codepos, plumedpos, codecell, plumedcell = [], [], [], [], [], []
       if not basic_md_failed :
          # Get the trajectory that was output by PLUMED
          plumedtraj = mda.coordinates.XYZ.XYZReader("tests/" + code + "/basic_" + version + "/plumed.xyz")
@@ -120,13 +121,14 @@ def runTests(code,version,runner) :
          for frame in plumedtraj.trajectory :
              if first : plumedpos, first = frame.positions, False
              else : plumedpos = np.concatenate( (plumedpos, frame.positions), axis=0 )
+         codecell, plumedcell = runner.getCell( "tests/" + code + "/basic_" + version ), np.loadtxt("tests/" + code + "/basic_" + version + "/cell_data")[:,1:]
+
       # Output results from tests on natoms
       writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], codenatoms, plumednatoms ) 
       of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, codenatoms, plumednatoms), "natoms", code, version) + "| \n") 
       # Output results from tests on positions
       writeReportPage( "positions", code, version, basic_md_failed, ["basic"], codepos, plumedpos )
-      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "pos", code, version) + "| \n")
-      codecell, plumedcell = 0.1, 0.1
+      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "positions", code, version) + "| \n")
       writeReportPage( "cell", code, version, basic_md_failed, ["basic"], codecell, plumedcell )
       of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codecell, plumedcell), "cell", code, version) + " | \n")
    if info["timestep"]=="yes" :

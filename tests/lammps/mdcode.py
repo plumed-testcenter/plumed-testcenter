@@ -71,6 +71,9 @@ class mdcode :
           else : pos = np.concatenate( (pos, frame.positions), axis=0 )
        return pos
 
+   def getCell( self, rundir ) :
+       return []
+
    def getMasses( self, rundir ) :
        return np.loadtxt( rundir + "/mq_lammps")[:,2]
 
