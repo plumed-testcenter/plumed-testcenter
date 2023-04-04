@@ -55,9 +55,9 @@ class mdcode :
        return pos
 
    def getMasses( self, rundir ) :
-       natoms = getNumberOfAtoms( rundir )
+       natoms = self.getNumberOfAtoms( rundir )
        return np.ones( natoms[0] )
 
    def getCharges( self, rundir ) :
-       natoms = getNumberOfAtoms( rundir )
+       natoms = self.getNumberOfAtoms( rundir )
        return np.zeros( natoms[0] )
