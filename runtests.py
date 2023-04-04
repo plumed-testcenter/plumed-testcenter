@@ -136,7 +136,7 @@ def runTests(code,version,runner) :
          md_tstep, plumed_tstep = runner.getTimestep(), plumedtimes[1]-plumedtimes[0]
          for i in range(1,len(plumedtimes)) : 
              if plumedtimes[i]-plumedtimes[i-1]!=plumed_tstep : ValueError("Timestep should be the same for all MD steps")
-      writeReportPage( "timestep", code, version, basic_md_failed, ["basic"], "Timestep", md_tstep, plumed_tstep )
+      writeReportPage( "timestep", code, version, basic_md_failed, ["basic"], md_tstep, plumed_tstep )
       of.write("| MD timestep passed correctly | " + getBadge( check(basic_md_failed, md_tstep, plumed_tstep), "timestep", code, version) + " | \n")
    if info["mass"]=="yes" : 
       md_masses, pl_masses = [], []
