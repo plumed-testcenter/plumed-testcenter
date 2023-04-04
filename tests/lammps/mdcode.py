@@ -76,3 +76,6 @@ class mdcode :
 
    def getCharges( self, rundir ) :
        return np.loadtxt( rundir + "/mq_lammps")[:,3]
+
+   def getEnergy( self, rundir ) :
+      return [] 

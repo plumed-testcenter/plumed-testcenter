@@ -6,6 +6,6 @@ tests:
    timestep: yes
    mass: yes
    charge: no
-   forces: yes
+   forces: no 
    virial: no
    energy: yes

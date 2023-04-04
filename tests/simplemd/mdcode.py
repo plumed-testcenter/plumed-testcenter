@@ -61,3 +61,6 @@ class mdcode :
    def getCharges( self, rundir ) :
        natoms = self.getNumberOfAtoms( rundir )
        return np.zeros( natoms[0] )
+
+   def getEnergy( self, rundir ) :
+       return np.loadtxt( rundir + "/energies.dat" )[:,3]

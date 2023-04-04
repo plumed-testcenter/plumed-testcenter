@@ -65,3 +65,6 @@ class mdcode :
 
    def getCharges( self, rundir ) :
        return [] 
+  
+   def getEnergy( self, rundir ) :
+       return []

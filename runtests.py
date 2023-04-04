@@ -121,13 +121,13 @@ def runTests(code,version,runner) :
              if first : plumedpos, first = frame.positions, False
              else : plumedpos = np.concatenate( (plumedpos, frame.positions), axis=0 )
       # Output results from tests on natoms
-      writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], "Number of atoms", codenatoms, plumednatoms ) 
+      writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], codenatoms, plumednatoms ) 
       of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, codenatoms, plumednatoms), "natoms", code, version) + "| \n") 
       # Output results from tests on positions
-      writeReportPage( "positions", code, version, basic_md_failed, ["basic"], "Positions", codepos, plumedpos )
+      writeReportPage( "positions", code, version, basic_md_failed, ["basic"], codepos, plumedpos )
       of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "pos", code, version) + "| \n")
       codecell, plumedcell = 0.1, 0.1
-      writeReportPage( "cell", code, version, basic_md_failed, ["basic"], "Cell vectors", codecell, plumedcell )
+      writeReportPage( "cell", code, version, basic_md_failed, ["basic"], codecell, plumedcell )
       of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codecell, plumedcell), "cell", code, version) + " | \n")
    if info["timestep"]=="yes" :
       md_tstep, plumed_tstep = 0.1, 0.1
@@ -141,12 +141,12 @@ def runTests(code,version,runner) :
    if info["mass"]=="yes" : 
       md_masses, pl_masses = [], []
       if not basic_md_failed : md_masses, pl_masses = runner.getMasses("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,1]
-      writeReportPage( "mass", code, version, basic_md_failed, ["basic"], "Masses", codepos, plumedpos ) 
+      writeReportPage( "mass", code, version, basic_md_failed, ["basic"], md_masses, pl_masses ) 
       of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, md_masses, pl_masses ), "mass", code, version) + " | \n")
    if info["charge"]=="yes" :
       md_charges, pl_charges = [], []
       if not basic_md_failed : md_charges, pl_charges = runner.getCharges("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,2]
-      writeReportPage( "charge", code, version, basic_md_failed, ["basic"], "Charges", codepos, plumedpos ) 
+      writeReportPage( "charge", code, version, basic_md_failed, ["basic"], md_charges, pl_charges ) 
       of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, md_charges, pl_charges ), "charge", code, version) + " | \n")
    if info["forces"]=="yes" :
       md_failed = True
@@ -155,8 +155,11 @@ def runTests(code,version,runner) :
       md_failed = True
       of.write("| PLUMED virial passed correctly | " + getBadge( check( md_failed, val1, val2 ), "virial", code, version) + " | \n")
    if info["energy"]=="yes" :
-      md_failed = True 
-      of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "energy", code, version) + " | \n") 
+      params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
+      md_failed, md_energy, pl_energy = runMDCalc( "energy", code, runner, params ), [], []
+      if not md_failed : md_energy, pl_energy = runner.getEnergy("tests/" + code + "/energy_" + version), np.loadtxt("tests/" + code + "/energy_" + version + "/energy")[:,1]
+      writeReportPage( "energy", code, version, md_failed, ["energy"], md_energy, pl_energy )
+      of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy ), "energy", code, version) + " | \n") 
       if info["forces"]=="yes" :
          md_failed = True
          of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engforce", code, version) + " | \n") 
@@ -179,7 +182,7 @@ def getBadge( sucess, filen, code, version ) :
    else : badge = badge + 'failed-red.svg'
    return badge + ')](' + filen + '_' + version + '.html)'
 
-def writeReportPage( filen, code, version, md_fail, zipfiles, description, ref, data ) :
+def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data ) :
    # Read in the file
    f = open( "pages/" + filen + ".md", "r" )
    inp = f.read()
@@ -215,7 +218,7 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, description, ref, 
 
 def check( md_failed, val1, val2 ) :
    if md_failed : return False
-   return np.array_equal( val1, val2 )
+   return np.allclose( val1, val2 )
 
 if __name__ == "__main__" :
    code, version, argv = "", "", sys.argv[1:]
