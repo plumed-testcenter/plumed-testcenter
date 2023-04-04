@@ -53,3 +53,11 @@ class mdcode :
           if first : pos, first = frame.positions, False
           else : pos = np.concatenate( (pos, frame.positions), axis=0 )
        return pos
+
+   def getMasses( self, rundir ) :
+       natoms = getNumberOfAtoms( rundir )
+       return np.ones( natoms[0] )
+
+   def getCharges( self, rundir ) :
+       natoms = getNumberOfAtoms( rundir )
+       return np.zeros( natoms[0] )

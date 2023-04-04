@@ -108,36 +108,44 @@ def runTests(code,version,runner) :
    of.write("| Description of test | Status | \n")
    of.write("|:--------------------|:------:| \n")
    if info["positions"]=="yes" :
-      # Get the trajectory that was output by PLUMED
-      plumedtraj = mda.coordinates.XYZ.XYZReader("tests/" + code + "/basic_" + version + "/plumed.xyz")
-      # Get the number of atoms in each frame from plumed trajectory
-      plumednatoms, codenatoms = [], runner.getNumberOfAtoms( "tests/" + code + "/basic_" + version )
-      for frame in plumedtraj.trajectory : plumednatoms.append( frame.positions.shape[0] )
+      plumednatoms, codenatoms, codepos, plumedpos = [], [], [], []
+      if not basic_md_failed :
+         # Get the trajectory that was output by PLUMED
+         plumedtraj = mda.coordinates.XYZ.XYZReader("tests/" + code + "/basic_" + version + "/plumed.xyz")
+         # Get the number of atoms in each frame from plumed trajectory
+         plumednatoms, codenatoms = [], runner.getNumberOfAtoms( "tests/" + code + "/basic_" + version )
+         for frame in plumedtraj.trajectory : plumednatoms.append( frame.positions.shape[0] )
+         # Concatenate all the trajectory frames
+         codepos, first = runner.getPositions( "tests/" + code + "/basic_" + version ), True
+         for frame in plumedtraj.trajectory :
+             if first : plumedpos, first = frame.positions, False
+             else : plumedpos = np.concatenate( (plumedpos, frame.positions), axis=0 )
+      # Output results from tests on natoms
       writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], "Number of atoms", codenatoms, plumednatoms ) 
       of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, codenatoms, plumednatoms), "natoms", code, version) + "| \n") 
-      # Concatenate all the trajectory frames
-      codepos, first = runner.getPositions( "tests/" + code + "/basic_" + version ), True 
-      for frame in plumedtraj.trajectory :
-          if first : plumedpos, first = frame.positions, False
-          else : plumedpos = np.concatenate( (plumedpos, frame.positions), axis=0 )
+      # Output results from tests on positions
       writeReportPage( "positions", code, version, basic_md_failed, ["basic"], "Positions", codepos, plumedpos )
       of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "pos", code, version) + "| \n")
       codecell, plumedcell = 0.1, 0.1
       writeReportPage( "cell", code, version, basic_md_failed, ["basic"], "Cell vectors", codecell, plumedcell )
       of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codecell, plumedcell), "cell", code, version) + " | \n")
    if info["timestep"]=="yes" :
-      md_tstep = runner.getTimestep()
-      plumedtimes = np.loadtxt("tests/" + code + "/basic_" + version + "/colvar")[:,1]
-      writeReportPage( "timestep", code, version, basic_md_failed, ["basic"], "Timestep", md_tstep, plumedtimes[1]-plumedtimes[0] )
-      of.write("| MD timestep passed correctly | " + getBadge( check(basic_md_failed, md_tstep, plumedtimes[1]-plumedtimes[0]), "timestep", code, version) + " | \n")
+      md_tstep, plumed_tstep = 0.1, 0.1
+      if not basic_md_failed :
+         plumedtimes = np.loadtxt("tests/" + code + "/basic_" + version + "/colvar")[:,1]
+         md_tstep, plumed_tstep = runner.getTimestep(), plumedtimes[1]-plumedtimes[0]
+         for i in range(1,len(plumedtimes) : 
+             if plumedtimes[i]-plumedtimes[i-1]!=plumed_tstep : ValueError("Timestep should be the same for all MD steps")
+      writeReportPage( "timestep", code, version, basic_md_failed, ["basic"], "Timestep", md_tstep, plumed_tstep )
+      of.write("| MD timestep passed correctly | " + getBadge( check(basic_md_failed, md_tstep, plumed_tstep), "timestep", code, version) + " | \n")
    if info["mass"]=="yes" : 
-      md_masses = 0.1 # runner.getMasses()
-      pl_masses = 0.1 # np.loadtxt("tests/" + code + "/mq_plumed")[1]
+      md_masses, pl_masses = [], []
+      if not basic_md_failed : md_masses, pl_masses = runner.getMasses("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,1]
       writeReportPage( "mass", code, version, basic_md_failed, ["basic"], "Masses", codepos, plumedpos ) 
       of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, md_masses, pl_masses ), "mass", code, version) + " | \n")
    if info["charge"]=="yes" :
-      md_charges = 0.1 # runner.getCharges()
-      pl_charges = 0.1 # np.loadtxt("tests/" + code + "/mq_plumed")[2]  
+      md_charges, pl_charges = [], []
+      if not basic_md_failed : md_charges, pl_charges = runner.getCharges("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,2]
       writeReportPage( "charge", code, version, basic_md_failed, ["basic"], "Charges", codepos, plumedpos ) 
       of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, md_charges, pl_charges ), "charge", code, version) + " | \n")
    if info["forces"]=="yes" :

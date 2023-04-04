@@ -70,3 +70,9 @@ class mdcode :
           if first : pos, first = frame.positions, False
           else : pos = np.concatenate( (pos, frame.positions), axis=0 )
        return pos
+
+   def getMasses( self, rundir ) :
+       return np.loadtxt( rundir + "/mq_lammps")[:,2]
+
+   def getCharges( self, rundir ) :
+       return np.loadtxt( rundir + "/mq_lammps")[:,3]

@@ -59,3 +59,9 @@ class mdcode :
    def getPositions( self, rundir ) :
        pos = []
        return pos
+
+   def getMasses( self, rundir ) :
+       return []
+
+   def getCharges( self, rundir ) :
+       return [] 
