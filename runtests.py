@@ -154,6 +154,7 @@ def runTests(code,version,runner) :
       # First run a calculation to find the reference distance between atom 1 and 2
       rparams = runner.setParams()
       rparams["nsteps"] = 2
+      rparams["version"], params["stable_version"]  = version, usestable
       rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar FMT=%8.4f"
       refrun, mdrun, plrun = runMDCalc("refres", code, runner, rparams ), True, True
       if not refrun : 
