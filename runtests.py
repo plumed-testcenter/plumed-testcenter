@@ -151,7 +151,27 @@ def runTests(code,version,runner) :
       writeReportPage( "charge", code, version, basic_md_failed, ["basic"], md_charges, pl_charges ) 
       of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, md_charges, pl_charges ), "charge", code, version) + " | \n")
    if info["forces"]=="yes" :
-      md_failed = True
+      # First run a calculation to find the reference distance between atom 1 and 2
+      rparams = runner.setParams()
+      rparams["nsteps"] = 2
+      rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar FMT=%8.4f"
+      refrun, mdrun, plrun = runMDCalc("refres", code, runner, rparams ), True, True
+      if not refrun : 
+         # Get the reference distance betwene the atoms
+         refdist = np.loadtxt("tests/" + code + "/refres_" + version + "/colvar")[0,1]
+         # Run the calculation with the restraint applied by the MD code
+         rparams["nsteps"] = 20
+         rparams["restraint"] = refdist
+         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar FMT=%8.4f"
+         mdrun = runMDCalc("forces1", code, runner, rparams )
+         # Run the calculation with the restraint applied by PLUMED
+         rparams["restraint"] = -10
+         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nRESTRAINT ARG=dd KAPPA=2000 AT=" + str(refdist) + "\nPRINT ARG=dd FILE=plumed_restraint FMT=%8.4f"
+         plrun = runMDCalc("forces2", code, runner, rparams )
+      # And create our reports from the two runs
+      md_failed, val1, val2 = mdrun and plrun, [], [] 
+      if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/forces1_" + version + "/colvar")[:,1], np.loadtxt("tests/" + code + "/forces2_" + version + "/colvar")[:,1]
+      writeReportPage( "forces", code, version, md_failed, ["forces1", "forces2"], val1, val2 )
       of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2 ), "forces", code, version) + " | \n")
    if info["virial"]=="yes" :
       md_failed = True

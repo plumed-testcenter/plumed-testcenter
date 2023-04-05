@@ -28,6 +28,8 @@ class mdcode :
        inp = inp + " &system \n"
        inp = inp + "    ibrav= 2, celldm(1)=10.18, nat=  2, ntyp= 1, \n"
        inp = inp + "    ecutwfc = 8.0, nosym=.true. \n"
+       # Code to deal with restraint 
+       if "restraint" in mdparams and mdparams["restraint"]>0 : inp = inp + "" 
        inp = inp + " / \n"
        inp = inp + " &electrons \n"
        inp = inp + "    conv_thr =  1.0e-8 \n"

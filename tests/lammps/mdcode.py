@@ -35,6 +35,8 @@ class mdcode :
        inp = inp + "fix             2 all plumed plumedfile plumed.dat outfile p.log\n"
        inp = inp + "fix             1 all nvt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["friction"]) + " tchain 1\n"
        inp = inp + "fix             2a ref setforce 0.0 0.0 0.0\n"
+       # Code to deal with restraint 
+       if "restraint" in mdparams and mdparams["restraint"]>0 : inp = inp + "fix 6 all restrain bond 1 2 1000.0 1000.0 " + str(10*params["restraint"]) + "\n"
        inp = inp + "fix             4 all shake 0.0001 10 100 b 4 6 8 10 12 14 18 a 31\n"
        inp = inp + "thermo_style    custom step temp etotal pe ke epair ebond f_2\n"
        inp = inp + "thermo          10\n"
