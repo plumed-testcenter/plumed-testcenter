@@ -8,4 +8,4 @@ tests:
    charge: no
    forces: no 
    virial: no
-   energy: no
+   energy: yes

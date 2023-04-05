@@ -1,7 +1,12 @@
 import numpy as np
+import xml.etree.ElementTree as ET
 import subprocess
 
 class mdcode :
+   def __init__( self ) :
+       self.bohrToNm = 0.0529177249
+       self.RyToKJ = 1312.75
+
    def getName( self ) :
        return "quantum_expresso"
 
@@ -50,24 +55,64 @@ class mdcode :
        return out.returncode
 
    def getTimestep( self ) :
-       return 0.005*(6.62607015E-34/2*np.pi/4.3597447222071E-18)*1E12
+       return 20*(6.62607015E-34/2*np.pi/4.3597447222071E-18)*1E12
 
    def getNumberOfAtoms( self, rundir ) :
-       natoms = []
+       natoms, root = [], ET.parse( rundir + "/pwscf.xml")
+       for step in root.findall("step") :
+           adict = step.find("atomic_structure").attrib
+           natoms.append( int(adict['nat']) )
        return natoms
        
    def getPositions( self, rundir ) :
-       pos = []
+       natoms = self.getNumberOfAtoms( rundir )
+       pos = np.zeros( [sum(natoms), 3] )
+
+       n, root = 0, ET.parse( rundir + "/pwscf.xml")
+       for step in root.findall("step") :
+           struct = step.find("atomic_structure")
+           apos = struct.find("atomic_positions")
+           allatoms = apos.findall("atom")
+           for atom in allatoms : 
+               strpos = atom.text.split()
+               pos[n][0], pos[n][1], pos[n][2] = self.bohrToNm*float(strpos[0]), self.bohrToNm*float(strpos[1]), self.bohrToNm*float(strpos[2])
+               n = n + 1 
        return pos
 
    def getCell( self, rundir ) :
-       return []
+       natoms = self.getNumberOfAtoms( rundir )
+       cell = np.zeros( [len(natoms), 9] )
+       n, root = 0 , ET.parse( rundir + "/pwscf.xml")
+       for step in root.findall("step") :
+           struct = step.find("atomic_structure")
+           cellf = struct.find("cell")
+           astr = cellf.find("a1").text.split()
+           cell[n][0], cell[n][1], cell[n][2] = self.bohrToNm*float(astr[0]), self.bohrToNm*float(astr[1]), self.bohrToNm*float(astr[2]) 
+           astr = cellf.find("a2").text.split()
+           cell[n][3], cell[n][4], cell[n][5] = self.bohrToNm*float(astr[0]), self.bohrToNm*float(astr[1]), self.bohrToNm*float(astr[2])
+           astr = cellf.find("a3").text.split()
+           cell[n][6], cell[n][7], cell[n][8] = self.bohrToNm*float(astr[0]), self.bohrToNm*float(astr[1]), self.bohrToNm*float(astr[2])
+           n = n + 1
+       return cell
 
    def getMasses( self, rundir ) :
-       return []
+       root = ET.parse( rundir + "/pwscf.xml")
+       species, inpt = {}, root.find("input")
+       for spec in inpt.find("atomic_species").findall("species") : 
+           species[spec.attrib["name"]] = float( spec.find("mass").text )
+ 
+       masses = []
+       for atom in inpt.find("atomic_structure").find("atomic_positions").findall("atom") : 
+           masses.append( species[ atom.attrib["name"] ] )
+       return masses
 
    def getCharges( self, rundir ) :
-       return [] 
+       natoms = self.getNumberOfAtoms( rundir )
+       return np.zeros( natoms[0] )
   
    def getEnergy( self, rundir ) :
-       return []
+       energies, root = [], ET.parse( rundir + "/pwscf.xml")
+       for step in root.findall("step") :
+           ebrac = step.find("total_energy")
+           energies.append( self.RyToKJ*float(ebrac.find("etot").text) )
+       return energies

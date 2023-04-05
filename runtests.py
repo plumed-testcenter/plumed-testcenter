@@ -206,7 +206,7 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data ) :
            of.write("Calculations were not sucessful and no data was generated for comparison\n")  
        else : of.write(line + "\n")
    if not md_fail and hasattr(data, "__len__") : 
-      if len(zipfiles)==1 : of.write("\n| PLUMED output | MD code output | \n")
+      if len(zipfiles)==1 : of.write("\n| MD code output | PLUMED output | \n")
       else : of.write("| First result | Second result | \n")
       of.write("|:-------------|:--------------| \n")
       nlines = min( 20, len(ref) )
