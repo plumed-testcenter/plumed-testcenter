@@ -5,7 +5,7 @@ import subprocess
 class mdcode :
    def __init__( self ) :
        self.bohrToNm = 0.0529177249
-       self.RyToKJ = 1312.75
+       self.HaToKJ = 2*1312.75  # I think the output in the xml file is in Hartrees and not Rydbergs
 
    def getName( self ) :
        return "quantum_expresso"
@@ -57,7 +57,7 @@ class mdcode :
        return out.returncode
 
    def getTimestep( self ) :
-       return 20*(6.62607015E-34/(2*np.pi)/4.3597447222071E-18)*1E12
+       return 20*4.8378E-5
 
    def getNumberOfAtoms( self, rundir ) :
        natoms, root = [], ET.parse( rundir + "/pwscf.xml")
@@ -116,5 +116,5 @@ class mdcode :
        energies, root = [], ET.parse( rundir + "/pwscf.xml")
        for step in root.findall("step") :
            ebrac = step.find("total_energy")
-           energies.append( self.RyToKJ*float(ebrac.find("etot").text) )
+           energies.append( self.HaToKJ*float(ebrac.find("etot").text) )
        return energies
