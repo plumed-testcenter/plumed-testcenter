@@ -203,7 +203,7 @@ def runTests(code,version,runner) :
          params["temperature"] = params["temperature"]*alpha*alpha
          params["friction"] = params["friction"] / alpha
          params["tstep"] = params["tstep"] / alpha
-         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.2"
+         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.1"
          run2 = runMDCalc("engforce2", code, runner, params )
          md_failed, val1, val2 = run1 or run2, [], []
          if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engforce1_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engforce2_" + version + "/energy")[:,1]
@@ -218,7 +218,7 @@ def runTests(code,version,runner) :
          params["temperature"] = params["temperature"]*alpha*alpha 
          params["friction"] = params["friction"] / alpha
          params["tstep"] = params["tstep"] / alpha
-         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.2"
+         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.1"
          run2 = runMDCalc("engvir2", code, runner, params )
          md_failed, val1, val2 = run1 or run2, [], []
          if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[:,1]
