@@ -213,13 +213,13 @@ def runTests(code,version,runner) :
          params = setParams( runner, version, usestable )
          params["nsteps"] = 20
          params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f"
-         run1 = runMDCalc("engforce1", code, runner, params )
+         run1 = runMDCalc("engvir1", code, runner, params )
          alpha = 1.1
          params["temperature"] = params["temperature"]*alpha*alpha 
          params["friction"] = params["friction"] / alpha
          params["tstep"] = params["tstep"] / alpha
          params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.2"
-         run2 = runMDCalc("engforce2", code, runner, params )
+         run2 = runMDCalc("engvir2", code, runner, params )
          md_failed, val1, val2 = run1 or run2, [], []
          if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[:,1]
          writeReportPage( "engvir", code, version, md_failed, ["engvir1", "engvir2"], val1, val2 )
@@ -277,7 +277,7 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data ) :
 def check( md_failed, val1, val2 ) :
    if md_failed : return False
    if hasattr(val2, "__len__") and len(val1)!=len(val2) : return False
-   return np.allclose( val1, val2 )
+   return np.allclose( val1, val2, atol=1E-4 )
 
 if __name__ == "__main__" :
    code, version, argv = "", "", sys.argv[1:]

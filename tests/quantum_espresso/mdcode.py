@@ -57,7 +57,7 @@ class mdcode :
        return out.returncode
 
    def getTimestep( self ) :
-       return 20*(6.62607015E-34/2*np.pi/4.3597447222071E-18)*1E12
+       return 20*(6.62607015E-34/(2*np.pi)/4.3597447222071E-18)*1E12
 
    def getNumberOfAtoms( self, rundir ) :
        natoms, root = [], ET.parse( rundir + "/pwscf.xml")
