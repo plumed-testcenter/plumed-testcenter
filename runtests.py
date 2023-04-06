@@ -202,7 +202,7 @@ def runTests(code,version,runner) :
          alpha = 1.1
          params["temperature"] = params["temperature"]*alpha*alpha
          params["friction"] = params["friction"] / alpha
-         params["timestep"] = params["timestep"] / alpha
+         params["tstep"] = params["tstep"] / alpha
          params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.2"
          run2 = runMDCalc("engforce2", code, runner, params )
          md_failed, val1, val2 = run1 or run2, [], []
@@ -217,7 +217,7 @@ def runTests(code,version,runner) :
          alpha = 1.1
          params["temperature"] = params["temperature"]*alpha*alpha 
          params["friction"] = params["friction"] / alpha
-         params["timestep"] = params["timestep"] / alpha
+         params["tstep"] = params["tstep"] / alpha
          params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.2"
          run2 = runMDCalc("engforce2", code, runner, params )
          md_failed, val1, val2 = run1 or run2, [], []
