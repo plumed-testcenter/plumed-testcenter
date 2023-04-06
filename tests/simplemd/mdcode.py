@@ -32,7 +32,7 @@ class mdcode :
        # Code to deal with restraint 
        if "restraint" in mdparams and mdparams["restraint"]>0 : 
           f = open("plumed.dat","w+")
-          f.write("dd: DISTANCE ATOMS=1,2 \nRESTRAINT ARG=dd KAPPA=2000 AT=" + str(mdparams["restraint"]) + "\nPRINT ARG=dd FILE=plumed_restraint FMT=%8.4f\n")
+          f.write("dd: DISTANCE ATOMS=1,2 \nRESTRAINT ARG=dd KAPPA=2000 AT=" + str(mdparams["restraint"]) + "\nPRINT ARG=dd FILE=colvar FMT=%8.4f\n")
           f.close()
        # Work out the name of the plumed executable 
        executible = "plumed_" + mdparams["version"] 
