@@ -167,7 +167,7 @@ def runTests(code,version,runner) :
          mdrun = runMDCalc("forces1", code, runner, rparams )
          # Run the calculation with the restraint applied by PLUMED
          rparams["restraint"] = -10
-         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nRESTRAINT ARG=dd KAPPA=2000 AT=" + str(refdist) + "\nPRINT ARG=dd FILE=plumed_restraint FMT=%8.4f"
+         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nRESTRAINT ARG=dd KAPPA=2000 AT=" + str(refdist) + "\nPRINT ARG=dd FILE=colvar FMT=%8.4f"
          plrun = runMDCalc("forces2", code, runner, rparams )
       # And create our reports from the two runs
       md_failed, val1, val2 = mdrun and plrun, [], [] 
@@ -184,7 +184,18 @@ def runTests(code,version,runner) :
       writeReportPage( "energy", code, version, md_failed, ["energy"], md_energy, pl_energy )
       of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy ), "energy", code, version) + " | \n") 
       if info["forces"]=="yes" :
-         md_failed = True
+         params = runner.setParams()
+         params["nsteps"] = 20
+         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f"
+         run1 = runMDCalc("engforce1", code, runner, params )
+         alpha = 1.1
+         params["temperature"] = params["temperature"]*alpha*alpha
+         params["friction"] = params["friction"] / alpha
+         params["timestep"] = params["timestep"] / alpha
+         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.2"
+         run2 = runMDCalc("engforce2", code, runner, params )
+         md_failed, val1, val2 = run1 and run2, [], []
+         if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engforce1_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engforce2_" + version + "/energy")[:,1]
          of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engforce", code, version) + " | \n") 
       if info["virial"]=="yes" :
          md_failed = True 
