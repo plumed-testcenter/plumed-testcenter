@@ -3,7 +3,7 @@ Check force on energy
 
 It is common practise to use the potential energy as a collective energy. Some MD codes thus pass the potential energy to PLUMED and
 PLUMED can then apply forces on this collective variable.  We test that any forces that PLUMED applies on the potential energy are 
-correctly passed back to the MD code by doing the following test.  We first run a short simulation at 500 K with a timestep of 0.002 ps.
+correctly passed back to the MD code by doing the following test.  We first run a short simulation at $T$ K with a timestep of $\tau$ ps.
 During the course of this simulation we monitor the potential energy using the following PLUMED input:
 
 ```plumed 
@@ -11,7 +11,7 @@ e: ENERGY
 PRINT ARG=e FILE=energy1
 ```
 
-We then run a second simulation (starting from identical conditions) at a temperature of $500\alpha^2$ and with a timestep of $0.002/\alpha$.
+We then run a second simulation (starting from identical conditions) at a temperature of $T\alpha^2$ and with a timestep of $\tau/\alpha$.
 The thermostat and barostat relaxation times are similarly divided by $\alpha$.  In the tests that are run on this website we set $\alpha=1.1$.
 
 For this second MD run the following PLUMED input file is used:
