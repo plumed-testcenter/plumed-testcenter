@@ -18,6 +18,9 @@ class mdcode :
        }
        return params
 
+   def getExecutibleName( self ) :
+       return "pw"
+
    def runMD( self, mdparams ) : 
        inp = " &control \n"
        inp = inp + "    calculation='md' \n"
@@ -48,8 +51,7 @@ class mdcode :
        of.write(inp)
        of.close()
        # Work out the name of the espresso executable
-       executible = "pw_" + mdparams["version"]
-       if mdparams["stable_version"] : executible = "pw"
+       executible = mdparams["executible"] 
        # Now run the calculation using subprocess
        with open("stdout","w") as stdout:
         with open("stderr","w") as stderr:

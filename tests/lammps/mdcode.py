@@ -14,6 +14,9 @@ class mdcode :
        }
        return params
   
+   def getExecutibleName( self ) :
+       return "lammps"
+ 
    def runMD( self, mdparams ) :
        inp = "units           real\n"
        inp = inp + "atom_style      full\n"
@@ -50,8 +53,7 @@ class mdcode :
        of.write(inp)
        of.close()
        # Work out the name of the lammps executable
-       executible = "lammps_" + mdparams["version"] 
-       if mdparams["stable_version"] : executible = "lammps"
+       executible = mdparams["executible"] 
        # Now run the calculation using subprocess
        with open("stdout","w") as stdout:
         with open("stderr","w") as stderr:

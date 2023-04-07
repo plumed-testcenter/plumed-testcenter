@@ -13,7 +13,10 @@ class mdcode :
          "friction": 1.0
        }
        return params
-  
+ 
+   def getExecutibleName( self ) :
+       return "plumed"
+ 
    def runMD( self, mdparams ) :
        # Prepare a string that contains the input for simplemd
        inp = "inputfile input.xyz\n"
@@ -35,8 +38,7 @@ class mdcode :
           f.write("dd: DISTANCE ATOMS=1,2 \nRESTRAINT ARG=dd KAPPA=2000 AT=" + str(mdparams["restraint"]) + "\nPRINT ARG=dd FILE=colvar FMT=%8.4f\n")
           f.close()
        # Work out the name of the plumed executable 
-       executible = "plumed_" + mdparams["version"] 
-       if mdparams["stable_version"] : executible = "plumed"
+       executible = mdparams["executible"] 
        cmd = [executible, "simplemd"]
        # Now run the calculation using subprocess
        with open("stdout","w") as stdout:
