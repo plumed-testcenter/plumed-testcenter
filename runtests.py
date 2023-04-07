@@ -65,7 +65,7 @@ def runMDCalc( name, code, version, runner, params ) :
     # Find the stable version 
     stable_version=subprocess.check_output('plumed info --version', shell=True).decode('utf-8').strip()
     # Check if the name is the stable version 
-    if stable_version in executible : params["executible"] = runner.getExecutibleName()
+    if stable_version in params["executible"] : params["executible"] = runner.getExecutibleName()
     # Now test that the executable exists if it doesn't then the test is broken
     if shutil.which(executible) == None : return True
     # Copy all the input needed for the MD calculation
