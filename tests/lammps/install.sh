@@ -19,13 +19,15 @@ esac
 done
 
 # Cloning the lammps repository
-repo=https://github.com/lammps/lammps.git
+repo=https://github.com/gtribello/lammps.git
+# https://github.com/lammps/lammps.git
 echo "cloning repoisitory $repo"
 git clone $repo lammps$suffix
 
 # Finding the latest stable version of lammps to build
 cd lammps$suffix
-version=$(git tag --sort=-creatordate | grep stable | head -n 1)
+#version=$(git tag --sort=-creatordate | grep stable | head -n 1)
+version="fix-plumed"
 echo "installing latest stable lammps $version"
 git checkout $version
 
