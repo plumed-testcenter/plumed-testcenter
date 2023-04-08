@@ -71,8 +71,8 @@ class mdcode :
    def getPositions( self, rundir ) :
        first, traj = True, mda.coordinates.XYZ.XYZReader( rundir + "/lammps.xyz")
        for frame in traj.trajectory :
-          if first : pos, first = frame.positions, False
-          else : pos = np.concatenate( (pos, frame.positions), axis=0 )
+          if first : pos, first = frame.positions / 10, False
+          else : pos = np.concatenate( (pos, frame.positions / 10), axis=0 )
        return pos
 
    def getCell( self, rundir ) :
