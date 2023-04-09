@@ -83,7 +83,7 @@ class mdcode :
        for line in inp.splitlines() :
            if inmasses :
               words = line.split()
-              data[int(words[0])] = float(words[col])
+              data[int(words[0])-1] = float(words[col])
            elif "ATOMS id mass q" in line : inmasses = True
            
        return data
