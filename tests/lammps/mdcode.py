@@ -92,10 +92,10 @@ class mdcode :
        return [] 
 
    def getMasses( self, rundir ) :
-       return this.getMassCharge( rundir, 2 ) 
+       return self.getMassCharge( rundir, 2 ) 
 
    def getCharges( self, rundir ) :
-       return this.getMassCharge( rundir, 2 ) 
+       return self.getMassCharge( rundir, 2 ) 
 
    def getEnergy( self, rundir ) :
        return  np.loadtxt(rundir + "/lammps_energy")[:,1]*4.184 
