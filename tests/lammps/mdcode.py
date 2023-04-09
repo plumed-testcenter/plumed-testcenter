@@ -48,6 +48,10 @@ class mdcode :
        inp = inp + "variable        pe equal pe\n"
        inp = inp + "fix             5 all print 1 \"$(v_step) $(v_pe)\" file lammps_energy\n"
        inp = inp + "dump            mq all custom 200 mq_lammps id mass q\n"
+       inp = inp + "variable        ab equal cella\n"
+       inp = inp + "variable        bb equal cellb\n"
+       inp = inp + "variable        cb equal cellc\n"
+       inp = inp + "fix             6 all print 1 \"$(v_ab) $(v_bb) $(v_cb)\" file lammps_cell\n"
        inp = inp + "run             " + str(mdparams["nsteps"]) + "\n"
        of = open("in.peptide-plumed","w+")
        of.write(inp)
@@ -89,7 +93,10 @@ class mdcode :
        return data
 
    def getCell( self, rundir ) :
-       return [] 
+       cell_size = np.loadtxt( rundir + "/lammps_celL")
+       cell_final = np.zeros([cell_size.shape[0],9])
+       for i in range(cell_size.shape[0]) : cell_final[i,0], cell_final[i,4], cell_final[i,8] = cell_size[i,0]/10, cell_size[i,1]/10, cell_size[i,2]/10
+       return cell_final 
 
    def getMasses( self, rundir ) :
        return self.getMassCharge( rundir, 1 ) 
