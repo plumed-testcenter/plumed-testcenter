@@ -6,7 +6,7 @@ To test these positions are passed correctly to PLUMED we run a short trajectory
 that are passed to PLUMED using the following command: 
 
 ```plumed
-DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz
+DUMPATOMS ATOMS=@mdatoms PRECISION=4 FILE=plumed.xyz
 ```
 
 # Trajectory

@@ -103,7 +103,7 @@ def runTests(code,version,runner) :
 
    params, basic_md_failed = runner.setParams(), True
    if info["positions"]=="yes" or info["timestep"]=="yes" or info["mass"]=="yes" or info["charge"]=="yes" : 
-      params["plumed"] = "DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz PRECISION=7\n"
+      params["plumed"] = "DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz PRECISION=4\n"
       params["plumed"] = params["plumed"] + "c: CELL \n PRINT ARG=c.* FILE=cell_data\n"
       if info["mass"]=="yes" and info["charge"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed\n"
       elif info["mass"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed ONLY_MASSES\n"

@@ -39,7 +39,7 @@ class mdcode :
        inp = inp + "fix             1 all nvt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["friction"]) + " tchain 1\n"
        inp = inp + "fix             2a ref setforce 0.0 0.0 0.0\n"
        # Code to deal with restraint 
-       if "restraint" in mdparams and mdparams["restraint"]>0 : inp = inp + "fix 6 all restrain bond 1 2 1000.0 1000.0 " + str(10*mdparams["restraint"]) + "\n"
+       if "restraint" in mdparams and mdparams["restraint"]>0 : inp = inp + "fix 6 all restrain bond 1 2 10.0 10.0 " + str(10*mdparams["restraint"]) + "\n"
        inp = inp + "fix             4 all shake 0.0001 10 100 b 4 6 8 10 12 14 18 a 31\n"
        inp = inp + "thermo_style    custom step temp etotal pe ke epair ebond f_2\n"
        inp = inp + "thermo          10\n"
@@ -75,16 +75,27 @@ class mdcode :
           else : pos = np.concatenate( (pos, frame.positions / 10), axis=0 )
        return pos
 
+   def getMassCharge(self, rundir, col) :
+       data = np.zeros( self.getNumberOfAtoms(rundir)[0] )
+       f = open( rundir + "/mq_lammps", "r")
+       inp, inmasses = f.read(), False
+       f.close()
+       for line in inp.splitlines() :
+           if inmasses :
+              words = line.split()
+              data[int(words[0])] = float(words[col])
+           else if "ATOMS id mass q" in line : inmasses = True
+           
+       return data
+
    def getCell( self, rundir ) :
-       return []
+       return [] 
 
    def getMasses( self, rundir ) :
-       return [] 
-       #np.loadtxt( rundir + "/mq_lammps")[:,2]
+       return this.getMassCharge( rundir, 2 ) 
 
    def getCharges( self, rundir ) :
-       return [] 
-       # np.loadtxt( rundir + "/mq_lammps")[:,3]
+       return this.getMassCharge( rundir, 2 ) 
 
    def getEnergy( self, rundir ) :
-       return [] 
+       return  np.loadtxt(rundir + "/lammps_energy")[:,1]*4.184 
