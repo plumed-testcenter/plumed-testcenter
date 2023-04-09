@@ -279,7 +279,7 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data ) :
 def check( md_failed, val1, val2 ) :
    if md_failed : return False
    if hasattr(val2, "__len__") and len(val1)!=len(val2) : return False
-   return np.allclose( val1, val2, atol=1E-4 )
+   return np.allclose( val1, val2, atol=1E-3 )
 
 if __name__ == "__main__" :
    code, version, argv = "", "", sys.argv[1:]

@@ -92,7 +92,7 @@ class mdcode :
        return [] 
 
    def getMasses( self, rundir ) :
-       return self.getMassCharge( rundir, 2 ) 
+       return self.getMassCharge( rundir, 1 ) 
 
    def getCharges( self, rundir ) :
        return self.getMassCharge( rundir, 2 ) 
