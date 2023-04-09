@@ -93,7 +93,7 @@ class mdcode :
        return data
 
    def getCell( self, rundir ) :
-       cell_size = np.loadtxt( rundir + "/lammps_celL")
+       cell_size = np.loadtxt( rundir + "/lammps_cell")
        cell_final = np.zeros([cell_size.shape[0],9])
        for i in range(cell_size.shape[0]) : cell_final[i,0], cell_final[i,4], cell_final[i,8] = cell_size[i,0]/10, cell_size[i,1]/10, cell_size[i,2]/10
        return cell_final 
