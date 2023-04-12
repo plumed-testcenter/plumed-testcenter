@@ -25,7 +25,7 @@ def buildBrowsePage( stable_version, tested ) :
    f.write("| Name of Program  | Short description | Compiles | Passes tests | \n")
    f.write("|:-----------------|:------------------|:--------:|:------------:| \n")
    for code in os.listdir("tests") :
-       if not os.path.isdir(code) : continue
+       if os.path.isfile("tests/" + code) : continue
        compile_badge, test_badge = "", ""
        stram=open("tmp/extract/tests/" + code + "/info.yml", "r")
        info=yaml.load(stram,Loader=yaml.BaseLoader)
