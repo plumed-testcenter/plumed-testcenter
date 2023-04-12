@@ -1,24 +1,3 @@
-#!/bin/bash
-
-set -x
-
-# Copying arguments from input
-# Mode is how plumed is linked static/runtime
-# Suffix is which version of plumed to use stable/master
-mode="static"
-suffix=""
-basedir=`pwd`
-
-# Reading arguments
-for opt
-do
-case "$opt" in
-  (mode=*) mode="${opt#mode=}" ;;
-  (suffix=*) suffix="${opt#suffix=}" ;;
-  (*) echo "unknown option $opt" ; exit 1 ;;
-esac
-done
-
 # Some dummy code as we don't need to do anything to build simplemd 
 # if plumed has been built
 echo Hello simplemd world

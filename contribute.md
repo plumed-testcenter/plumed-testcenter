@@ -32,26 +32,6 @@ in the file `.github/workflows/main.yml` to add your code to the list of those t
 The `install.sh` that you will write to download and install your code must be written in bash and will have a structure similar to the one shown below:
 
 ```bash
-#!/bin/bash
-
-set -x
-
-mode="static"
-suffix=""
-basedir=`pwd`
-
-# Copying arguments from input
-# Mode is how plumed is linked static/runtime
-# Suffix is which version of plumed to use stable/master
-for opt
-do
-case "$opt" in
-  (mode=*) mode="${opt#mode=}" ;;
-  (suffix=*) suffix="${opt#suffix=}" ;;
-  (*) echo "unknown option $opt" ; exit 1 ;;
-esac
-done
-
 # Add code here to download your code from some repository 
 
 # Add code here to build your code so that final executible is in $HOME/opt/bin
@@ -65,8 +45,12 @@ else
 fi
 ```
 
-The first part of the script above is common to all the tested MD codes.  This part essentially gets the name of the plumed library that we are linking with (`plumed$suffix`) and the 
-mode that we are using to link PLUMED.  You will need to use this information when you build your MD code.
+Notice that a part of the final install script that is used for all MD codes is contained in the file `tests/script_head`.  This file contains the `#!/bin/bash` that appears at the top of any bash script.
+This file also sets the values of three bash variables that you will need to use when you install your code:
+
+1. `mode` - the mode that is used to link PLUMED.
+2. `suffix` - the version of PLUMED we are linking to is called plumed$suffix.  
+3. `basedir` - essentially the directory that we are running within.
 
 The final part of the code above is also common to all tested MD codes.  This part of the code tells the python script (`build.py`) that constructs [the dashboard page](browse.md) whether or not your code compiled 
 sucessfully so that the appropriate badges can be put on the dashboard.  Notice that this information is transferred by adding lines to the `info.yml` file for your code.

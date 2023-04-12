@@ -1,23 +1,3 @@
-#!/bin/bash
-
-set -x
-
-mode="static"
-suffix=""
-basedir=`pwd`
-
-# Copying arguments from input
-# Mode is how plumed is linked static/runtime
-# Suffix is which version of plumed to use stable/master
-for opt
-do
-case "$opt" in
-  (mode=*) mode="${opt#mode=}" ;;
-  (suffix=*) suffix="${opt#suffix=}" ;;
-  (*) echo "unknown option $opt" ; exit 1 ;;
-esac
-done
-
 # Cloning the lammps repository
 repo=https://github.com/gtribello/lammps.git
 # https://github.com/lammps/lammps.git

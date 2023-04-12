@@ -188,7 +188,7 @@ def runTests(code,version,runner) :
       of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2 ), "forces", code, version) + " | \n")
    if info["virial"]=="yes" :
       params = runner.setParams()
-      params["nsteps"], params["ensemble"] = 1000, "npt"
+      params["nsteps"], params["ensemble"] = 200, "npt"
       params["plumed"] = "vv: VOLUME \n PRINT ARG=vv FILE=volume FMT=%8.5f"
       run1 = runMDCalc("virial1", code, version, runner, params )
       params["pressure"], params["plumed"] = 1001*params["pressure"], "vv: VOLUME \n RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429 \nPRINT ARG=vv FILE=volume FMT=%8.5f"
@@ -230,7 +230,7 @@ def runTests(code,version,runner) :
          params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.1"
          run2 = runMDCalc("engvir2", code, version, runner, params )
          md_failed, val1, val2 = run1 or run2, [], []
-         if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[:,1:2], np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[:,1:2]
+         if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[:,1:]
          writeReportPage( "engvir", code, version, md_failed, ["engvir1", "engvir2"], val1, val2 )
          of.write("| PLUMED contribution to virial due to force on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engvir", code, version) + " | \n") 
    of.close()
@@ -264,8 +264,8 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data ) :
        elif "Trajectories" in line and "#" in line :
            if len(zipfiles)!=2 : ValueError("wrong number of trajectories")
            of.write(line + "\n")
-           of.write("Input and output files for the first calculation described above are available in this [zip archive](" + zipfiles[0] + "_" + version + ".zip) \n")
-           of.write("Input and output files for the second calculation described above are available in this [zip archive](" + zipfiles[1] + "_" + version + ".zip) \n\n") 
+           of.write("1. Input and output files for the first calculation described above are available in this [zip archive](" + zipfiles[0] + "_" + version + ".zip) \n")
+           of.write("2. Input and output files for the second calculation described above are available in this [zip archive](" + zipfiles[1] + "_" + version + ".zip) \n\n") 
        elif "Results" in line and "#" in line and md_fail :
            of.write(line + "\n")
            of.write("Calculations were not sucessful and no data was generated for comparison\n")  
