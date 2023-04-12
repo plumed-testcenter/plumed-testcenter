@@ -3,9 +3,6 @@ import MDAnalysis as mda
 import subprocess
 
 class mdcode :
-   def getName( self ) :
-       return "lammps"
-
    def setParams( self ) :
        params = {
          "temperature": 275,
@@ -16,9 +13,6 @@ class mdcode :
          "pfriction": 400
        }
        return params
-  
-   def getExecutibleName( self ) :
-       return "lammps"
  
    def runMD( self, mdparams ) :
        inp = "units           real\n"
@@ -57,7 +51,7 @@ class mdcode :
        inp = inp + "variable        bb equal cellb\n"
        inp = inp + "variable        cb equal cellc\n"
        inp = inp + "fix             7 all print 1 \"$(v_ab) $(v_bb) $(v_cb)\" file lammps_cell\n"
-       inp = inp + "velocity        all create " + str(mdparams["itemperature"]) + " ${seed} dist gaussian"
+       inp = inp + "velocity        all create " + str(mdparams["itemperature"]) + " ${seed} dist gaussian\n"
        inp = inp + "run             " + str(mdparams["nsteps"]) + "\n"
        of = open("in.peptide-plumed","w+")
        of.write(inp)

@@ -7,9 +7,6 @@ class mdcode :
        self.bohrToNm = 0.0529177249
        self.HaToKJ = 2*1312.75  # I think the output in the xml file is in Hartrees and not Rydbergs
 
-   def getName( self ) :
-       return "quantum_expresso"
-
    def setParams( self ) :
        params = {
          "temperature": 1.0,
@@ -19,9 +16,6 @@ class mdcode :
          "pfriction": 4.0
        }
        return params
-
-   def getExecutibleName( self ) :
-       return "pw"
 
    def runMD( self, mdparams ) : 
        inp = " &control \n"

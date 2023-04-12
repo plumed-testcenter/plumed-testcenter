@@ -1,5 +1,6 @@
 name: Quantum ESPRESSO
 description: An integrated suite of Open-Source computer codes for electronic-structure calculatiosn and materials modelling at the nanoscales that uses density-functional theory, plane waves and pseudopotentials.
+executible: pw
 link: https://www.quantum-espresso.org
 tests: 
    positions: yes

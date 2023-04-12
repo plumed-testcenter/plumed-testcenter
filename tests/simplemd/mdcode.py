@@ -3,9 +3,6 @@ import MDAnalysis as mda
 import subprocess
 
 class mdcode :
-   def getName( self ) :
-       return "simplemd"
-
    def setParams( self ) :
        params = {
          "temperature": 1.0,
@@ -15,9 +12,6 @@ class mdcode :
          "pfriction": 4
        }
        return params
- 
-   def getExecutibleName( self ) :
-       return "plumed"
  
    def runMD( self, mdparams ) :
        # Prepare a string that contains the input for simplemd

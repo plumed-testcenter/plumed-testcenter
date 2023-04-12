@@ -59,13 +59,20 @@ def buildTestPages( directory ) :
    for page in os.listdir(directory) :
        if ".md" in page : processMarkdown( directory + "/" + page )
 
+def getExecutibleName( code ) :
+   # Get the name of the executible
+    stram=open("tests/" + code + "/info.yml", "r")
+    executible=yaml.load(stram,Loader=yaml.BaseLoader)["executible"]
+    stram.close()
+    return executible
+
 def runMDCalc( name, code, version, runner, params ) :
     # Get the name of the executible
-    params["executible"] = runner.getExecutibleName() + "_" + version
+    params["executible"]=getExecutibleName( code ) + "_" + version
     # Find the stable version 
     stable_version=subprocess.check_output('plumed info --version', shell=True).decode('utf-8').strip()
     # Check if the name is the stable version 
-    if stable_version in params["executible"] : params["executible"] = runner.getExecutibleName()
+    if stable_version in params["executible"] : params["executible"] = getExecutibleName( code )
     # Now test that the executable exists if it doesn't then the test is broken
     if shutil.which(params["executible"]) == None : return True
     # Copy all the input needed for the MD calculation
@@ -311,6 +318,5 @@ if __name__ == "__main__" :
    d = importlib.import_module( "tests." + code, "mdcode" )
    # And create the class that interfaces with the MD code output
    runner = d.mdcode()
-   print("Running tests for ", runner.getName() )
    # Now run the tests 
    runTests( code, version, runner )
