@@ -41,7 +41,7 @@ class mdcode :
        inp = inp + "group           colvar union one two ref\n"
        inp = inp + "fix             2 all plumed plumedfile plumed.dat outfile p.log\n"
        if mdparams["ensemble"]=="nvt" : inp = inp + "fix             1 all nvt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["friction"]) + " tchain 1\n"
-       elif mdparams["ensemble"]=="npt" : inp = inp + "fix           1 all npt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["friction"]) + " iso " str(mdparams["pressure"]) + " " + str(mdparams["pressure"]) + " " + str(mdparams["pfriction"]) + " tchain 1 \n"
+       elif mdparams["ensemble"]=="npt" : inp = inp + "fix           1 all npt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["friction"]) + " iso " + str(mdparams["pressure"]) + " " + str(mdparams["pressure"]) + " " + str(mdparams["pfriction"]) + " tchain 1 \n"
        inp = inp + "fix             2a ref setforce 0.0 0.0 0.0\n"
        # Code to deal with restraint 
        if "restraint" in mdparams and mdparams["restraint"]>0 : inp = inp + "fix 6 all restrain bond 1 2 10.0 10.0 " + str(10*mdparams["restraint"]) + "\n"
