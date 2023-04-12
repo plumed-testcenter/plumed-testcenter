@@ -12,14 +12,22 @@ tests/<your code name>/input
 
 You will then need to write three further files in `tests/<your code name>`
 
-* `install.sh` - A shell script that downloads and installs a version of your MD code patched with lammps
+* `install.sh` - A shell script that downloads and installs a version of your MD code patched with PLUMED 
 * `info.yml` - A yaml file with basic information on your MD code including what tests should be performed
 * `mdcode.py` - A python class that tells the testcenter how to run your MD code and how to get various outputs from you code to compare with output from PLUMED.
 
 You are well advised to look the versions of these files that have been written for testing other codes.  In the sections that follow we will try to provide some rationale 
 that explains the content of the three files described above.
 
-# Writing an `install.sh` file
+Lastly, you will need to modify the line:
+
+```yml
+        replica: ["simplemd", "lammps", "quantum_espresso"]
+```
+
+in the file `.github/workflows/main.yml` to add your code to the list of those that are tested here. 
+
+# Writing an install.sh file
 
 The `install.sh` that you will write to download and install your code must be written in bash and will have a structure similar to the one shown below:
 
@@ -130,3 +138,97 @@ The key parameters that are passed within the `mdparams` are:
 * __executible__ - the name of the MD codes executible.  This is necessary as we test the interface between each code, the latest stable version of PLUMED and the master version of PLUMED.  Two versions of each MD code (with different names) are thus compiled and tested.  The name of the executible that is to be tested is controlled by the underlying code plumed testcenter code.
 
 Notice that although some of these variables (e.g. nsteps) are set by the underlying plumed testcenter code, there are others that must be given sensible initial values.  This process of giving sensible initial values to variables is done by `setParams`.  Parameters here should be set in the units of the MD code (and not in PLUMED units).  Importantly, however, __the pressure must be set equal to 1 bar in whatever internal units your MD code employs__ as we assume that the pressure has been set to 1 bar when we test the virial.
+
+# Writing your info.yml file
+
+The `info.yml` file does two things:
+
+1. It provides some basic information about your code
+2. It tells the code that forms part of the test center what tests should be performed.
+
+To understand these two functions it is instructive to look at an example of this file.  Below is the `info.yml` file that is used when we test quantum\_espresso:
+
+```yml
+name: Quantum ESPRESSO
+description: An integrated suite of Open-Source computer codes for electronic-structure calculatiosn and materials modelling at the nanoscales that uses density-functional theory, plane waves and pseudopotentials.
+executible: pw
+link: https://www.quantum-espresso.org
+tests:
+   positions: yes
+   timestep: yes
+   mass: yes
+   charge: no
+   forces: no
+   virial: no
+   energy: yes
+```
+
+The first four lines in the file do task (1).  These first four lines are hopefully self-explanatory.  
+
+The remainder of the file complete task (2).  There are essentially seven tests we can perform on an MD code:
+
+1. __positions__ - are the number of atoms, the positions of the atoms and the cell vectors correctly passed from the MD code to PLUMED.  This test should always be performed.
+2. __timestep__ - is the integration timestep correctly passed to PLUMED.  This test should always be performed.
+3. __masses__ - are the masses of the atoms correctly passed to PLUMED.  This test should always be performed.
+4. __charges__ - are the charges of the atosm correctly passed to PLUMED (N.B. we mean charges on classical ions here so it makes no sense to do this test for Quantum Espresso).
+5. __forces__ - if we apply a harmonic restraint on the distance between atom 1 and atom 2 using PLUMED and using the MD code do we obtain the same time series of distances between atoms 1 and 2.  Obviously, you have to be able to apply a harmonic restraint using the MD code to do this test.
+6. __virial__ - can we compensate for a restraint that PLUMED applies on the volume by adjusting the pressure at which we run the simulation.  You cannot do this test if your code cannot run npt simulations.
+7. __energy__ - is the potential energy correctly passed from the MD code to PLUMED.  Obviously it only makes sense to perform this test if you have written code to pass the potential energy from the MD code to PLUMED.
+
+Two further tests are then done based on the values of the keywords:
+
+1. If __forces__ and __energy__ are set to yes then we test whether PLUMED can set forces on the energy correctly in a simulation run in the nvt ensemble.
+2. If __virial__ and __energy__ are set to yes then we test whether PLUMED can set forces on the energy correctly in a simulation run in the npt ensemble.
+
+# Recovering data from the MD code for comparison
+
+Having described the tests that are performed by the testcenter we can now describe the other functions that must be written in the `mdcode.py` file.  These functions recover various quantities from the MD code so that a comparison can be performed between the values that are passed to PLUMED and the values that the MD code outputs.  The various functions you need to write are described in the code snippet below:
+
+```python
+class mdcode :
+   def getTimestep( self ) :
+       # Return the timestep that was used in your MD simulations in ps 
+       # as a single float.
+
+   def getNumberOfAtoms( self, rundir ) :
+       # Return a list that contains the number of atoms in each of the frames of the trajectory that 
+       # was run in the directory rundir.  Normally you would read in the trajectory file that your 
+       # code output.  This file is in rundir.  You then return a list that has a length equal to 
+       # the number of frames in this trajectory.  Each of the numbers in this list is then the number 
+       # of atoms.  All these numbers of atoms in your list will likely be the same.
+
+   def getPositions( self, rundir ) :
+       # Return a NumPy array that contains the trajectory for each of the atoms.  This function is called
+       # after your MD code has run a MD calculation in which the positions of m atoms have been propegated for 
+       # n steps in the directory rundir.  There should, therefore, be a trajectory in rundir that contains the positions
+       # the atoms took after each of these n steps.  This function should read in that trajectory and concatenate all the data 
+       # within it into an n*m by 3 array of atomic positions.  All the positions in this array should be given in units of nm.
+
+   def getCell( self, rundir ) :
+       # Return a NumPy array that contains the cell vectors for each frame of a trajectory.  This function is called
+       # after your MD code has run a MD calculation in which the positions of m atoms have been propegated for 
+       # n steps in the directory rundir.  There should, therefore, be a trajectory in rundir that contains the positions
+       # the atoms took after each of these n steps.  This function should read in the cell vectors from that trajectory and return 
+       # an n by 9 array of cell vectors.  All the vectors in this array should be given in units of nm.
+
+   def getMasses( self, rundir ) :
+       # Return a NumPy array that contains the masses of each of the m atoms in the system.  This function is called
+       # after your MD code has run a MD calculation in which the positions of m atoms have been propegated for
+       # n steps in the directory rundir.  You can read the masses of the atoms from one of the output files in this directory 
+       # or you can read them from the input files.
+
+   def getCharges( self, rundir ) :
+       # Return a NumPy array that contains the charges of each of the m atoms in the system.  This function is called
+       # after your MD code has run a MD calculation in which the positions of m atoms have been propegated for
+       # n steps in the directory rundir.  You can read the charges of the atoms from one of the output files in this directory 
+       # or you can read them from the input files.
+
+   def getEnergy( self, rundir ) :
+       # Return a NumPy array that contains the value of the potential energies that the sytem took.  This function is called
+       # after your MD code has run a MD calculation in which the positions of m atoms have been propegated for
+       # n steps in the directory rundir.  You should be able to read the potential energy of this ensemble of m atoms after each 
+       # of these n steps from an output file.  This function should read in those energies and return a list of n energies for comparison
+       # with the energies that are output by PLUMED.  All energies should be returned in units of kJ/mol. 
+```
+
+These functions are used in the tests on __positions__, __timestep__, __masses__, __charges__ and __energy__.  All other tests are general for all MD codes as we can use output from PLUMED.
