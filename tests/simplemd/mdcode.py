@@ -10,7 +10,9 @@ class mdcode :
        params = {
          "temperature": 1.0,
          "tstep": 0.005,
-         "friction": 1.0
+         "friction": 1.0,
+         "pressure": 1.0,
+         "pfriction": 4
        }
        return params
  

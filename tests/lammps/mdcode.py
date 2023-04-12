@@ -9,8 +9,11 @@ class mdcode :
    def setParams( self ) :
        params = {
          "temperature": 275,
+         "itemperature": 275,
          "tstep": 2,
-         "friction": 100
+         "friction": 100,
+         "pressure": 0.987,
+         "pfriction": 400
        }
        return params
   
@@ -19,6 +22,7 @@ class mdcode :
  
    def runMD( self, mdparams ) :
        inp = "units           real\n"
+       inp = inp + "variable        seed equal 74581\n"
        inp = inp + "atom_style      full\n"
        inp = inp + "pair_style      lj/charmm/coul/long 8.0 10.0 10.0\n"
        inp = inp + "bond_style      harmonic\n"
@@ -36,7 +40,8 @@ class mdcode :
        inp = inp + "group           ref id 37\n"
        inp = inp + "group           colvar union one two ref\n"
        inp = inp + "fix             2 all plumed plumedfile plumed.dat outfile p.log\n"
-       inp = inp + "fix             1 all nvt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["friction"]) + " tchain 1\n"
+       if mdparams["ensemble"]=="nvt" : inp = inp + "fix             1 all nvt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["friction"]) + " tchain 1\n"
+       elif mdparams["ensemble"]=="npt" : inp = inp + "fix           1 all npt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["friction"]) + " iso " str(mdparams["pressure"]) + " " + str(mdparams["pressure"]) + " " + str(mdparams["pfriction"] + " tchain 1 \n"
        inp = inp + "fix             2a ref setforce 0.0 0.0 0.0\n"
        # Code to deal with restraint 
        if "restraint" in mdparams and mdparams["restraint"]>0 : inp = inp + "fix 6 all restrain bond 1 2 10.0 10.0 " + str(10*mdparams["restraint"]) + "\n"
@@ -52,6 +57,7 @@ class mdcode :
        inp = inp + "variable        bb equal cellb\n"
        inp = inp + "variable        cb equal cellc\n"
        inp = inp + "fix             7 all print 1 \"$(v_ab) $(v_bb) $(v_cb)\" file lammps_cell\n"
+       inp = inp + "velocity        all create " + str(mdparams["itemperature"]) + " ${seed} dist gaussian"
        inp = inp + "run             " + str(mdparams["nsteps"]) + "\n"
        of = open("in.peptide-plumed","w+")
        of.write(inp)

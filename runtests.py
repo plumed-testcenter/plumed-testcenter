@@ -108,7 +108,7 @@ def runTests(code,version,runner) :
       if info["mass"]=="yes" and info["charge"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed\n"
       elif info["mass"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed ONLY_MASSES\n"
       if info["timestep"]=="yes" : params["plumed"] = params["plumed"] + "t1: TIME\nPRINT ARG=t1 FILE=colvar\n"
-      params["nsteps"] = 10
+      params["nsteps"], params["ensemble"] = 10, "npt"
       basic_md_failed = runMDCalc( "basic", code, version, runner, params )
   
    val1, val2 = 0.1, 0.1  
@@ -159,14 +159,14 @@ def runTests(code,version,runner) :
    if info["forces"]=="yes" :
       # First run a calculation to find the reference distance between atom 1 and 2
       rparams = runner.setParams()
-      rparams["nsteps"] = 2
+      rparams["nsteps"], rparams["ensemble"] = 2, "nvt"
       rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar FMT=%8.4f"
       refrun, mdrun, plrun = runMDCalc("refres", code, version, runner, rparams ), True, True
       if not refrun : 
          # Get the reference distance betwene the atoms
          refdist = np.loadtxt("tests/" + code + "/refres_" + version + "/colvar")[0,1]
          # Run the calculation with the restraint applied by the MD code
-         rparams["nsteps"] = 20
+         rparams["nsteps"], rparams["ensemble"] = 20, "nvt"
          rparams["restraint"] = refdist
          rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar FMT=%8.4f"
          mdrun = runMDCalc("forces1", code, version, runner, rparams )
@@ -181,10 +181,10 @@ def runTests(code,version,runner) :
       of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2 ), "forces", code, version) + " | \n")
    if info["virial"]=="yes" :
       params = runner.setParams()
-      params["nsteps"] = 20
+      params["nsteps"], params["ensemble"] = 1000, "npt"
       params["plumed"] = "vv: VOLUME \n PRINT ARG=vv FILE=volume FMT=%8.5f"
       run1 = runMDCalc("virial1", code, version, runner, params )
-      params["plumed"] = "vv: VOLUME \n RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429 PRINT ARG=vv FILE=volume FMT=%8.5f"
+      params["pressure"], params["plumed"] = 1001*params["pressure"], "vv: VOLUME \n RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429 \nPRINT ARG=vv FILE=volume FMT=%8.5f"
       run2 = runMDCalc("virial2", code, version, runner, params )
       md_failed, val1, val2 = run1 or run2, [], []
       if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/virial1_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial2_" + version + "/volume")[:,1]
@@ -198,7 +198,7 @@ def runTests(code,version,runner) :
       of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy ), "energy", code, version) + " | \n") 
       if info["forces"]=="yes" :
          params = runner.setParams()
-         params["nsteps"] = 20
+         params["nsteps"], params["ensemble"] = 20, "nvt"
          params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f"
          run1 = runMDCalc("engforce1", code, version, runner, params )
          alpha = 1.1
@@ -213,17 +213,17 @@ def runTests(code,version,runner) :
          of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engforce", code, version) + " | \n") 
       if info["virial"]=="yes" :
          params = runner.setParams()
-         params["nsteps"] = 20
-         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f"
+         params["nsteps"], params["ensemble"] = 20, "npt"
+         params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f"
          run1 = runMDCalc("engvir1", code, version, runner, params )
          alpha = 1.1
          params["temperature"] = params["temperature"]*alpha*alpha 
-         params["friction"] = params["friction"] / alpha
+         params["friction"], params["pfriction"] = params["friction"] / alpha, params["pfriction"] / alpha
          params["tstep"] = params["tstep"] / alpha
-         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.1"
+         params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.1"
          run2 = runMDCalc("engvir2", code, version, runner, params )
          md_failed, val1, val2 = run1 or run2, [], []
-         if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[:,1]
+         if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[:,1:2], np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[:,1:2]
          writeReportPage( "engvir", code, version, md_failed, ["engvir1", "engvir2"], val1, val2 )
          of.write("| PLUMED contribution to virial due to force on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engvir", code, version) + " | \n") 
    of.close()
