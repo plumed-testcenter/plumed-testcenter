@@ -51,7 +51,7 @@ class mdcode :
        inp = inp + "variable        ab equal cella\n"
        inp = inp + "variable        bb equal cellb\n"
        inp = inp + "variable        cb equal cellc\n"
-       inp = inp + "fix             6 all print 1 \"$(v_ab) $(v_bb) $(v_cb)\" file lammps_cell\n"
+       inp = inp + "fix             7 all print 1 \"$(v_ab) $(v_bb) $(v_cb)\" file lammps_cell\n"
        inp = inp + "run             " + str(mdparams["nsteps"]) + "\n"
        of = open("in.peptide-plumed","w+")
        of.write(inp)
