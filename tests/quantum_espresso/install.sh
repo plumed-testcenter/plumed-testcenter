@@ -12,10 +12,3 @@ plumed$suffix patch --engine qespresso-7.0 -p
 make pw
 make install
 
-# Checking that quantum espresso has been built correctly
-if [ ! -f $HOME/opt/bin/pw.x ] ; then
-     echo install_plumed$suffix: broken >> $basedir/tests/quantum_espresso/info.yml
-else 
-     echo install_plumed$suffix: working >> $basedir/tests/quantum_espresso/info.yml
-     cp $HOME/opt/bin/pw.x $HOME/opt/bin/pw$suffix
-fi

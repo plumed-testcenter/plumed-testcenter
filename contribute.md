@@ -29,20 +29,13 @@ in the file `.github/workflows/main.yml` to add your code to the list of those t
 
 # Writing an install.sh file
 
-The `install.sh` that you will write to download and install your code must be written in bash and will have a structure similar to the one shown below:
+The `install.sh` that you will write to download and install your code must be written in bash and will have a structure something like the one shown below:
 
 ```bash
 # Add code here to download your code from some repository 
 
 # Add code here to build your code so that final executible is in $HOME/opt/bin
 
-# Check that your executible has been generated
-if [ ! -f $HOME/opt/bin/<your executible> ] ; then
-     echo install_plumed$suffix: broken >> $basedir/tests/<your code name>/info.yml
-else 
-     echo install_plumed$suffix: working >> $basedir/tests/<your code name>/info.yml
-     cp $HOME/opt/bin/<your executible> $HOME/opt/bin/<your executible>$suffix
-fi
 ```
 
 Notice that a part of the final install script that is used for all MD codes is contained in the file `tests/script_head`.  This file contains the `#!/bin/bash` that appears at the top of any bash script.
@@ -52,7 +45,8 @@ This file also sets the values of three bash variables that you will need to use
 2. `suffix` - the version of PLUMED we are linking to is called plumed$suffix.  
 3. `basedir` - essentially the directory that we are running within.
 
-The final part of the code above is also common to all tested MD codes.  This part of the code tells the python script (`build.py`) that constructs [the dashboard page](browse.md) whether or not your code compiled 
+Once your install.sh script has run a test is performed to determine if an executible with the name given in the `info.yml` file has been created in `$(HOME)/opt/bin`.  This test is performed by the bash script
+`tests/check_status.sh`.  This script tells the python script (`build.py`) that constructs [the dashboard page](browse.md) whether or not your code compiled 
 sucessfully so that the appropriate badges can be put on the dashboard.  Notice that this information is transferred by adding lines to the `info.yml` file for your code.
 
 # Running your code from python
