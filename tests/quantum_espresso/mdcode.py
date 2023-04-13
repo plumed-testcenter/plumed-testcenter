@@ -1,3 +1,4 @@
+import os
 import numpy as np
 import xml.etree.ElementTree as ET
 import subprocess
@@ -57,6 +58,8 @@ class mdcode :
        of = open("md.in","w+")
        of.write(inp)
        of.close()
+       # Make sure the PLUMED libarary is available in the LD_LIBRARY_PATH
+       os.environ["LD_LIBRARY_PATH"] = os.environ["LD_LIBRARY_PATH"] + ":$(HOME)/opt/lib/" 
        # Work out the name of the espresso executable
        executible = mdparams["executible"] 
        # Now run the calculation using subprocess
