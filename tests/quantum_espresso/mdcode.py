@@ -36,7 +36,7 @@ class mdcode :
        if mdparams["ensemble"]=="npt" :
           inp = inp + " &cell \n"
           inp = inp + "    cell_dynamics = 'damp-w' \n"
-          inp = inp + "    press = " + mdparams["presssure"] + "\n"
+          inp = inp + "    press = " + mdparams["pressure"] + "\n"
           inp = inp + " / \n" 
        inp = inp + " &electrons \n"
        inp = inp + "    conv_thr =  1.0e-8 \n"
