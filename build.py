@@ -32,8 +32,7 @@ def buildBrowsePage( stable_version, tested ) :
        stram.close()
        for i in range(len(tested)):
            compile_badge = compile_badge + ' [![tested on ' + tested[i] + '](https://img.shields.io/badge/' + tested[i] + '-'
-           compile_status = info["install_plumed"]
-           if tested[i]!=stable_version : compile_status=info["install_plumed_" + tested[i] ]
+           compile_status=info["install_plumed_" + tested[i] ]
            if compile_status=="working" : compile_badge = compile_badge + 'passing-green.svg'
            elif compile_status=="broken" : compile_badge = compile_badge + 'failed-red.svg'
            else : ValueError("found invalid compilation status for " + code + " should be working or broken")
