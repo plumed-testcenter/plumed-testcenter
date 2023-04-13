@@ -116,16 +116,18 @@ def runTests(code,version,runner) :
       plumednatoms, codenatoms, codepos, plumedpos, codecell, plumedcell = [], [], [], [], [], []
       if not basic_md_failed :
          # Get the trajectory that was output by PLUMED
-         plumedtraj = mda.coordinates.XYZ.XYZReader("tests/" + code + "/basic_" + version + "/plumed.xyz")
-         # Get the number of atoms in each frame from plumed trajectory
-         plumednatoms, codenatoms = [], runner.getNumberOfAtoms( "tests/" + code + "/basic_" + version )
-         for frame in plumedtraj.trajectory : plumednatoms.append( frame.positions.shape[0] )
-         # Concatenate all the trajectory frames
-         codepos, first = runner.getPositions( "tests/" + code + "/basic_" + version ), True
-         for frame in plumedtraj.trajectory :
-             if first : plumedpos, first = frame.positions, False
-             else : plumedpos = np.concatenate( (plumedpos, frame.positions), axis=0 )
-         codecell, plumedcell = runner.getCell( "tests/" + code + "/basic_" + version ), np.loadtxt("tests/" + code + "/basic_" + version + "/cell_data")[:,1:]
+         if os.path.exists("tests/" + code + "/basic_" + version + "/plumed.xyz") : 
+            plumedtraj = mda.coordinates.XYZ.XYZReader("tests/" + code + "/basic_" + version + "/plumed.xyz")
+            # Get the number of atoms in each frame from plumed trajectory
+            plumednatoms, codenatoms = [], runner.getNumberOfAtoms( "tests/" + code + "/basic_" + version )
+            for frame in plumedtraj.trajectory : plumednatoms.append( frame.positions.shape[0] )
+            # Concatenate all the trajectory frames
+            codepos, first = runner.getPositions( "tests/" + code + "/basic_" + version ), True
+            for frame in plumedtraj.trajectory :
+                if first : plumedpos, first = frame.positions, False
+                else : plumedpos = np.concatenate( (plumedpos, frame.positions), axis=0 )
+            codecell, plumedcell = runner.getCell( "tests/" + code + "/basic_" + version ), np.loadtxt("tests/" + code + "/basic_" + version + "/cell_data")[:,1:]
+        else : basic_md_failed = True
 
       # Output results from tests on natoms
       writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], codenatoms, plumednatoms ) 
@@ -191,7 +193,8 @@ def runTests(code,version,runner) :
    if info["energy"]=="yes" :
       params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
       md_failed, md_energy, pl_energy = runMDCalc( "energy", code, version, runner, params ), [], []
-      if not md_failed : md_energy, pl_energy = runner.getEnergy("tests/" + code + "/energy_" + version), np.loadtxt("tests/" + code + "/energy_" + version + "/energy")[:,1]
+      if not md_failed and os.path.exists("tests/" + code + "/energy_" + version + "/energy") : md_energy, pl_energy = runner.getEnergy("tests/" + code + "/energy_" + version), np.loadtxt("tests/" + code + "/energy_" + version + "/energy")[:,1]
+      else : md_failed = True
       writeReportPage( "energy", code, version, md_failed, ["energy"], md_energy, pl_energy )
       of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy ), "energy", code, version) + " | \n") 
       if info["forces"]=="yes" :
