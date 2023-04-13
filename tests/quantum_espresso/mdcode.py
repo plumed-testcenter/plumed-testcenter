@@ -11,7 +11,7 @@ class mdcode :
        params = {
          "temperature": 1.0,
          "tstep": 20,
-         "friction": 1.0,
+         "friction": 10,
          "pressure": 0.0001,
          "pfriction": 4.0
        }
@@ -33,17 +33,20 @@ class mdcode :
        # Code to deal with restraint 
        if "restraint" in mdparams and mdparams["restraint"]>0 : inp = inp + "" 
        inp = inp + " / \n"
-       if mdparams["ensemble"]=="npt" :
-          inp = inp + " &cell \n"
-          inp = inp + "    cell_dynamics = 'damp-w' \n"
-          inp = inp + "    press = " + str(mdparams["pressure"]) + "\n"
-          inp = inp + " / \n" 
        inp = inp + " &electrons \n"
        inp = inp + "    conv_thr =  1.0e-8 \n"
        inp = inp + "    mixing_beta = 0.7 \n"
        inp = inp + " / \n"
        inp = inp + " &ions \n"
+       inp = inp + "    ion_temperature = 'svr' \n"
+       inp = inp + "    tempw = " + str(mdparams["temperature"]) + "\n"
+       inp = inp + "    nraise = " + str(mdparams["friction"]) + "\n"
        inp = inp + " / \n"
+       if mdparams["ensemble"]=="npt" :
+          inp = inp + " &cell \n"
+          inp = inp + "    cell_dynamics = 'damp-w', \n"
+          inp = inp + "    press = " + str(mdparams["pressure"]) + "\n"
+          inp = inp + " / \n"
        inp = inp + "ATOMIC_SPECIES \n"
        inp = inp + " Si  28.086  Si.pz-vbc.UPF \n"
        inp = inp + "ATOMIC_POSITIONS {alat} \n"
