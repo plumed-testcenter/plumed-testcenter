@@ -8,5 +8,5 @@ tests:
    mass: yes
    charge: no
    forces: no 
-   virial: no
+   virial: yes
    energy: yes

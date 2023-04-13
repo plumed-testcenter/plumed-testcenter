@@ -19,7 +19,10 @@ class mdcode :
 
    def runMD( self, mdparams ) : 
        inp = " &control \n"
-       inp = inp + "    calculation='md' \n"
+       if mdparams["ensemble"]=="nvt" : 
+          inp = inp + "    calculation='md' \n"
+       elif mdparams["ensemble"]=="npt" :
+          inp = inp + "    calculation='vc-md' \n" 
        inp = inp + "    pseudo_dir='./' \n"
        inp = inp + "    dt=" + str(mdparams["tstep"]) + ", \n"
        inp = inp + "    nstep=" + str(mdparams["nsteps"]) + " \n"
@@ -30,6 +33,11 @@ class mdcode :
        # Code to deal with restraint 
        if "restraint" in mdparams and mdparams["restraint"]>0 : inp = inp + "" 
        inp = inp + " / \n"
+       if mdparams["ensemble"]=="npt" :
+          inp = inp + " &cell \n"
+          inp = inp + "    cell_dynamics = 'damp-w' \n"
+          inp = inp + "    press = " + mdparams["presssure"] + "\n"
+          inp = inp + " / \n" 
        inp = inp + " &electrons \n"
        inp = inp + "    conv_thr =  1.0e-8 \n"
        inp = inp + "    mixing_beta = 0.7 \n"
