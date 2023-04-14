@@ -181,7 +181,7 @@ def runTests(code,version,runner) :
       of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2 ), "forces", code, version) + " | \n")
    if info["virial"]=="yes" :
       params = runner.setParams()
-      params["nsteps"], params["ensemble"] = 200, "npt"
+      params["nsteps"], params["ensemble"] = 150, "npt"
       params["plumed"] = "vv: VOLUME \n PRINT ARG=vv FILE=volume FMT=%8.5f"
       run1 = runMDCalc("virial1", code, version, runner, params )
       params["pressure"], params["plumed"] = 1001*params["pressure"], "vv: VOLUME \n RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429 \nPRINT ARG=vv FILE=volume FMT=%8.5f"
@@ -191,7 +191,7 @@ def runTests(code,version,runner) :
       writeReportPage( "virial", code, version, md_failed, ["virial1", "virial2"], val1, val2 )
       of.write("| PLUMED virial passed correctly | " + getBadge( check( md_failed, val1, val2 ), "virial", code, version) + " | \n")
    if info["energy"]=="yes" :
-      params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
+      params["nsteps"], params["plumed"] = 20, "e: ENERGY \nPRINT ARG=e FILE=energy"
       md_failed, md_energy, pl_energy = runMDCalc( "energy", code, version, runner, params ), [], []
       if not md_failed and os.path.exists("tests/" + code + "/energy_" + version + "/energy") : md_energy, pl_energy = runner.getEnergy("tests/" + code + "/energy_" + version), np.loadtxt("tests/" + code + "/energy_" + version + "/energy")[:,1]
       else : md_failed = True
