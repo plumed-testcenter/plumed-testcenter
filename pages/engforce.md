@@ -11,8 +11,8 @@ e: ENERGY
 PRINT ARG=e FILE=energy1
 ```
 
-We then run a second simulation (starting from identical conditions) at a temperature of $T\alpha^2$ and with a timestep of $\tau/\alpha$.
-The thermostat and barostat relaxation times are similarly divided by $\alpha$.  In the tests that are run on this website we set $\alpha=1.1$.
+We then run a second simulation (starting from identical conditions) at a temperature of $T\alpha$ and with a timestep of $\tau/\sqrt(\alpha)$.
+The thermostat and barostat relaxation times are similarly divided by $\sqrt(\alpha)$.  In the tests that are run on this website we set $\alpha=1.1$.
 
 For this second MD run the following PLUMED input file is used:
 

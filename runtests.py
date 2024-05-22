@@ -191,7 +191,7 @@ def runTests(code,version,runner) :
       writeReportPage( "virial", code, version, md_failed, ["virial1", "virial2"], val1, val2 )
       of.write("| PLUMED virial passed correctly | " + getBadge( check( md_failed, val1, val2 ), "virial", code, version) + " | \n")
    if info["energy"]=="yes" :
-      params["nsteps"], params["plumed"] = 20, "e: ENERGY \nPRINT ARG=e FILE=energy"
+      params["nsteps"], params["plumed"] = 150, "e: ENERGY \nPRINT ARG=e FILE=energy"
       md_failed, md_energy, pl_energy = runMDCalc( "energy", code, version, runner, params ), [], []
       if not md_failed and os.path.exists("tests/" + code + "/energy_" + version + "/energy") : md_energy, pl_energy = runner.getEnergy("tests/" + code + "/energy_" + version), np.loadtxt("tests/" + code + "/energy_" + version + "/energy")[:,1]
       else : md_failed = True
@@ -199,13 +199,13 @@ def runTests(code,version,runner) :
       of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy ), "energy", code, version) + " | \n") 
       if info["forces"]=="yes" :
          params = runner.setParams()
-         params["nsteps"], params["ensemble"] = 20, "nvt"
+         params["nsteps"], params["ensemble"] = 150, "nvt"
          params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f"
          run1 = runMDCalc("engforce1", code, version, runner, params )
          alpha = 1.1
-         params["temperature"] = params["temperature"]*alpha*alpha
-         params["friction"] = params["friction"] / alpha
-         params["tstep"] = params["tstep"] / alpha
+         params["temperature"] = params["temperature"]*alpha
+         params["friction"] = params["friction"] / np.sqrt(alpha)
+         params["tstep"] = params["tstep"] / np.sqrt(alpha)
          params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.1"
          run2 = runMDCalc("engforce2", code, version, runner, params )
          md_failed, val1, val2 = run1 or run2, [], []
@@ -214,13 +214,13 @@ def runTests(code,version,runner) :
          of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engforce", code, version) + " | \n") 
       if info["virial"]=="yes" :
          params = runner.setParams()
-         params["nsteps"], params["ensemble"] = 20, "npt"
+         params["nsteps"], params["ensemble"] = 150, "npt"
          params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f"
          run1 = runMDCalc("engvir1", code, version, runner, params )
          alpha = 1.1
-         params["temperature"] = params["temperature"]*alpha*alpha 
-         params["friction"], params["pfriction"] = params["friction"] / alpha, params["pfriction"] / alpha
-         params["tstep"] = params["tstep"] / alpha
+         params["temperature"] = params["temperature"]*alpha
+         params["friction"], params["pfriction"] = params["friction"] / np.sqrt(alpha), params["pfriction"] / np.sqrt(alpha)
+         params["tstep"] = params["tstep"] / np.sqrt(alpha)
          params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.1"
          run2 = runMDCalc("engvir2", code, version, runner, params )
          md_failed, val1, val2 = run1 or run2, [], []
