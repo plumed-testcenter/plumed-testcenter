@@ -204,7 +204,7 @@ def runTests(code,version,runner) :
          run1 = runMDCalc("engforce1", code, version, runner, params )
          alpha = 1.1
          params["temperature"] = params["temperature"]*alpha
-         params["friction"] = params["friction"] / np.sqrt(alpha)
+         params["friction"] = params["friction"]*np.sqrt(alpha)
          params["tstep"] = params["tstep"] / np.sqrt(alpha)
          params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.1"
          run2 = runMDCalc("engforce2", code, version, runner, params )
@@ -219,7 +219,7 @@ def runTests(code,version,runner) :
          run1 = runMDCalc("engvir1", code, version, runner, params )
          alpha = 1.1
          params["temperature"] = params["temperature"]*alpha
-         params["friction"], params["pfriction"] = params["friction"] / np.sqrt(alpha), params["pfriction"] / np.sqrt(alpha)
+         params["friction"], params["pfriction"] = params["friction"]*np.sqrt(alpha), params["pfriction"]*np.sqrt(alpha)
          params["tstep"] = params["tstep"] / np.sqrt(alpha)
          params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.1"
          run2 = runMDCalc("engvir2", code, version, runner, params )
