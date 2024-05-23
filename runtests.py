@@ -197,31 +197,31 @@ def runTests(code,version,runner) :
       else : md_failed = True
       writeReportPage( "energy", code, version, md_failed, ["energy"], md_energy, pl_energy )
       of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy ), "energy", code, version) + " | \n") 
-      if info["forces"]=="yes" :
+      sqrtalpha = 1.1
+      alpha = sqrtalpha*sqrtalpha
+      if info["engforces"]=="yes" :
          params = runner.setParams()
          params["nsteps"], params["ensemble"] = 150, "nvt"
          params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f"
          run1 = runMDCalc("engforce1", code, version, runner, params )
-         alpha = 1.1
          params["temperature"] = params["temperature"]*alpha
-         params["friction"] = params["friction"]*np.sqrt(alpha)
-         params["tstep"] = params["tstep"] / np.sqrt(alpha)
-         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.1"
+         params["relaxtime"] = params["relaxtime"] / sqrtalpha
+         params["tstep"] = params["tstep"] / sqrtalpha
+         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=" + str(alpha - 1)
          run2 = runMDCalc("engforce2", code, version, runner, params )
          md_failed, val1, val2 = run1 or run2, [], []
          if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engforce1_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engforce2_" + version + "/energy")[:,1]
          writeReportPage( "engforce", code, version, md_failed, ["engforce1", "engforce2"], val1, val2 ) 
          of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engforce", code, version) + " | \n") 
-      if info["forces"] and info["virial"]=="yes" :
+      if info["engforces"] and info["virial"]=="yes" :
          params = runner.setParams()
          params["nsteps"], params["ensemble"] = 150, "npt"
          params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f"
          run1 = runMDCalc("engvir1", code, version, runner, params )
-         alpha = 1.1
          params["temperature"] = params["temperature"]*alpha
-         params["friction"], params["pfriction"] = params["friction"]*np.sqrt(alpha), params["pfriction"]*np.sqrt(alpha)
-         params["tstep"] = params["tstep"] / np.sqrt(alpha)
-         params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=0.1"
+         params["relaxtime"], params["prelaxtime"] = params["relaxtime"] / sqrtalpha, params["prelaxtime"] / sqrtalpha
+         params["tstep"] = params["tstep"] / sqrtalpha
+         params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=" + str(alpha - 1)
          run2 = runMDCalc("engvir2", code, version, runner, params )
          md_failed, val1, val2 = run1 or run2, [], []
          if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[:,1:]

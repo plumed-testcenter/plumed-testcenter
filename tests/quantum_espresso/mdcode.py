@@ -1,4 +1,4 @@
-import os
+mport os
 import numpy as np
 import xml.etree.ElementTree as ET
 import subprocess
@@ -12,9 +12,9 @@ class mdcode :
        params = {
          "temperature": 1.0,
          "tstep": 20,
-         "friction": 10,
+         "relaxtime": 10,
          "pressure": 0.0001,
-         "pfriction": 4.0
+         "prelaxtime": 4.0
        }
        return params
 
@@ -41,7 +41,7 @@ class mdcode :
        inp = inp + " &ions \n"
        inp = inp + "    ion_temperature = 'svr' \n"
        inp = inp + "    tempw = " + str(mdparams["temperature"]) + "\n"
-       inp = inp + "    nraise = " + str(1./mdparams["friction"]) + "\n"
+       inp = inp + "    nraise = 10\n"
        inp = inp + " / \n"
        if mdparams["ensemble"]=="npt" :
           inp = inp + " &cell \n"

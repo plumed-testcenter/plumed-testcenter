@@ -7,9 +7,9 @@ class mdcode :
        params = {
          "temperature": 1.0,
          "tstep": 0.005,
-         "friction": 1.0,
+         "relaxtime": 1.0,
          "pressure": 1.0,
-         "pfriction": 4
+         "prelaxtime": 4
        }
        return params
  
@@ -19,7 +19,7 @@ class mdcode :
        inp = inp + "outputfile output.xyz\n"
        inp = inp + "temperature " + str(mdparams["temperature"]) + "\n"
        inp = inp + "tstep " + str(mdparams["tstep"]) + "\n"
-       inp = inp + "friction " + str(mdparams["friction"]) + "\n"
+       inp = inp + "friction " + str(1.0/mdparams["relaxtime"]) + "\n"
        inp = inp + "forcecutoff 2.5\n"
        inp = inp + "listcutoff  3.0\n"
        inp = inp + "nstep " + str(mdparams["nsteps"]) + "\n"

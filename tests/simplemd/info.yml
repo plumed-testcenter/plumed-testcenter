@@ -10,3 +10,4 @@ tests:
    forces: yes
    virial: no
    energy: yes
+   engforces: yes
