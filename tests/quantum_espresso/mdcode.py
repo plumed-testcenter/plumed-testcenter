@@ -41,7 +41,7 @@ class mdcode :
        inp = inp + " &ions \n"
        inp = inp + "    ion_temperature = 'svr' \n"
        inp = inp + "    tempw = " + str(mdparams["temperature"]) + "\n"
-       inp = inp + "    nraise = " + str(mdparams["friction"]) + "\n"
+       inp = inp + "    nraise = " + str(1./mdparams["friction"]) + "\n"
        inp = inp + " / \n"
        if mdparams["ensemble"]=="npt" :
           inp = inp + " &cell \n"

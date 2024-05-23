@@ -212,7 +212,7 @@ def runTests(code,version,runner) :
          if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engforce1_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engforce2_" + version + "/energy")[:,1]
          writeReportPage( "engforce", code, version, md_failed, ["engforce1", "engforce2"], val1, val2 ) 
          of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engforce", code, version) + " | \n") 
-      if info["virial"]=="yes" :
+      if info["forces"] and info["virial"]=="yes" :
          params = runner.setParams()
          params["nsteps"], params["ensemble"] = 150, "npt"
          params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f"

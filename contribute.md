@@ -107,9 +107,9 @@ The key parameters that are passed within the `mdparams` are:
 
 * __ensemble__ - either npt or nvt.  If this variable is npt then the calculation should be run at constant pressure.  If it is nvt then the calculation should be run at constant volume.  If there is not a barostat in your code you can safely ignore this variable and run everything with nvt (as is done for simplemd in the example above).  If you set the tests correctly (see next section) you will not be testing any features that require you to run at constant pressure.
 * __temperature__ - the temperature 
-* __friction__ - the thermostat friction
+* __friction__ - the thermostat friction in units of inverse time.  In many MD codes you provide a relaxation time to the thermostat.  This quantity is one over the relaxation time.
 * __pressure__ - the pressure  
-* __pfriction__ - the barstat frction
+* __pfriction__ - the barstat frction.  In many MD codes you provide a relaxation time to the barostat.  This quantity is one over the relaxation time.
 * __tstep__ - the integration timestep
 * __nsteps__ - the number of steps of MD to perform
 * __restraint__ - this parameter is used to test that PLUMED is applying forces on atoms correctly.  If the value passed in this variable is positive then this should be used as the $d_0$ parameter of a harmonic restraint with the form $\frac{1}{2}\kappa(d_{12} - d_0)^2$, where $d_{12}$ is the distance between the first two atoms in your system and $\kappa = 2000 kJ mol$^{-1}$ nm$^{-2}$.  In the example above with simplemd this restraint is applied by PLUMED (because simplemd has no functionality of its own to apply a restraint of this form).  In most other MD codes you should be able to apply the harmonic restraint within the MD code.  The test here then determines whether the time series of distances that is returned when the restraint is applied by PLUMED is the same as the time series that is returned when the restraint is applied within the MD code.
