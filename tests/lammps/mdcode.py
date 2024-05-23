@@ -36,7 +36,7 @@ class mdcode :
        inp = inp + "fix             2 all plumed plumedfile plumed.dat outfile p.log\n"
        inp = inp + "fix             4 all shake 0.0001 10 100 b 4 6 8 10 12 14 18 a 31\n"
        if mdparams["ensemble"]=="nvt" : inp = inp + "fix             1 all nvt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["relaxtime"]) + " tchain 1\n"
-       elif mdparams["ensemble"]=="npt" : inp = inp + "fix           1 all npt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["relaxtime"]) + " iso " + str(mdparams["pressure"]) + " " + str(mdparams["pressure"]) + " " + str(1./mdparams["prelaxtime"]) + " tchain 1 \n"
+       elif mdparams["ensemble"]=="npt" : inp = inp + "fix           1 all npt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["relaxtime"]) + " iso " + str(mdparams["pressure"]) + " " + str(mdparams["pressure"]) + " " + str(mdparams["prelaxtime"]) + " tchain 1 \n"
        inp = inp + "fix             2a ref setforce 0.0 0.0 0.0\n"
        # Code to deal with restraint 
        if "restraint" in mdparams and mdparams["restraint"]>0 : inp = inp + "fix 6 all restrain bond 1 2 10.0 10.0 " + str(10*mdparams["restraint"]) + "\n"
