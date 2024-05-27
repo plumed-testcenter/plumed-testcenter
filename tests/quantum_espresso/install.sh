@@ -8,7 +8,7 @@ cd q-e$suffix
 # We build the interface with QE 7.0 because we are using the patch 
 git checkout qe-7.0
 ./configure --prefix="$HOME/opt"
-plumed$suffix patch --engine qespresso-7.0 -p   #--mode $mode
+plumed$suffix patch --engine qespresso-7.0 -p --mode $mode
 make pw
 make install
 
