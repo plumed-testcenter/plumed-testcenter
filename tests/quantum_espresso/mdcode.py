@@ -39,7 +39,7 @@ class mdcode :
        inp = inp + "    mixing_beta = 0.7 \n"
        inp = inp + " / \n"
        inp = inp + " &ions \n"
-       inp = inp + "    ion_temperature = 'svr' \n"
+       inp = inp + "    ion_temperature = 'berendsen' \n"
        inp = inp + "    tempw = " + str(mdparams["temperature"]) + "\n"
        inp = inp + "    nraise = 10\n"
        inp = inp + " / \n"
