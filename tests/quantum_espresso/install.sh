@@ -6,10 +6,8 @@ git clone https://gitlab.com/QEF/q-e.git q-e$suffix
 # Lets build quantum espresso
 cd q-e$suffix
 # We build the interface with QE 7.0 because we are using the patch 
-export F90=mpif90
-export CC=mpic++
 git checkout qe-7.0
-./configure --prefix="$HOME/opt"
+./configure --prefix="$HOME/opt" CC=mpic++
 plumed$suffix patch --engine qespresso-7.0 -p --mode $mode
 make pw
 make install
