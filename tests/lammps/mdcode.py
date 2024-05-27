@@ -6,7 +6,6 @@ class mdcode :
    def setParams( self ) :
        params = {
          "temperature": 275,
-         "itemperature": 275,
          "tstep": 2,
          "relaxtime": 100,
          "pressure": 0.987,
@@ -51,7 +50,7 @@ class mdcode :
        inp = inp + "variable        bb equal cellb\n"
        inp = inp + "variable        cb equal cellc\n"
        inp = inp + "fix             7 all print 1 \"$(v_ab) $(v_bb) $(v_cb)\" file lammps_cell\n"
-       inp = inp + "velocity        all create " + str(mdparams["itemperature"]) + " ${seed} dist gaussian\n"
+       inp = inp + "velocity        all create " + str(mdparams["temperature"]) + " ${seed} dist gaussian\n"
        inp = inp + "run             " + str(mdparams["nsteps"]) + "\n"
        of = open("in.peptide-plumed","w+")
        of.write(inp)
