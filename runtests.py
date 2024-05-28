@@ -27,25 +27,25 @@ def processMarkdown( filename ) :
     inp = f.read()
     f.close()
 
-    ofile, inplumed, plumed_inp = open( filename, "w+" ), False, ""
+    ofile, inplumed, plumed_inp, ninputs = open( filename, "w+" ), False, "", 0
     for line in inp.splitlines() :
         # Detect and copy plumed input files 
         if "```plumed" in line :
-           inplumed, plumed_inp = True, ""
+           inplumed, plumed_inp, ninputs = True, "", ninputs + 1
         # Test plumed input files that have been found in tutorial 
         elif inplumed and "```" in line :
            inplumed = False
-           solutionfile = "this_input_should_work.dat"
+           solutionfile = "working" + str(ninputs) + ".dat"
            sf = open( solutionfile, "w+" )
            sf.write( plumed_inp )
            sf.close()
            # Test whether the input solution can be parsed
            success = success=test_plumed( "plumed", solutionfile )
-           success_master=test_plumed( "plumed_master", solutionfile  )
+           success_master=test_plumed( "plumed_master", solutionfile, printjson=True  )
            # Find the stable version 
            stable_version=subprocess.check_output('plumed info --version', shell=True).decode('utf-8').strip()
            # Use PlumedToHTML to create the input with all the bells and whistles
-           html = get_html( plumed_inp, solutionfile, solutionfile, ("v"+ stable_version,"master"), (success,success_master), ("plumed","plumed_master") )
+           html = get_html( plumed_inp, solutionfile, solutionfile, ("v"+ stable_version,"master"), (success,success_master), ("plumed","plumed_master"), usejson=(not success_master) )
            # Print the html for the solution
            ofile.write( "{% raw %}\n" + html + "\n {% endraw %} \n" )
         elif inplumed :
@@ -101,7 +101,7 @@ def runTests(code,version,runner) :
 
    params, basic_md_failed = runner.setParams(), True
    if info["positions"]=="yes" or info["timestep"]=="yes" or info["mass"]=="yes" or info["charge"]=="yes" : 
-      params["plumed"] = "DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz PRECISION=4\n"
+      params["plumed"] = "DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz\n"
       params["plumed"] = params["plumed"] + "c: CELL \n PRINT ARG=c.* FILE=cell_data\n"
       if info["mass"]=="yes" and info["charge"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed\n"
       elif info["mass"]=="yes" : params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed ONLY_MASSES\n"
@@ -131,12 +131,12 @@ def runTests(code,version,runner) :
 
       # Output results from tests on natoms
       writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], codenatoms, plumednatoms ) 
-      of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, codenatoms, plumednatoms), "natoms", code, version) + "| \n") 
+      of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, codenatoms, plumednatoms, np.ones(len(codenatoms) ), "natoms", code, version) + "| \n") 
       # Output results from tests on positions
       writeReportPage( "positions", code, version, basic_md_failed, ["basic"], codepos, plumedpos )
-      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos), "positions", code, version) + "| \n")
+      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos, codepos ), "positions", code, version) + "| \n")
       writeReportPage( "cell", code, version, basic_md_failed, ["basic"], codecell, plumedcell )
-      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codecell, plumedcell), "cell", code, version) + " | \n")
+      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codecell, plumedcell, codecell), "cell", code, version) + " | \n")
    if info["timestep"]=="yes" :
       md_tstep, plumed_tstep = 0.1, 0.1
       if not basic_md_failed :
@@ -145,22 +145,22 @@ def runTests(code,version,runner) :
          for i in range(1,len(plumedtimes)) : 
              if plumedtimes[i]-plumedtimes[i-1]!=plumed_tstep : ValueError("Timestep should be the same for all MD steps")
       writeReportPage( "timestep", code, version, basic_md_failed, ["basic"], md_tstep, plumed_tstep )
-      of.write("| MD timestep passed correctly | " + getBadge( check(basic_md_failed, md_tstep, plumed_tstep), "timestep", code, version) + " | \n")
+      of.write("| MD timestep passed correctly | " + getBadge( check(basic_md_failed, md_tstep, plumed_tstep, 1), "timestep", code, version) + " | \n")
    if info["mass"]=="yes" : 
       md_masses, pl_masses = [], []
       if not basic_md_failed : md_masses, pl_masses = runner.getMasses("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,1]
       writeReportPage( "mass", code, version, basic_md_failed, ["basic"], md_masses, pl_masses ) 
-      of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, md_masses, pl_masses ), "mass", code, version) + " | \n")
+      of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, md_masses, pl_masses, np.ones(len(md_masses) ), "mass", code, version) + " | \n")
    if info["charge"]=="yes" :
       md_charges, pl_charges = [], []
       if not basic_md_failed : md_charges, pl_charges = runner.getCharges("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,2]
       writeReportPage( "charge", code, version, basic_md_failed, ["basic"], md_charges, pl_charges ) 
-      of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, md_charges, pl_charges ), "charge", code, version) + " | \n")
+      of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, md_charges, pl_charges, np.ones(len(md_charges) ), "charge", code, version) + " | \n")
    if info["forces"]=="yes" :
       # First run a calculation to find the reference distance between atom 1 and 2
       rparams = runner.setParams()
       rparams["nsteps"], rparams["ensemble"] = 2, "nvt"
-      rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar FMT=%8.4f"
+      rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
       refrun, mdrun, plrun = runMDCalc("refres", code, version, runner, rparams ), True, True
       if not refrun : 
          # Get the reference distance betwene the atoms
@@ -168,65 +168,69 @@ def runTests(code,version,runner) :
          # Run the calculation with the restraint applied by the MD code
          rparams["nsteps"], rparams["ensemble"] = 20, "nvt"
          rparams["restraint"] = refdist
-         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar FMT=%8.4f"
+         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
          mdrun = runMDCalc("forces1", code, version, runner, rparams )
          # Run the calculation with the restraint applied by PLUMED
          rparams["restraint"] = -10
-         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nRESTRAINT ARG=dd KAPPA=2000 AT=" + str(refdist) + "\nPRINT ARG=dd FILE=colvar FMT=%8.4f"
+         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nRESTRAINT ARG=dd KAPPA=2000 AT=" + str(refdist) + "\nPRINT ARG=dd FILE=colvar"
          plrun = runMDCalc("forces2", code, version, runner, rparams )
       # And create our reports from the two runs
       md_failed, val1, val2 = mdrun or plrun, [], [] 
       if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/forces1_" + version + "/colvar")[:,1], np.loadtxt("tests/" + code + "/forces2_" + version + "/colvar")[:,1]
       writeReportPage( "forces", code, version, md_failed, ["forces1", "forces2"], val1, val2 )
-      of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2 ), "forces", code, version) + " | \n")
+      of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2, val1 ), "forces", code, version) + " | \n")
    if info["virial"]=="yes" :
       params = runner.setParams()
       params["nsteps"], params["ensemble"] = 150, "npt"
-      params["plumed"] = "vv: VOLUME \n PRINT ARG=vv FILE=volume FMT=%8.5f"
+      params["plumed"] = "vv: VOLUME \n PRINT ARG=vv FILE=volume"
       run1 = runMDCalc("virial1", code, version, runner, params )
-      params["pressure"], params["plumed"] = 1001*params["pressure"], "vv: VOLUME \n RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429 \nPRINT ARG=vv FILE=volume FMT=%8.5f"
+      params["pressure"] = 1001*params["pressure"] 
+      run3 = runMDCalc("virial3", code, version, runner, params )
+      params["plumed"] = "vv: VOLUME \n RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429 \nPRINT ARG=vv FILE=volume"
       run2 = runMDCalc("virial2", code, version, runner, params )
-      md_failed, val1, val2 = run1 or run2, [], []
-      if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/virial1_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial2_" + version + "/volume")[:,1]
+      md_failed, val1, val2, val3 = run1 or run2 or run3, [], [], []
+      if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/virial1_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial2_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial3_" + version + "/volume")[:,1]
       writeReportPage( "virial", code, version, md_failed, ["virial1", "virial2"], val1, val2 )
-      of.write("| PLUMED virial passed correctly | " + getBadge( check( md_failed, val1, val2 ), "virial", code, version) + " | \n")
+      of.write("| PLUMED virial passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val3-val1) ), "virial", code, version) + " | \n")
    if info["energy"]=="yes" :
       params["nsteps"], params["plumed"] = 150, "e: ENERGY \nPRINT ARG=e FILE=energy"
       md_failed, md_energy, pl_energy = runMDCalc( "energy", code, version, runner, params ), [], []
       if not md_failed and os.path.exists("tests/" + code + "/energy_" + version + "/energy") : md_energy, pl_energy = runner.getEnergy("tests/" + code + "/energy_" + version), np.loadtxt("tests/" + code + "/energy_" + version + "/energy")[:,1]
       else : md_failed = True
       writeReportPage( "energy", code, version, md_failed, ["energy"], md_energy, pl_energy )
-      of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy ), "energy", code, version) + " | \n") 
+      of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy, np.abs(md_energy) ), "energy", code, version) + " | \n") 
       sqrtalpha = 1.1
       alpha = sqrtalpha*sqrtalpha
       if info["engforces"]=="yes" :
          params = runner.setParams()
          params["nsteps"], params["ensemble"] = 150, "nvt"
-         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f"
+         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy"
          run1 = runMDCalc("engforce1", code, version, runner, params )
          params["temperature"] = params["temperature"]*alpha
          params["relaxtime"] = params["relaxtime"] / sqrtalpha
          params["tstep"] = params["tstep"] / sqrtalpha
-         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=" + str(alpha - 1)
+         run3 = runMDCalc("engforce3", code, version, runner, params )
+         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy \n RESTRAINT AT=0.0 ARG=e SLOPE=" + str(alpha - 1)
          run2 = runMDCalc("engforce2", code, version, runner, params )
-         md_failed, val1, val2 = run1 or run2, [], []
-         if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engforce1_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engforce2_" + version + "/energy")[:,1]
+         md_failed, val1, val2, val3 = run1 or run2 or run3, [], [], val3
+         if not md_failed : val1, val2, val3 = np.loadtxt("tests/" + code + "/engforce1_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engforce2_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engforce3_" + version + "/energy")[:,1]
          writeReportPage( "engforce", code, version, md_failed, ["engforce1", "engforce2"], val1, val2 ) 
-         of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engforce", code, version) + " | \n") 
+         of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val1-val3) ), "engforce", code, version) + " | \n") 
       if info["engforces"] and info["virial"]=="yes" :
          params = runner.setParams()
          params["nsteps"], params["ensemble"] = 150, "npt"
-         params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f"
+         params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy"
          run1 = runMDCalc("engvir1", code, version, runner, params )
          params["temperature"] = params["temperature"]*alpha
          params["relaxtime"], params["prelaxtime"] = params["relaxtime"] / sqrtalpha, params["prelaxtime"] / sqrtalpha
          params["tstep"] = params["tstep"] / sqrtalpha
-         params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy FMT=%8.4f \n RESTRAINT AT=0.0 ARG=e SLOPE=" + str(alpha - 1)
+         run3 = runMDCalc("engvir3", code, version, runner, params )
+         params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy \n RESTRAINT AT=0.0 ARG=e SLOPE=" + str(alpha - 1)
          run2 = runMDCalc("engvir2", code, version, runner, params )
-         md_failed, val1, val2 = run1 or run2, [], []
-         if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[:,1:]
+         md_failed, val1, val2, val3 = run1 or run2 or run3, [], [], []
+         if not md_failed : val1, val2, val3 = np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engvir3_" + version + "/energy")[:,1:]
          writeReportPage( "engvir", code, version, md_failed, ["engvir1", "engvir2"], val1, val2 )
-         of.write("| PLUMED contribution to virial due to force on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2 ), "engvir", code, version) + " | \n") 
+         of.write("| PLUMED contribution to virial due to force on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val1-val3) ), "engvir", code, version) + " | \n") 
    of.close()
    # Read output file to get status
    ifn, of = open("tests/" + code + "/" + fname, "r"), open("tests/" + code + "/info.yml", "a")
@@ -239,8 +243,10 @@ def runTests(code,version,runner) :
 
 def getBadge( sucess, filen, code, version ) :
    badge = '[![tested on ' + version + '](https://img.shields.io/badge/' + version + '-'
-   if sucess : badge = badge + 'passing-green.svg'
-   else : badge = badge + 'failed-red.svg'
+   if sucess<0 : badge = badge + 'failed-red.svg'
+   elif sucess<5 : badge = badge + 'fail-' + str(sucess) + '%-green.svg'
+   elif sucess<20 : badge = badge + 'fail-' + str(sucess) + '%-yellow.svg'
+   else : badge = badge + 'fail-' + str(sucess) + '%-yellow.svg'
    return badge + ')](' + filen + '_' + version + '.html)'
 
 def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data ) :
@@ -282,10 +288,12 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data ) :
       of.write("| " + str(ref) + " | " + str(data) + " | \n")
    of.close()
 
-def check( md_failed, val1, val2 ) :
-   if md_failed : return False
-   if hasattr(val2, "__len__") and len(val1)!=len(val2) : return False
-   return np.allclose( val1, val2, atol=1E-2 )
+def check( md_failed, val1, val2, val3 ) :
+   if md_failed : return -1
+   if hasattr(val2, "__len__") and len(val1)!=len(val2) : return -1
+   if hasattr(val2, "__len__") and len(val3)!=len(val2) : return -1
+   percent_diff = 100*np.abs( val1 - val2 ) / val3
+   return np.round( np.average( percent_diff ) ) 
 
 if __name__ == "__main__" :
    code, version, argv = "", "", sys.argv[1:]
