@@ -113,7 +113,7 @@ def runTests(code,version,runner) :
    of.write("| Description of test | Status | \n")
    of.write("|:--------------------|:------:| \n")
    if info["positions"]=="yes" :
-      plumednatoms, codenatoms, codepos, plumedpos, codecell, plumedcell = [], [], [], [], [], []
+      plumednatoms, codenatoms, codepos, plumedpos, codecell, plumedcell = [], [], np.ones(10), np.ones(10), np.ones(10), np.ones(10)
       if not basic_md_failed :
          # Get the trajectory that was output by PLUMED
          if os.path.exists("tests/" + code + "/basic_" + version + "/plumed.xyz") : 
@@ -133,7 +133,6 @@ def runTests(code,version,runner) :
       writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], codenatoms, plumednatoms ) 
       of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, np.array(codenatoms), np.array(plumednatoms), 0.0001*np.ones(len(codenatoms)) ), "natoms", code, version) + "| \n") 
       # Output results from tests on positions
-      plumedpos = np.array( plumedpos )
       writeReportPage( "positions", code, version, basic_md_failed, ["basic"], codepos, plumedpos )
       of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, np.array(codepos), plumedpos, 0.0001*np.ones(plumedpos.shape) ), "positions", code, version) + "| \n")
       writeReportPage( "cell", code, version, basic_md_failed, ["basic"], codecell, plumedcell )
@@ -148,12 +147,12 @@ def runTests(code,version,runner) :
       writeReportPage( "timestep", code, version, basic_md_failed, ["basic"], md_tstep, plumed_tstep )
       of.write("| MD timestep passed correctly | " + getBadge( check(basic_md_failed, md_tstep, plumed_tstep, 0.0001), "timestep", code, version) + " | \n")
    if info["mass"]=="yes" : 
-      md_masses, pl_masses = [], []
+      md_masses, pl_masses = np.ones(10), np.ones(10)
       if not basic_md_failed : md_masses, pl_masses = runner.getMasses("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,1]
       writeReportPage( "mass", code, version, basic_md_failed, ["basic"], md_masses, pl_masses ) 
       of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, np.array(md_masses), pl_masses, 0.0001*np.ones(pl_masses.shape) ), "mass", code, version) + " | \n")
    if info["charge"]=="yes" :
-      md_charges, pl_charges = [], []
+      md_charges, pl_charges = np.ones(10), np.ones(10)
       if not basic_md_failed : md_charges, pl_charges = runner.getCharges("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,2]
       writeReportPage( "charge", code, version, basic_md_failed, ["basic"], md_charges, pl_charges ) 
       of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, np.array(md_charges), pl_charges, 0.0001*np.ones(pl_charges.shape) ), "charge", code, version) + " | \n")
