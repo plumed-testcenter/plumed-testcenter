@@ -12,7 +12,7 @@ jobs:
   build:
     strategy:
       matrix:
-        replica: ["simplemd"]
+        replica: ["simplemd", "lammps", "quantum_espresso"]
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
