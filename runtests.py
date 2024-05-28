@@ -131,12 +131,12 @@ def runTests(code,version,runner) :
 
       # Output results from tests on natoms
       writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], codenatoms, plumednatoms ) 
-      of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, codenatoms, plumednatoms, 0.0001*np.ones(len(codenatoms)) ), "natoms", code, version) + "| \n") 
+      of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, np.array(codenatoms), np.array(plumednatoms), 0.0001*np.ones(len(codenatoms)) ), "natoms", code, version) + "| \n") 
       # Output results from tests on positions
       writeReportPage( "positions", code, version, basic_md_failed, ["basic"], codepos, plumedpos )
-      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos, 0.0001*np.ones(plumedpos.shape) ), "positions", code, version) + "| \n")
+      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, np.array(codepos), plumedpos, 0.0001*np.ones(plumedpos.shape) ), "positions", code, version) + "| \n")
       writeReportPage( "cell", code, version, basic_md_failed, ["basic"], codecell, plumedcell )
-      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codecell, plumedcell, 0.0001*np.ones(plumedcell.shape) ), "cell", code, version) + " | \n")
+      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, np.array(codecell), plumedcell, 0.0001*np.ones(plumedcell.shape) ), "cell", code, version) + " | \n")
    if info["timestep"]=="yes" :
       md_tstep, plumed_tstep = 0.1, 0.1
       if not basic_md_failed :
@@ -150,12 +150,12 @@ def runTests(code,version,runner) :
       md_masses, pl_masses = [], []
       if not basic_md_failed : md_masses, pl_masses = runner.getMasses("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,1]
       writeReportPage( "mass", code, version, basic_md_failed, ["basic"], md_masses, pl_masses ) 
-      of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, md_masses, pl_masses, 0.0001*np.ones(pl_masses.shape) ), "mass", code, version) + " | \n")
+      of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, np.array(md_masses), pl_masses, 0.0001*np.ones(pl_masses.shape) ), "mass", code, version) + " | \n")
    if info["charge"]=="yes" :
       md_charges, pl_charges = [], []
       if not basic_md_failed : md_charges, pl_charges = runner.getCharges("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,2]
       writeReportPage( "charge", code, version, basic_md_failed, ["basic"], md_charges, pl_charges ) 
-      of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, md_charges, pl_charges, 0.0001*np.ones(pl_charges.shape) ), "charge", code, version) + " | \n")
+      of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, np.array(md_charges), pl_charges, 0.0001*np.ones(pl_charges.shape) ), "charge", code, version) + " | \n")
    if info["forces"]=="yes" :
       # First run a calculation to find the reference distance between atom 1 and 2
       rparams = runner.setParams()
@@ -178,7 +178,7 @@ def runTests(code,version,runner) :
       md_failed, val1, val2 = mdrun or plrun, [], [] 
       if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/forces1_" + version + "/colvar")[:,1], np.loadtxt("tests/" + code + "/forces2_" + version + "/colvar")[:,1]
       writeReportPage( "forces", code, version, md_failed, ["forces1", "forces2"], val1, val2 )
-      of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2, val1 ), "forces", code, version) + " | \n")
+      of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2, 0.0001*np.ones(val1.shape) ), "forces", code, version) + " | \n")
    if info["virial"]=="yes" :
       params = runner.setParams()
       params["nsteps"], params["ensemble"] = 150, "npt"
