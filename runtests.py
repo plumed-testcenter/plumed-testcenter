@@ -212,7 +212,7 @@ def runTests(code,version,runner) :
          run3 = runMDCalc("engforce3", code, version, runner, params )
          params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy \n RESTRAINT AT=0.0 ARG=e SLOPE=" + str(alpha - 1)
          run2 = runMDCalc("engforce2", code, version, runner, params )
-         md_failed, val1, val2, val3 = run1 or run2 or run3, [], [], val3
+         md_failed, val1, val2, val3 = run1 or run2 or run3, [], [], []
          if not md_failed : val1, val2, val3 = np.loadtxt("tests/" + code + "/engforce1_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engforce2_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engforce3_" + version + "/energy")[:,1]
          writeReportPage( "engforce", code, version, md_failed, ["engforce1", "engforce2"], val1, val2 ) 
          of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val1-val3) ), "engforce", code, version) + " | \n") 
