@@ -285,7 +285,7 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data, denom )
              data_strings = [ "%.4f" % x for x in data[i] ]
              pp_strings = [ "%.4f" % x for x in percent_diff[i] ]
              of.write("|" + " ".join(ref_strings) + " | " + " ".join(data_strings) + " | " + " ".join(pp_strings) + "| \n")
-          else : of.write("|" + str(ref[i]) + " | " + str(data[i]) + " | " + str(pecent_diff[i]) + "| \n")
+          else : of.write("|" + str(ref[i]) + " | " + str(data[i]) + " | " + str(percent_diff[i]) + "| \n")
    elif not md_fail : 
       if len(zipfiles)==1 : of.write("\n| MD code output | PLUMED output | % Difference | \n")
       else : of.write("| First result | Second result | % Difference | \n")
