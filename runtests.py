@@ -131,12 +131,12 @@ def runTests(code,version,runner) :
 
       # Output results from tests on natoms
       writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], codenatoms, plumednatoms ) 
-      of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, codenatoms, plumednatoms, 0.0001*np.ones(codenatoms.shape) ), "natoms", code, version) + "| \n") 
+      of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, codenatoms, plumednatoms, 0.0001*np.ones(len(codenatoms)) ), "natoms", code, version) + "| \n") 
       # Output results from tests on positions
       writeReportPage( "positions", code, version, basic_md_failed, ["basic"], codepos, plumedpos )
-      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos, 0.0001*np.ones(codepos.shape) ), "positions", code, version) + "| \n")
+      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, codepos, plumedpos, 0.0001*np.ones(plumedpos.shape) ), "positions", code, version) + "| \n")
       writeReportPage( "cell", code, version, basic_md_failed, ["basic"], codecell, plumedcell )
-      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codecell, plumedcell, 0.0001*np.ones(codecell.shape) ), "cell", code, version) + " | \n")
+      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, codecell, plumedcell, 0.0001*np.ones(plumedcell.shape) ), "cell", code, version) + " | \n")
    if info["timestep"]=="yes" :
       md_tstep, plumed_tstep = 0.1, 0.1
       if not basic_md_failed :
@@ -150,12 +150,12 @@ def runTests(code,version,runner) :
       md_masses, pl_masses = [], []
       if not basic_md_failed : md_masses, pl_masses = runner.getMasses("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,1]
       writeReportPage( "mass", code, version, basic_md_failed, ["basic"], md_masses, pl_masses ) 
-      of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, md_masses, pl_masses, 0.0001*np.ones(md_masses.shape) ), "mass", code, version) + " | \n")
+      of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, md_masses, pl_masses, 0.0001*np.ones(pl_masses.shape) ), "mass", code, version) + " | \n")
    if info["charge"]=="yes" :
       md_charges, pl_charges = [], []
       if not basic_md_failed : md_charges, pl_charges = runner.getCharges("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,2]
       writeReportPage( "charge", code, version, basic_md_failed, ["basic"], md_charges, pl_charges ) 
-      of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, md_charges, pl_charges, 0.0001*np.ones(md_charges.shape) ), "charge", code, version) + " | \n")
+      of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, md_charges, pl_charges, 0.0001*np.ones(pl_charges.shape) ), "charge", code, version) + " | \n")
    if info["forces"]=="yes" :
       # First run a calculation to find the reference distance between atom 1 and 2
       rparams = runner.setParams()
