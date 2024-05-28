@@ -269,7 +269,10 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data ) :
       else : of.write("\n| First result | Second result | \n")
       of.write("|:-------------|:--------------| \n")
       nlines = min( 20, len(ref) )
-      for i in range(nlines) : of.write("|" + str(ref[i]) + " | " + str(data[i]) + " | \n")
+      for i in range(nlines) : 
+          ref_strings = [ "%.4f" % x for x in ref[i] ] 
+          data_strings = [ "%.4f" % x for x in data[i] ]
+          of.write("|" + " ".join(ref_strings) + " | " + " ".join(data_strings) + " | \n")
    elif not md_fail : 
       if len(zipfiles)==1 : of.write("\n| MD code output | PLUMED output | \n")
       else : of.write("| First result | Second result | \n")
