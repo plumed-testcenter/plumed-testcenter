@@ -236,10 +236,11 @@ def runTests(code,version,runner) :
    ifn, of = open("tests/" + code + "/" + fname, "r"), open("tests/" + code + "/info.yml", "a")
    inp = ifn.read()
    ifn.close()
-   if "%-green.svg" in inp and ("%-red.svg" in inp or '%-yellow.svg' in inp) : of.write("test_plumed" + version + ": partial\n")
+   if "%-green.svg" in inp and ("%-red.svg" in inp or "%-yellow.svg" in inp) : of.write("test_plumed" + version + ": partial\n")
    elif "%-yellow.svg" in inp : of.write("test_plumed" + version + ": partial\n")
    elif "%-green.svg" in inp : of.write("test_plumed" + version + ": working \n")
    elif "%-red.svg" in inp : of.write("test_plumed" + version + ": broken \n")
+   else : raise Exception("Found no test badges in output for tests on " + code + " with " + version)
    of.close()
 
 def getBadge( sucess, filen, code, version ) :
