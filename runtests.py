@@ -189,7 +189,7 @@ def runTests(code,version,runner) :
       params["plumed"] = "vv: VOLUME \n RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429 \nPRINT ARG=vv FILE=volume"
       run2 = runMDCalc("virial2", code, version, runner, params )
       md_failed, val1, val2, val3 = run1 or run2 or run3, np.ones(1), np.ones(1), np.ones(1)
-      if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/virial1_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial2_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial3_" + version + "/volume")[:,1]
+      if not md_failed : val1, val2, val3 = np.loadtxt("tests/" + code + "/virial1_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial2_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial3_" + version + "/volume")[:,1]
       writeReportPage( "virial", code, version, md_failed, ["virial1", "virial2"], val1, val2 )
       of.write("| PLUMED virial passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val3-val1) ), "virial", code, version) + " | \n")
    if info["energy"]=="yes" :
