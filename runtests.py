@@ -278,7 +278,7 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data, denom )
       else : of.write("\n| First result | Second result | % Difference | \n")
       of.write("|:-------------|:--------------|:--------------| \n")
       nlines = min( 20, len(ref) )
-      percent_diff = np.divide( np.abs( ref - data ), denom, out=np.zeros_like(denom), where=denom!=0 )
+      percent_diff = 100*np.divide( np.abs( ref - data ), denom, out=np.zeros_like(denom), where=denom!=0 )
       for i in range(nlines) : 
           if hasattr(ref[i], "__len__") :
              ref_strings = [ "%.4f" % x for x in ref[i] ] 
@@ -290,14 +290,14 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data, denom )
       if len(zipfiles)==1 : of.write("\n| MD code output | PLUMED output | % Difference | \n")
       else : of.write("| First result | Second result | % Difference | \n")
       of.write("|:-------------|:--------------|:--------------| \n")
-      of.write("| " + str(ref) + " | " + str(data) + " | " + str(percent_diff) + " | \n")
+      of.write("| " + str(ref) + " | " + str(data) + " | " + str(100*np.abs(ref-data)/denom) + " | \n")
    of.close()
 
 def check( md_failed, val1, val2, val3 ) :
    if md_failed : return -1
    if hasattr(val2, "__len__") and len(val1)!=len(val2) : return -1
    if hasattr(val2, "__len__") and len(val3)!=len(val2) : return -1
-   percent_diff = np.divide( np.abs( val1 - val2 ), val3, out=np.zeros_like(val3), where=val3!=0 ) 
+   percent_diff = 100*np.divide( np.abs( val1 - val2 ), val3, out=np.zeros_like(val3), where=val3!=0 ) 
    return int(np.round( np.average( percent_diff ) )) 
 
 if __name__ == "__main__" :
