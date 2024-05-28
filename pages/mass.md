@@ -14,5 +14,6 @@ DUMPMASSCHARGE FILE=mq_plumed
 # Results 
 
 The table below contains some of the masses that were output by the above command and the masses of the corresponding atoms 
-that were output by the MD code.  If the PLUMED interface is working correctly these two sets of numbers should be identical.
+that were output by the MD code in its first two columns.  The third column contains the difference between these two numbers reported as a percentage of 0.001.
+If the PLUMED interface is working correctly the two columns of numbers should be identical and the third should be zero.
 

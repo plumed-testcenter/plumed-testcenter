@@ -16,5 +16,6 @@ test that the energy is passed correctly.
 
 # Results
 
-The table below contains the energies that were output by PLUMED and the energies that were ouptut by the Md code.  If the PLUMED interface is 
-working correctly these two sets of numbers should be identical.
+The table below contains the energies that were output by PLUMED and the energies that were ouptut by the MD code in its first two columns.  
+The third column is the difference between these two numbers expressed as a percentage of 0.001.  If the PLUMED interface is 
+working correctly the first two columns of numbers should be identical and the third should be zero.

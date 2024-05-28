@@ -14,4 +14,5 @@ PRINT ARG=t1 FILE=colvar
 # Results
 
 The table below contains times at which each trajectory step should have ended based on the input timestep and the times 
-that were output by the command above.  If the PLUMED interface is working correctly these two sets of numbers should be identical.
+that were output by the command above in its first two columns.  The third column is the difference between these two numbers divided by 0.0001.  
+If the PLUMED interface is working correctly the first two columns of numbers should be identical.  The third column should contain all zeros.

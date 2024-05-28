@@ -13,8 +13,10 @@ v: VOLUME
 PRINT ARG=v FILE=volume
 ```
 
-We then run a second constant pressure MD simulation at a pressure of 1001 bar and with the following PLUMED restraint 
-applied:
+We then run a second constant pressure MD simulation at a pressure of 1001 bar and the input above.
+
+If the virial has been imlemented correctly within PLUMED the following PLUMED restraint will apply a negative pressure of 1000bar, which should compensate the fact that the
+second calculation was run at higher pressure.  We thus run a third MD calculation with the following input file:
 
 ```plumed
 v: VOLUME 
@@ -23,13 +25,13 @@ RESTRAINT AT=0.0 ARG=v SLOPE=-60.2214129
 PRINT ARG=v FILE=volume2
 ```
 
-The PLUMED restraint in this second calculation applies a negative pressure of 1000bar, which should compensate the fact that the 
-second calculation was run at higher pressure.  The time series for the volumes that are output by the files `volume` and `volume2`
-above should thus be close to identicial. 
+The time series for the volumes that are output by the files `volume` and `volume2` above should thus be close to identicial. 
 
 # Trajectories
 
 # Results
 
-The table below contains the PLUMED outputs from the two calculations described above.
-If the PLUMED interface is working correctly these two sets of numbers should be identical.
+The first and seccond column of the table below contains the PLUMED outputs from the first and the third calculation described above.
+The third column gives a measure of the difference between the results in these two calculations.  To obtain the numbers in this third column we subtracted the results from the 
+first and third calculation described above.  This difference was then divided by the difference between the results obtained from the first and second calculation described above.
+If the PLUMED interface is working correctly the first two columns in this table should be identical.  The third column should be filled with zeros.

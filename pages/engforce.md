@@ -13,8 +13,11 @@ PRINT ARG=e FILE=energy1
 
 We then run a second simulation (starting from identical conditions) at a temperature of $T\alpha$ and with a timestep of $\tau/\sqrt(\alpha)$.
 The thermostat and barostat relaxation times are similarly divided by $\sqrt(\alpha)$.  In the tests that are run on this website we set $\sqrt(\alpha)=1.1$.
+The PLUMED file above is used when this test is run but a different time series of energy values is recorded as the MD parameters in this second simulation are 
+different.
 
-For this second MD run the following PLUMED input file is used:
+If PLUMED is working correctly we should be able to recapture the time series of energy values for the first simulation by running an MD simulation with the modified 
+parameters that were used in the second simulation and the following PLUMED input file:
 
 ```plumed
 e: ENERGY
@@ -24,12 +27,17 @@ PRINT ARG=e FILE=energy2
 RESTRAINT AT=0.0 ARG=e SLOPE=0.21
 ```
 
-When forces are passed correctly the time series of the energies from these two calculations should be identical. An NPT version of this calculation 
-is performed as well as an NVT calculation if the virial is passed to PLUMED.
+In other words, when forces are passed correctly the time series of the energies from the first and third of these calculations should be identical.  
+
+To determine if PLUMED passes this test we calculate the difference between the time series that were observed in the first and third simulations described above.
+We then divide this by the difference between the first and second time series.
+
+An NPT version of this calculation is performed as well as an NVT calculation if the virial is passed to PLUMED.
 
 # Trajectories
 
 # Results
 
-The table below contains the PLUMED outputs from the two calculations described above.
-If the PLUMED interface is working correctly these two sets of numbers should be identical.
+The table below contains the PLUMED outputs from the first and third of the calculations described above in its first two columns.
+The third columns is the difference between the results that were obtained in these two simulations divided by the difference between the results for the first and second simulation.
+If the PLUMED interface is working correctly the first two sets of numbers should be identical and the third should be close to zero.
