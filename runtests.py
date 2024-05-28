@@ -130,7 +130,7 @@ def runTests(code,version,runner) :
          else : basic_md_failed = True
 
       # Output results from tests on natoms
-      writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], np.array(codenatoms), np.array(plumednatom)s, 0.01*np.ones(len(codenatoms)) ) 
+      writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], np.array(codenatoms), np.array(plumednatoms), 0.01*np.ones(len(codenatoms)) ) 
       of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, np.array(codenatoms), np.array(plumednatoms), 0.01*np.ones(len(codenatoms)) ), "natoms", code, version) + "| \n") 
       # Output results from tests on positions
       writeReportPage( "positions", code, version, basic_md_failed, ["basic"], np.array(codepos), plumedpos, 0.001*np.ones(plumedpos.shape) )
