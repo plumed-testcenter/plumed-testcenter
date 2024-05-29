@@ -20,11 +20,12 @@ def cd(newdir):
     finally:
         os.chdir(prevdir)
 
-def processMarkdown( filename ) :
+def processMarkdown( filename, tolerance ) :
     if not os.path.exists(filename) :
        raise RuntimeError("Found no file called " + filename )
     f = open( filename, "r" )
     inp = f.read()
+    inp.replace("$tolerance",tolerance)
     f.close()
 
     ofile, inplumed, plumed_inp, ninputs = open( filename, "w+" ), False, "", 0
@@ -56,8 +57,11 @@ def processMarkdown( filename ) :
     ofile.close()
 
 def buildTestPages( directory ) :
+   stram=open("tests/" + code + "/info.yml", "r")
+   tolerance=yaml.load(stram,Loader=yaml.BaseLoader)["tolerance"]
+   stram.close() 
    for page in os.listdir(directory) :
-       if ".md" in page : processMarkdown( directory + "/" + page )
+       if ".md" in page : processMarkdown( directory + "/" + page, tolerance )
 
 def runMDCalc( name, code, version, runner, params ) :
     # Get the name of the executible
@@ -84,6 +88,7 @@ def runTests(code,version,runner) :
    # Read in the information on the tests that should be run for this code
    stram=open("tests/" + code + "/info.yml", "r")
    info=yaml.load(stram,Loader=yaml.BaseLoader)["tests"]
+   tolerance=yaml.load(stram,Loader=yaml.BaseLoader)["tolerance"]
    stram.close()
 
    fname, usestable = "testout.md", version=="stable"
@@ -133,10 +138,10 @@ def runTests(code,version,runner) :
       writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], np.array(codenatoms), np.array(plumednatoms), 0.01*np.ones(len(codenatoms)) ) 
       of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, np.array(codenatoms), np.array(plumednatoms), 0.01*np.ones(len(codenatoms)) ), "natoms", code, version) + "| \n") 
       # Output results from tests on positions
-      writeReportPage( "positions", code, version, basic_md_failed, ["basic"], np.array(codepos), plumedpos, 0.001*np.ones(plumedpos.shape) )
-      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, np.array(codepos), plumedpos, 0.001*np.ones(plumedpos.shape) ), "positions", code, version) + "| \n")
-      writeReportPage( "cell", code, version, basic_md_failed, ["basic"], np.array(codecell), plumedcell, 0.001*np.ones(plumedcell.shape) )
-      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, np.array(codecell), plumedcell, 0.001*np.ones(plumedcell.shape) ), "cell", code, version) + " | \n")
+      writeReportPage( "positions", code, version, basic_md_failed, ["basic"], np.array(codepos), plumedpos, tolerance*np.ones(plumedpos.shape) )
+      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, np.array(codepos), plumedpos, tolerance*np.ones(plumedpos.shape) ), "positions", code, version) + "| \n")
+      writeReportPage( "cell", code, version, basic_md_failed, ["basic"], np.array(codecell), plumedcell, tolerance*np.ones(plumedcell.shape) )
+      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, np.array(codecell), plumedcell, tolerance*np.ones(plumedcell.shape) ), "cell", code, version) + " | \n")
    if info["timestep"]=="yes" :
       md_tstep, plumed_tstep = 0.1, 0.1
       if not basic_md_failed :
@@ -149,13 +154,13 @@ def runTests(code,version,runner) :
    if info["mass"]=="yes" : 
       md_masses, pl_masses = np.ones(10), np.ones(10)
       if not basic_md_failed : md_masses, pl_masses = runner.getMasses("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,1]
-      writeReportPage( "mass", code, version, basic_md_failed, ["basic"], np.array(md_masses), pl_masses, 0.001*np.ones(pl_masses.shape) ) 
-      of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, np.array(md_masses), pl_masses, 0.001*np.ones(pl_masses.shape) ), "mass", code, version) + " | \n")
+      writeReportPage( "mass", code, version, basic_md_failed, ["basic"], np.array(md_masses), pl_masses, tolerance*np.ones(pl_masses.shape) ) 
+      of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, np.array(md_masses), pl_masses, tolerance*np.ones(pl_masses.shape) ), "mass", code, version) + " | \n")
    if info["charge"]=="yes" :
       md_charges, pl_charges = np.ones(10), np.ones(10)
       if not basic_md_failed : md_charges, pl_charges = runner.getCharges("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,2]
-      writeReportPage( "charge", code, version, basic_md_failed, ["basic"], np.array(md_charges), pl_charges, 0.001*np.ones(pl_charges.shape) ) 
-      of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, np.array(md_charges), pl_charges, 0.001*np.ones(pl_charges.shape) ), "charge", code, version) + " | \n")
+      writeReportPage( "charge", code, version, basic_md_failed, ["basic"], np.array(md_charges), pl_charges, tolerance*np.ones(pl_charges.shape) ) 
+      of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, np.array(md_charges), pl_charges, tolerance*np.ones(pl_charges.shape) ), "charge", code, version) + " | \n")
    if info["forces"]=="yes" :
       # First run a calculation to find the reference distance between atom 1 and 2
       rparams = runner.setParams()
@@ -177,8 +182,8 @@ def runTests(code,version,runner) :
       # And create our reports from the two runs
       md_failed, val1, val2 = mdrun or plrun, np.ones(1), np.ones(1) 
       if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/forces1_" + version + "/colvar")[:,1], np.loadtxt("tests/" + code + "/forces2_" + version + "/colvar")[:,1]
-      writeReportPage( "forces", code, version, md_failed, ["forces1", "forces2"], val1, val2, 0.001*np.ones(val1.shape) )
-      of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2, 0.001*np.ones(val1.shape) ), "forces", code, version) + " | \n")
+      writeReportPage( "forces", code, version, md_failed, ["forces1", "forces2"], val1, val2, tolerance*np.ones(val1.shape) )
+      of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2, tolerance*np.ones(val1.shape) ), "forces", code, version) + " | \n")
    if info["virial"]=="yes" :
       params = runner.setParams()
       params["nsteps"], params["ensemble"] = 50, "npt"
@@ -197,8 +202,8 @@ def runTests(code,version,runner) :
       md_failed, md_energy, pl_energy = runMDCalc( "energy", code, version, runner, params ), np.ones(1), np.ones(1) 
       if not md_failed and os.path.exists("tests/" + code + "/energy_" + version + "/energy") : md_energy, pl_energy = runner.getEnergy("tests/" + code + "/energy_" + version), np.loadtxt("tests/" + code + "/energy_" + version + "/energy")[:,1]
       else : md_failed = True
-      writeReportPage( "energy", code, version, md_failed, ["energy"], md_energy, pl_energy, 0.001*np.ones(len(md_energy)) )
-      of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy, 0.001*np.ones(len(md_energy)) ), "energy", code, version) + " | \n") 
+      writeReportPage( "energy", code, version, md_failed, ["energy"], md_energy, pl_energy, tolerance*np.ones(len(md_energy)) )
+      of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy, tolerance*np.ones(len(md_energy)) ), "energy", code, version) + " | \n") 
       sqrtalpha = 1.1
       alpha = sqrtalpha*sqrtalpha
       if info["engforces"]=="yes" :
@@ -253,9 +258,13 @@ def getBadge( sucess, filen, code, version ) :
    return badge + ')](' + filen + '_' + version + '.html)'
 
 def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data, denom ) :
+   stram=open("tests/" + code + "/info.yml", "r")
+   tolerance=yaml.load(stram,Loader=yaml.BaseLoader)["tolerance"]
+   stram.close() 
    # Read in the file
    f = open( "pages/" + filen + ".md", "r" )
    inp = f.read()
+   inp.replace("$tolerance",tolerance)
    f.close()
    # Now output the file 
    of = open("tests/" + code + "/" + filen + "_" + version + ".md", "w+" )

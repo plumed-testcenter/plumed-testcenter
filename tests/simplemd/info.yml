@@ -1,6 +1,7 @@
 name: simplemd
 description: A Lennard Jones molecular dynamics code that is part of PLUMED. 
 executible: plumed
+tolerance: 0.001
 link: https://www.plumed.org/doc-master/user-doc/html/simplemd.html
 tests: 
    positions: yes

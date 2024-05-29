@@ -13,5 +13,6 @@ DUMPATOMS ATOMS=@mdatoms PRECISION=4 FILE=plumed.xyz
 
 # Results
 
-The table below contains some of the positions that were output by the above command and the positions of the corresponding atoms 
-that were output by the MD code.  If the PLUMED interface is working correctly these two sets of numbers should be identical.
+The first two columns in the table below contains some of the positions that were output by the above command and the positions of the corresponding atoms 
+that were output by the MD code.  If the PLUMED interface is working correctly these two sets of numbers should be identical.  The third column contains the difference
+between these two numbers expressed as a percentage of $tolerance.

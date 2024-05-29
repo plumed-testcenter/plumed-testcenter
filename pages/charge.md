@@ -15,5 +15,5 @@ DUMPMASSCHARGE FILE=mq_plumed
 
 The table below contains some of the charges that were output by the above command and the charges of the corresponding atoms 
 that were output by the MD code in the first two columns.  The third column is the difference between the numbers in the first two columns expressed as a percentage of 
-0.001.  If the PLUMED interface is working correctly the first two columns of numbers should be identical and the third column should be zero.
+$tolerance.  If the PLUMED interface is working correctly the first two columns of numbers should be identical and the third column should be zero.
 

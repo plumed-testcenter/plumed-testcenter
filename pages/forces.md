@@ -24,4 +24,4 @@ PRINT ARG=dd FILE=mdcode_restraint FMT=%8.4f
 # Results
 
 The table below contains the PLUMED outputs from the two calculations described above in the first two columns.  The third column
-reports the difference between these two numbers as a percentage of 0.001.  If the PLUMED interface is working correctly the first two sets of numbers should be identical, while the third should be zero.
+reports the difference between these two numbers as a percentage of $tolerance.  If the PLUMED interface is working correctly the first two sets of numbers should be identical, while the third should be zero.
