@@ -45,7 +45,7 @@ class mdcode :
        inp = inp + " / \n"
        if mdparams["ensemble"]=="npt" :
           inp = inp + " &cell \n"
-          inp = inp + "    cell_dynamics = 'w', \n"
+          inp = inp + "    cell_dynamics = 'pr', \n"
           inp = inp + "    press = " + str(mdparams["pressure"]) + "\n"
           inp = inp + " / \n"
        inp = inp + "ATOMIC_SPECIES \n"
