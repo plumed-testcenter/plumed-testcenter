@@ -29,10 +29,10 @@ jobs:
         key: ccache-${{ runner.os }}-${{ github.sha }}
         restore-keys: ccache-${{ runner.os }}-
 
-    - name: Set up Python 3.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v2
       with:
-        python-version: 3.8
+        python-version: 3.9
 
     - name: Set paths
       run: |
