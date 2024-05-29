@@ -24,6 +24,8 @@ def processMarkdown( filename ) :
     if not os.path.exists(filename) :
        raise RuntimeError("Found no file called " + filename )
     f = open( filename, "r" )
+    inp = f.read()
+    f.close()
     ofile, inplumed, plumed_inp, ninputs = open( filename, "w+" ), False, "", 0
     for line in inp.splitlines() :
         # Detect and copy plumed input files 
