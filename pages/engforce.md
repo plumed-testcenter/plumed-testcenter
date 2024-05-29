@@ -44,7 +44,7 @@ The table below includes some of the results from the calculation.  The columns 
 
 1. Time series for the energy and volume that were obtained from the simulation at $T$ K, $x_{md}$.
 2. Time series for the energy and volume that were obtained from the simulation at $\alpha T$ K and in which PLUMED applied a restriant on on the energy, $x_{pl}$.
-3. The absolute value of the difference between the time series of energies and volumes that were obtained from the simulations running at $T$ K and $\alpha T$ K, $|x_{md}'-x_{md}|$.  No PLUMED restraints were applied in either of these simulations.
-4. The values of $100\frac{|x_{md} - x_{pl}| }{ |x_{md}'-x_{md} |}$. 
+3. The absolute value of the difference between the time series of energies and volumes that were obtained from the simulations running at $T$ K and $\alpha T$ K, $\vert x_{md}'-x_{md} \vert$.  No PLUMED restraints were applied in either of these simulations.
+4. The values of $100\frac{\vert x_{md} - x_{pl}\vert }{ \vert x_{md}'-x_{md} \vert}$. 
 
 If the PLUMED interface is working correctly the first two sets of numbers should be identical and the final column should be filled with zeros.
