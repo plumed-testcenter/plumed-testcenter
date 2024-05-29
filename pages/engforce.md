@@ -8,7 +8,8 @@ During the course of this simulation we monitor the potential energy using the f
 
 ```plumed 
 e: ENERGY
-PRINT ARG=e FILE=energy1
+v: VOLUME
+PRINT ARG=e,v FILE=energy1
 ```
 
 We then run a second simulation (starting from identical conditions) at a temperature of $T\alpha$ and with a timestep of $\tau/\sqrt(\alpha)$.
@@ -21,13 +22,14 @@ parameters that were used in the second simulation and the following PLUMED inpu
 
 ```plumed
 e: ENERGY
+v: VOLUME
 # slope is such that 
 PRINT ARG=e FILE=energy2
 # slope should be (alpha-1)=0.21
 RESTRAINT AT=0.0 ARG=e SLOPE=0.21
 ```
 
-In other words, when forces are passed correctly the time series of the energies from the first and third of these calculations should be identical.  
+In other words, when forces are passed correctly the time series for the energies and volumes from the first and third of these calculations should be identical.  
 
 To determine if PLUMED passes this test we calculate the difference between the time series that were observed in the first and third simulations described above.
 We then divide this by the difference between the first and second time series.
@@ -38,6 +40,11 @@ An NPT version of this calculation is performed as well as an NVT calculation if
 
 # Results
 
-The table below contains the PLUMED outputs from the first and third of the calculations described above in its first two columns.
-The third columns is the difference between the results that were obtained in these two simulations divided by the difference between the results for the first and second simulation.
-If the PLUMED interface is working correctly the first two sets of numbers should be identical and the third should be close to zero.
+The table below includes some of the results from the calculation.  The columns contain:
+
+1. Time series for the energy and volume that were obtained from the simulation at $T$ K, $x_{md}$.
+2. Time series for the energy and volume that were obtained from the simulation at $\alpha T$ K and in which PLUMED applied a restriant on on the energy, $x_{pl}$.
+3. The absolute value of the difference between the time series of energies and volumes that were obtained from the simulations running at $T$ K and $\alpha T$ K, $|x_{md}'-x_{md}|$.  No PLUMED restraints were applied in either of these simulations.
+4. The values of $100\frac{|x_{md} - x_{pl}| }{ |x_{md}'-x_{md} |}$. 
+
+If the PLUMED interface is working correctly the first two sets of numbers should be identical and the final column should be filled with zeros.

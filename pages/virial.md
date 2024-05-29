@@ -31,7 +31,11 @@ The time series for the volumes that are output by the files `volume` and `volum
 
 # Results
 
-The first and seccond column of the table below contains the PLUMED outputs from the first and the third calculation described above.
-The third column gives a measure of the difference between the results in these two calculations.  To obtain the numbers in this third column we subtracted the results from the 
-first and third calculation described above.  This difference was then divided by the difference between the results obtained from the first and second calculation described above.
-If the PLUMED interface is working correctly the first two columns in this table should be identical.  The third column should be filled with zeros.
+The table below includes some of the results from the calculation.  The columns contain:
+
+1. The time series for the volume that was obtained from the simulation in that was performed at 1 bar, $x_{md}$.
+2. The time series for the volume that was obtained from the simulation that was performed at 1001 bar and in which PLUMED applied a restraint on the volume, $x_{pl}$.
+3. The absolute value of the difference between the time series of volumes that were obtained from the simulations running at 1001 bar and 1 bar, $|x_{md}'-x_{md}|$.  No PLUMED restraints were applied in either of these simulations.
+4. The values of $100\frac{|x_{md} - x_{pl}| }{ |x_{md}'-x_{md} |}$.
+
+If the PLUMED interface is working correctly the first two sets of numbers should be identical and the final column should be filled with zeros.

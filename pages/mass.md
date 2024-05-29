@@ -13,7 +13,12 @@ DUMPMASSCHARGE FILE=mq_plumed
 
 # Results 
 
-The table below contains some of the masses that were output by the above command and the masses of the corresponding atoms 
-that were output by the MD code in its first two columns.  The third column contains the difference between these two numbers reported as a percentage of $tolerance.
-If the PLUMED interface is working correctly the two columns of numbers should be identical and the third should be zero.
+The table below includes some of the results from the calculation.  The columns contain:
+
+1. The masses that were obtained from the MD code, $x_{md}$.
+2. The masses that were obtained from PLUMED, $x_{pl}$.
+3. The tolerances that were used when comparing these quantities, $\delta$.
+4. The values of $100\frac{|x_{md} - x_{pl}| }{\delta}$.
+
+If the PLUMED interface is working correctly the first two sets of numbers should be identical and the final column should be filled with zeros.
 

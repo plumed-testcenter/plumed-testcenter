@@ -6,13 +6,18 @@ To test these positions are passed correctly to PLUMED we run a short trajectory
 that are passed to PLUMED using the following command: 
 
 ```plumed
-DUMPATOMS ATOMS=@mdatoms PRECISION=4 FILE=plumed.xyz
+DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz
 ```
 
 # Trajectory
 
 # Results
 
-The first two columns in the table below contains some of the positions that were output by the above command and the positions of the corresponding atoms 
-that were output by the MD code.  If the PLUMED interface is working correctly these two sets of numbers should be identical.  The third column contains the difference
-between these two numbers expressed as a percentage of $tolerance.
+The table below includes some of the results from the calculation.  The columns contain:
+
+1. The positions that were obtained from the MD code, $x_{md}$.
+2. The positions that were obtained from PLUMED, $x_{pl}$.
+3. The tolerances that were used when comparing these quantities, $\delta$.
+4. The values of $100\frac{|x_{md} - x_{pl}| }{ \delta }$.
+
+If the PLUMED interface is working correctly the first two sets of numbers should be identical and the final column should be filled with zeros.

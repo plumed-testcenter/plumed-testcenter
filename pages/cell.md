@@ -13,6 +13,11 @@ c: CELL
 
 # Results
 
-The table below contains the cell vectors that were output by the above command and the cell vectors 
-that were output by the MD code in the first two columns.  The third column is the difference between the two sets of cell vectors reported as a percentage of 
-$tolerance.  If the PLUMED interface is working correctly the first two sets of numbers should be identical and the final column should be filled with zeros.
+The table below includes some of the results from the calculation.  The columns contain:
+
+1. The values for the cell vectors that were obtained from the MD code, $x_{md}$.
+2. The values for the cell vectors that were obtained from PLUMED, $x_{pl}$.
+3. The tolerances that were used when comparing these quantities, $\delta$. 
+4. The values of $100\frac{|x_{md} - x_{pl}| }{ \delta }$.
+
+If the PLUMED interface is working correctly the first two sets of numbers should be identical and the final column should be filled with zeros.

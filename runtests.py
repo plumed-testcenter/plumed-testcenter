@@ -195,7 +195,7 @@ def runTests(code,version,runner) :
       run2 = runMDCalc("virial2", code, version, runner, params )
       md_failed, val1, val2, val3 = run1 or run2 or run3, np.ones(1), np.ones(1), np.ones(1)
       if not md_failed : val1, val2, val3 = np.loadtxt("tests/" + code + "/virial1_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial2_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial3_" + version + "/volume")[:,1]
-      writeReportPage( "virial", code, version, md_failed, ["virial1", "virial2"], val1, val2, np.abs(val3-val1) )
+      writeReportPage( "virial", code, version, md_failed, ["virial1", "virial2", "virial3"], val1, val2, np.abs(val3-val1) )
       of.write("| PLUMED virial passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val3-val1) ), "virial", code, version) + " | \n")
    if info["energy"]=="yes" :
       params["nsteps"], params["plumed"] = 150, "e: ENERGY \nPRINT ARG=e FILE=energy"
@@ -209,17 +209,17 @@ def runTests(code,version,runner) :
       if info["engforces"]=="yes" :
          params = runner.setParams()
          params["nsteps"], params["ensemble"] = 50, "nvt"
-         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy"
+         params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy"
          run1 = runMDCalc("engforce1", code, version, runner, params )
          params["temperature"] = params["temperature"]*alpha
          params["relaxtime"] = params["relaxtime"] / sqrtalpha
          params["tstep"] = params["tstep"] / sqrtalpha
          run3 = runMDCalc("engforce3", code, version, runner, params )
-         params["plumed"] = "e: ENERGY\n PRINT ARG=e FILE=energy \n RESTRAINT AT=0.0 ARG=e SLOPE=" + str(alpha - 1)
+         params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy \n RESTRAINT AT=0.0 ARG=e SLOPE=" + str(alpha - 1)
          run2 = runMDCalc("engforce2", code, version, runner, params )
          md_failed, val1, val2, val3 = run1 or run2 or run3, np.ones(1), np.ones(1), np.ones(1)
-         if not md_failed : val1, val2, val3 = np.loadtxt("tests/" + code + "/engforce1_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engforce2_" + version + "/energy")[:,1], np.loadtxt("tests/" + code + "/engforce3_" + version + "/energy")[:,1]
-         writeReportPage( "engforce", code, version, md_failed, ["engforce1", "engforce2"], val1, val2, np.abs(val1-val3) ) 
+         if not md_failed : val1, val2, val3 = np.loadtxt("tests/" + code + "/engforce1_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engforce2_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engforce3_" + version + "/energy")[:,1:]
+         writeReportPage( "engforce", code, version, md_failed, ["engforce1", "engforce2", "engforce3"], val1, val2, np.abs(val1-val3) ) 
          of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val1-val3) ), "engforce", code, version) + " | \n") 
       if info["engforces"] and info["virial"]=="yes" :
          params = runner.setParams()
@@ -234,7 +234,7 @@ def runTests(code,version,runner) :
          run2 = runMDCalc("engvir2", code, version, runner, params )
          md_failed, val1, val2, val3 = run1 or run2 or run3, np.ones(1), np.ones(1), np.ones(1)
          if not md_failed : val1, val2, val3 = np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engvir3_" + version + "/energy")[:,1:]
-         writeReportPage( "engvir", code, version, md_failed, ["engvir1", "engvir2"], val1, val2, np.abs(val1-val3) )
+         writeReportPage( "engvir", code, version, md_failed, ["engvir1", "engvir2", "engvir3"], val1, val2, np.abs(val1-val3) )
          of.write("| PLUMED contribution to virial due to force on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val1-val3) ), "engvir", code, version) + " | \n") 
    of.close()
    # Read output file to get status
@@ -270,36 +270,43 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data, denom )
    of = open("tests/" + code + "/" + filen + "_" + version + ".md", "w+" )
    for line in inp.splitlines() :
        if "Trajectory" in line and "#" in line : 
-           if len(zipfiles)!=1 : ValueError("wrong number of trajectories")
+           if len(zipfiles)!=1 : raise ValueError("wrong number of trajectories")
            of.write(line + "\n")
            of.write("Input and output files for the test calculation are available in this [zip archive](" + zipfiles[0] + "_" + version + ".zip) \n\n")
        elif "Trajectories" in line and "#" in line :
-           if len(zipfiles)!=2 : ValueError("wrong number of trajectories")
-           of.write(line + "\n")
-           of.write("1. Input and output files for the first calculation described above are available in this [zip archive](" + zipfiles[0] + "_" + version + ".zip) \n")
-           of.write("2. Input and output files for the second calculation described above are available in this [zip archive](" + zipfiles[1] + "_" + version + ".zip) \n\n") 
+           if len(zipfiles)==2 : 
+              of.write(line + "\n")
+              of.write("1. Input and output files for the calculation where the restraint is applied by the MD code available in this [zip archive](" + zipfiles[0] + "_" + version + ".zip) \n")
+              of.write("2. Input and output files for the calculation where the restraint is applied by PLUMED are available in this [zip archive](" + zipfiles[1] + "_" + version + ".zip) \n\n") 
+           elif len(zipfiles)==3 : 
+              of.write(line + "\n")
+              of.write("1. Input and output files for the unpeturbed calculation are available in this [zip archive](" + zipfiles[0] + "_" + version + ".zip) \n")
+              of.write("2. Input and output files for the peturbed calculation are available in this [zip archive](" + zipfiles[2] + "_" + version + ".zip) \n\n")
+              of.write("2. Input and output files for the peturbed calculation in which a PLUMED restraint is used to undo the effect of the changed MD parameters are available in this [zip archive](" + zipfiles[1] + "_" + version + ".zip) \n\n")
+           else : raise ValueError("wrong number of trajectories")
        elif "Results" in line and "#" in line and md_fail :
            of.write(line + "\n")
            of.write("Calculations were not sucessful and no data was generated for comparison\n")  
        else : of.write(line + "\n")
    if not md_fail and hasattr(data, "__len__") : 
-      if len(zipfiles)==1 : of.write("\n| MD code output | PLUMED output | % Difference | \n")
-      else : of.write("\n| First result | Second result | % Difference | \n")
-      of.write("|:-------------|:--------------|:--------------| \n")
+      if len(zipfiles)==1 : of.write("\n| MD code output | PLUMED output | Tolerance | % Difference | \n")
+      else : of.write("\n| Original result | Result with PLUMED | Effect of peturbation | % Difference | \n")
+      of.write("|:-------------|:--------------|:--------------|:--------------| \n")
       nlines = min( 20, len(ref) )
       percent_diff = 100*np.divide( np.abs( ref - data ), denom, out=np.zeros_like(denom), where=denom!=0 )
       for i in range(nlines) : 
           if hasattr(ref[i], "__len__") :
              ref_strings = [ "%.4f" % x for x in ref[i] ] 
              data_strings = [ "%.4f" % x for x in data[i] ]
+             denom_strings = [ "%.4f" % x for x in denom[i] ]
              pp_strings = [ "%.4f" % x for x in percent_diff[i] ]
-             of.write("|" + " ".join(ref_strings) + " | " + " ".join(data_strings) + " | " + " ".join(pp_strings) + "| \n")
-          else : of.write("|" + str(ref[i]) + " | " + str(data[i]) + " | " + str(percent_diff[i]) + "| \n")
+             of.write("|" + " ".join(ref_strings) + " | " + " ".join(data_strings) + " | " + " ".join(denom_strings) + " | " + " ".join(pp_strings) + "| \n")
+          else : of.write("|" + str(ref[i]) + " | " + str(data[i]) + " | " + str(denom[i]) + " | " + str(percent_diff[i]) + "| \n")
    elif not md_fail : 
-      if len(zipfiles)==1 : of.write("\n| MD code output | PLUMED output | % Difference | \n")
-      else : of.write("| First result | Second result | % Difference | \n")
-      of.write("|:-------------|:--------------|:--------------| \n")
-      of.write("| " + str(ref) + " | " + str(data) + " | " + str(100*np.abs(ref-data)/denom) + " | \n")
+      if len(zipfiles)==1 : of.write("\n| MD code output | PLUMED output | Tolerance | % Difference | \n")
+      else : of.write("| Original result | Result with PLUMED | Effect of peturbation | % Difference | \n")
+      of.write("|:-------------|:--------------|:--------------|:--------------| \n")
+      of.write("| " + str(ref) + " | " + str(data) + " | " + denom + " | " + str(100*np.abs(ref-data)/denom) + " | \n")
    of.close()
 
 def check( md_failed, val1, val2, val3 ) :
