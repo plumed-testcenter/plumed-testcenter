@@ -87,8 +87,8 @@ def runMDCalc( name, code, version, runner, params ) :
 def runTests(code,version,runner) :
    # Read in the information on the tests that should be run for this code
    stram=open("tests/" + code + "/info.yml", "r")
-   info=yaml.load(stram,Loader=yaml.BaseLoader)["tests"]
-   tolerance=yaml.load(stram,Loader=yaml.BaseLoader)["tolerance"]
+   ymldata = yaml.load(stram,Loader=yaml.BaseLoader)
+   info, tolerance = ymldata["tests"], ymldata["tolerance"]
    stram.close()
 
    fname, usestable = "testout.md", version=="stable"
