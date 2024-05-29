@@ -1,0 +1,14 @@
+name: i-pi
+description: A universal force engine interface that can be used to sample thermodynamic ensembles once it is coupled with a function for calculating the energies and forces  
+executible: i-pi
+tolerance: 0.001
+link: https://ipi-code.org
+tests: 
+   positions: yes
+   timestep: yes
+   mass: no
+   charge: no
+   forces: no 
+   virial: no
+   energy: yes
+   engforces: no
