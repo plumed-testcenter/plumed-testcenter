@@ -20,14 +20,10 @@ def cd(newdir):
     finally:
         os.chdir(prevdir)
 
-def processMarkdown( filename, tolerance ) :
+def processMarkdown( filename ) :
     if not os.path.exists(filename) :
        raise RuntimeError("Found no file called " + filename )
     f = open( filename, "r" )
-    inp = f.read()
-    inp.replace("$tolerance",tolerance)
-    f.close()
-
     ofile, inplumed, plumed_inp, ninputs = open( filename, "w+" ), False, "", 0
     for line in inp.splitlines() :
         # Detect and copy plumed input files 
@@ -57,11 +53,8 @@ def processMarkdown( filename, tolerance ) :
     ofile.close()
 
 def buildTestPages( directory ) :
-   stram=open("tests/" + code + "/info.yml", "r")
-   tolerance=yaml.load(stram,Loader=yaml.BaseLoader)["tolerance"]
-   stram.close() 
    for page in os.listdir(directory) :
-       if ".md" in page : processMarkdown( directory + "/" + page, tolerance )
+       if ".md" in page : processMarkdown( directory + "/" + page )
 
 def runMDCalc( name, code, version, runner, params ) :
     # Get the name of the executible
@@ -258,13 +251,9 @@ def getBadge( sucess, filen, code, version ) :
    return badge + ')](' + filen + '_' + version + '.html)'
 
 def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data, denom ) :
-   stram=open("tests/" + code + "/info.yml", "r")
-   tolerance=yaml.load(stram,Loader=yaml.BaseLoader)["tolerance"]
-   stram.close() 
    # Read in the file
    f = open( "pages/" + filen + ".md", "r" )
    inp = f.read()
-   inp.replace("$tolerance",tolerance)
    f.close()
    # Now output the file 
    of = open("tests/" + code + "/" + filen + "_" + version + ".md", "w+" )
@@ -306,7 +295,7 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data, denom )
       if len(zipfiles)==1 : of.write("\n| MD code output | PLUMED output | Tolerance | % Difference | \n")
       else : of.write("| Original result | Result with PLUMED | Effect of peturbation | % Difference | \n")
       of.write("|:-------------|:--------------|:--------------|:--------------| \n")
-      of.write("| " + str(ref) + " | " + str(data) + " | " + denom + " | " + str(100*np.abs(ref-data)/denom) + " | \n")
+      of.write("| " + str(ref) + " | " + str(data) + " | " + str(denom) + " | " + str(100*np.abs(ref-data)/denom) + " | \n")
    of.close()
 
 def check( md_failed, val1, val2, val3 ) :
