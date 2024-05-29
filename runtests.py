@@ -88,7 +88,7 @@ def runTests(code,version,runner) :
    # Read in the information on the tests that should be run for this code
    stram=open("tests/" + code + "/info.yml", "r")
    ymldata = yaml.load(stram,Loader=yaml.BaseLoader)
-   info, tolerance = ymldata["tests"], ymldata["tolerance"]
+   info, tolerance = ymldata["tests"], float( ymldata["tolerance"] )
    stram.close()
 
    fname, usestable = "testout.md", version=="stable"
