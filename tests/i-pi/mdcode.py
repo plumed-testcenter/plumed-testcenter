@@ -86,7 +86,7 @@ class mdcode :
        return 25*0.001  # Convert timestep in fs to ps
 
    def getNumberOfAtoms( self, rundir ) :
-       natoms, traj, [], mda.coordinates.XYZ.XYZReader( rundir + "/tut1.pos_0.xyz")
+       natoms, traj = [], mda.coordinates.XYZ.XYZReader( rundir + "/tut1.pos_0.xyz")
        for frame in traj.trajectory : natoms.append( frame.positions.shape[0] )
        return natoms
        
