@@ -1,10 +1,9 @@
 #!/bin/bash
 
-set -x
-
 mode="static"
 suffix=""
 basedir=`pwd`
+set -x
 
 # Copying arguments from input
 # Mode is how plumed is linked static/runtime
