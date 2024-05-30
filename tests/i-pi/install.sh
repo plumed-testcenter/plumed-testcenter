@@ -4,7 +4,7 @@ git clone https://github.com/i-pi/i-pi.git
 # Build the fortran drivers
 cd i-pi/drivers/f90
 make
-cd ../../../../
+cd ../../../
 
 # Copy i-pi to $HOME/opt
 cp -pr i-pi $HOME/opt
