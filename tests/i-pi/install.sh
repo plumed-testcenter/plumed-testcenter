@@ -11,6 +11,6 @@ cp -pr i-pi $HOME/opt
 
 # Make a script to run i-pi
 echo "#!/bin/bash" > $HOME/opt/bin/i-pi
-echo "PYTHONPATH=$HOME/opt/lib/plumed$suffix/python" >> $HOME/opt/bin/i-pi
+echo "export PYTHONPATH=$HOME/opt/lib/plumed$suffix/python" >> $HOME/opt/bin/i-pi
 echo "$HOME/opt/i-pi/bin/i-pi input.xml & sleep 5; $HOME/opt/i-pi/bin/i-pi-driver -m sg -h localhost -o 15 -p 31415" >> $HOME/opt/bin/i-pi
 chmod u+x $HOME/opt/bin/i-pi
