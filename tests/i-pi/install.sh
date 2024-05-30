@@ -9,6 +9,12 @@ cd ../../../
 # Copy i-pi to $HOME/opt
 cp -pr i-pi $HOME/opt
 
+if [ -d "$HOME/opt/lib/plumed$suffix/python" ]; then
+   echo FOUND PYTHON DIRECTORY FOR RUNNING PLUMED
+else 
+   echo DID NOT FIND PYTHON DIRECTORY FOR RUNNING PLUMED
+fi
+
 # Make a script to run i-pi
 echo "#!/bin/bash" > $HOME/opt/bin/i-pi
 echo "export PYTHONPATH=$HOME/opt/lib/plumed$suffix/python" >> $HOME/opt/bin/i-pi
