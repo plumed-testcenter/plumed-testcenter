@@ -13,7 +13,7 @@ class mdcode :
          "temperature": 1.0,
          "tstep": 20,
          "relaxtime": 10,
-         "pressure": 0.0001,
+         "pressure": 0.001,
          "prelaxtime": 4.0
        }
        return params
