@@ -1,4 +1,5 @@
 import os
+import numpy as np
 import MDAnalysis as mda
 import subprocess
 
@@ -19,7 +20,7 @@ class mdcode :
    def runMD( self, mdparams ) : 
        inp = "<simulation verbosity='high'>\n"
        inp = inp + "  <output prefix='tut1'>\n"
-       inp = inp + "    <properties filename='md' stride='1'> [step, time{picosecond}, conserved{kelvin}, temperature{kelvin}, potential{kelvin}, kinetic_cv{kelvin}] </properties>\n"
+       inp = inp + "    <properties filename='md' stride='1'> [step, time{picosecond}, conserved{kelvin}, temperature{kelvin}, potential{j/mol}, kinetic_cv{j/mol}] </properties>\n"
        inp = inp + "    <properties filename='force' stride='20'> [atom_f{piconewton}(atom=0;bead=0)] </properties>\n"
        inp = inp + "    <trajectory filename='pos' stride='1' format='xyz' cell_units='angstrom'> positions{angstrom} </trajectory>\n"
        inp = inp + "    <checkpoint filename='checkpoint' stride='1000' overwrite='True'/>\n"
@@ -87,6 +88,15 @@ class mdcode :
        return pos
 
    def getCell( self, rundir ) :
+       nframes = len( self.getNumberOfAtoms( rundir ) )
+       cell = np.zeros([nframes,9])
+       f = open( rundir + "/tut1.pos_0.xyz", "r" )
+       lines = f.read().splitlines()
+       f.close() 
+       natoms = int( lines[0] )
+       for i in range(nframes) : 
+           cellstr = lines[i*(2+natoms)+1].split()
+           cell[i,0], cell[i,4], cell[i,8] = float(cellstr[2]) / 10, float(cellstr[3]) / 10, float(cellstr[4]) / 10
        return 0
 
    def getMasses( self, rundir ) :
@@ -96,4 +106,4 @@ class mdcode :
        raise Exception("No function to get charges yet")
   
    def getEnergy( self, rundir ) :
-       return 0
+       return np.loadtxt( rundir + "/tut1.md" )[:,4] / 1000
