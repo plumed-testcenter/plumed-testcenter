@@ -126,6 +126,8 @@ def runTests(code,version,runner) :
             for frame in plumedtraj.trajectory :
                 if first : plumedpos, first = frame.positions, False
                 else : plumedpos = np.concatenate( (plumedpos, frame.positions), axis=0 )
+            plumedcelldata = np.loadtxt("tests/" + code + "/basic_" + version + "/cell_data")
+            print("CELL DATA SHAPE", plumedcelldata.shape )
             codecell, plumedcell = runner.getCell( "tests/" + code + "/basic_" + version ), np.loadtxt("tests/" + code + "/basic_" + version + "/cell_data")[:,1:]
          else : basic_md_failed = True
 
