@@ -1,4 +1,5 @@
 import os
+import time
 import numpy as np
 import MDAnalysis as mda
 import subprocess
@@ -44,21 +45,21 @@ class mdcode :
        inp = inp + "    </forces>\n"
        inp = inp + "    <ensemble>\n"
        inp = inp + "      <temperature units='kelvin'> " + str(mdparams["temperature"]) + " </temperature>\n"
-       #if mdparams["ensemble"]=="npt" : inp = inp + "      <pressure>" + str(mdparams["pressure"]) + "</pressure>\n"
+#       if mdparams["ensemble"]=="npt" : inp = inp + "      <pressure>" + str(mdparams["pressure"]) + "</pressure>\n"
        inp = inp + "      <bias>\n"
        inp = inp + "        <force forcefield='plumed' nbeads='1'></force>\n"
        inp = inp + "      </bias>\n"
        inp = inp + "    </ensemble>\n"
        inp = inp + "    <motion mode='dynamics'>\n"
-       # if mdparams["ensemble"]=="npt" : 
-       #    inp = inp + "      <dynamics mode='npt'>\n"
-       #    inp = inp + "        <barostat mode='isotropic'>\n"
-       #    inp = inp + "        <thermostat mode='langevin'>\n"
-       #    inp = inp + "          <tau units='femtosecond'> " + str(mdparams["prelaxtime"]) + " </tau>\n"
-       #    inp = inp + "        </thermostat>\n"
-       #    inp = inp + "        <tau units='femtosecond'> " + str(mdparams["prelaxtime"]) + " </tau>\n"
-       #    inp = inp + "        </barostat>\n"
-       # else : 
+#       if mdparams["ensemble"]=="npt" : 
+#          inp = inp + "      <dynamics mode='npt'>\n"
+#          inp = inp + "        <barostat mode='isotropic'>\n"
+#          inp = inp + "        <thermostat mode='langevin'>\n"
+#          inp = inp + "          <tau units='femtosecond'> " + str(mdparams["prelaxtime"]) + " </tau>\n"
+#          inp = inp + "        </thermostat>\n"
+#          inp = inp + "        <tau units='femtosecond'> " + str(mdparams["prelaxtime"]) + " </tau>\n"
+#          inp = inp + "        </barostat>\n"
+#       else : 
        inp = inp + "      <dynamics mode='nvt'>\n"
        inp = inp + "        <thermostat mode='pile_g'>\n"
        inp = inp + "          <tau units='femtosecond'> " + str(mdparams["tstep"]) + " </tau>\n"
@@ -80,21 +81,26 @@ class mdcode :
        with open("stdout","w") as stdout:
         with open("stderr","w") as stderr:
            out = subprocess.run([executible], text=True, input=inp, stdout=stdout, stderr=stderr )
+       # Just pause for a second after run to make sure there is time to write out all files
+       time.sleep(5)
        return out.returncode
 
    def getTimestep( self ) :
        return 25*0.001  # Convert timestep in fs to ps
 
    def getNumberOfAtoms( self, rundir ) :
-       natoms, traj = [], mda.coordinates.XYZ.XYZReader( rundir + "/tut1.pos_0.xyz")
-       for frame in traj.trajectory : natoms.append( frame.positions.shape[0] )
+       natoms, traj, fnum = [], mda.coordinates.XYZ.XYZReader( rundir + "/tut1.pos_0.xyz"), 0
+       for frame in traj.trajectory : 
+           if fnum>0 : natoms.append( frame.positions.shape[0] )
+           fnum = fnum + 1
        return natoms
        
    def getPositions( self, rundir ) :
-       first, traj = True, mda.coordinates.XYZ.XYZReader( rundir + "/tut1.pos_0.xyz")
+       fnum, traj = 0, mda.coordinates.XYZ.XYZReader( rundir + "/tut1.pos_0.xyz")
        for frame in traj.trajectory :
-          if first : pos, first = frame.positions / 10, False
-          else : pos = np.concatenate( (pos, frame.positions / 10), axis=0 )
+          if fnum==1 : pos, first = frame.positions / 10, False
+          elif fnum>0 : pos = np.concatenate( (pos, frame.positions / 10), axis=0 )
+          fnum = fnum + 1
        return pos
 
    def getCell( self, rundir ) :
@@ -104,10 +110,10 @@ class mdcode :
        lines = f.read().splitlines()
        f.close() 
        natoms = int( lines[0] )
-       for i in range(nframes) : 
+       for i in range(1,nframes) : 
            cellstr = lines[i*(2+natoms)+1].split()
            cell[i,0], cell[i,4], cell[i,8] = float(cellstr[2]) / 10, float(cellstr[3]) / 10, float(cellstr[4]) / 10
-       return 0
+       return cell
 
    def getMasses( self, rundir ) :
        raise Exception("No function to get masses yet")
@@ -116,4 +122,4 @@ class mdcode :
        raise Exception("No function to get charges yet")
   
    def getEnergy( self, rundir ) :
-       return np.loadtxt( rundir + "/tut1.md" )[:,4] / 1000
+       return np.loadtxt( rundir + "/tut1.md" )[1:,4] / 1000
