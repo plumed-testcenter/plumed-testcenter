@@ -53,7 +53,7 @@ class mdcode :
    def getPositions( self, rundir ) :
        first, traj = True, mda.coordinates.XYZ.XYZReader( rundir + "/trajectory.xyz") 
        for frame in traj.trajectory :
-          if first : pos, first = frame.positions, False
+          if first : pos, first = frame.positions.copy(), False
           else : pos = np.concatenate( (pos, frame.positions), axis=0 )
        return pos
 

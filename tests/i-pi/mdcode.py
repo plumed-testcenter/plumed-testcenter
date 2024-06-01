@@ -11,8 +11,8 @@ class mdcode :
    def setParams( self ) :
        params = {
          "temperature": 25,
-         "tstep": 25,
-         "relaxtime": 10,
+         "tstep": 1,
+         "relaxtime": 25,
          "pressure": 1,
          "prelaxtime": 250
        }
@@ -61,9 +61,9 @@ class mdcode :
           inp = inp + "        </barostat>\n"
        else : inp = inp + "      <dynamics mode='nvt'>\n"
        inp = inp + "        <thermostat mode='pile_g'>\n"
-       inp = inp + "          <tau units='femtosecond'> " + str(mdparams["tstep"]) + " </tau>\n"
+       inp = inp + "          <tau units='femtosecond'> " + str(mdparams["relaxtime"]) + " </tau>\n"
        inp = inp + "        </thermostat>\n"
-       inp = inp + "        <timestep units='femtosecond'> " + str(mdparams["relaxtime"]) + " </timestep>\n"
+       inp = inp + "        <timestep units='femtosecond'> " + str(mdparams["tstep"]) + " </timestep>\n"
        inp = inp + "      </dynamics>\n"
        inp = inp + "    </motion>\n"
        inp = inp + "  </system>\n"
@@ -85,7 +85,7 @@ class mdcode :
        return out.returncode
 
    def getTimestep( self ) :
-       return 25*0.001  # Convert timestep in fs to ps
+       return 0.001  # Convert timestep in fs to ps
 
    def getNumberOfAtoms( self, rundir ) :
        natoms, traj, fnum = [], mda.coordinates.XYZ.XYZReader( rundir + "/tut1.pos_0.xyz"), 0
