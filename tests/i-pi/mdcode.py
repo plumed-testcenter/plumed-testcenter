@@ -13,7 +13,7 @@ class mdcode :
          "temperature": 25,
          "tstep": 25,
          "relaxtime": 10,
-         "pressure": 0.0001,
+         "pressure": 1,
          "prelaxtime": 250
        }
        return params
@@ -45,22 +45,21 @@ class mdcode :
        inp = inp + "    </forces>\n"
        inp = inp + "    <ensemble>\n"
        inp = inp + "      <temperature units='kelvin'> " + str(mdparams["temperature"]) + " </temperature>\n"
-#       if mdparams["ensemble"]=="npt" : inp = inp + "      <pressure>" + str(mdparams["pressure"]) + "</pressure>\n"
+       if mdparams["ensemble"]=="npt" : inp = inp + "      <pressure units='bar'>" + str(mdparams["pressure"]) + "</pressure>\n"
        inp = inp + "      <bias>\n"
        inp = inp + "        <force forcefield='plumed' nbeads='1'></force>\n"
        inp = inp + "      </bias>\n"
        inp = inp + "    </ensemble>\n"
        inp = inp + "    <motion mode='dynamics'>\n"
-#       if mdparams["ensemble"]=="npt" : 
-#          inp = inp + "      <dynamics mode='npt'>\n"
-#          inp = inp + "        <barostat mode='isotropic'>\n"
-#          inp = inp + "        <thermostat mode='langevin'>\n"
-#          inp = inp + "          <tau units='femtosecond'> " + str(mdparams["prelaxtime"]) + " </tau>\n"
-#          inp = inp + "        </thermostat>\n"
-#          inp = inp + "        <tau units='femtosecond'> " + str(mdparams["prelaxtime"]) + " </tau>\n"
-#          inp = inp + "        </barostat>\n"
-#       else : 
-       inp = inp + "      <dynamics mode='nvt'>\n"
+       if mdparams["ensemble"]=="npt" : 
+          inp = inp + "      <dynamics mode='npt'>\n"
+          inp = inp + "        <barostat mode='isotropic'>\n"
+          inp = inp + "        <thermostat mode='langevin'>\n"
+          inp = inp + "          <tau units='femtosecond'> " + str(mdparams["prelaxtime"]) + " </tau>\n"
+          inp = inp + "        </thermostat>\n"
+          inp = inp + "        <tau units='femtosecond'> " + str(mdparams["prelaxtime"]) + " </tau>\n"
+          inp = inp + "        </barostat>\n"
+       else : inp = inp + "      <dynamics mode='nvt'>\n"
        inp = inp + "        <thermostat mode='pile_g'>\n"
        inp = inp + "          <tau units='femtosecond'> " + str(mdparams["tstep"]) + " </tau>\n"
        inp = inp + "        </thermostat>\n"
