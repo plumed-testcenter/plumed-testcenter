@@ -85,7 +85,7 @@ class mdcode :
        return out.returncode
 
    def getTimestep( self ) :
-       return 0.001  # Convert timestep in fs to ps
+       return 1  # Set timestep equal to one as the MD code does not set it
 
    def getNumberOfAtoms( self, rundir ) :
        natoms, traj, fnum = [], mda.coordinates.XYZ.XYZReader( rundir + "/tut1.pos_0.xyz"), 0
@@ -111,7 +111,7 @@ class mdcode :
        natoms = int( lines[0] )
        for i in range(1,nframes) : 
            cellstr = lines[i*(2+natoms)+1].split()
-           cell[i,0], cell[i,4], cell[i,8] = float(cellstr[2]) / 10, float(cellstr[3]) / 10, float(cellstr[4]) / 10
+           cell[i-1,0], cell[i-1,4], cell[i-1,8] = float(cellstr[2]) / 10, float(cellstr[3]) / 10, float(cellstr[4]) / 10
        return cell
 
    def getMasses( self, rundir ) :

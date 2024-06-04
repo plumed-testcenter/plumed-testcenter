@@ -5,7 +5,7 @@ tolerance: 0.001
 link: https://ipi-code.org
 tests: 
    positions: yes
-   timestep: yes
+   timestep: no
    mass: no
    charge: no
    forces: no 

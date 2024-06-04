@@ -1,5 +1,5 @@
 # Cloning the i-pi repository
-git clone https://github.com/i-pi/i-pi.git
+git clone https://github.com/gtribello/i-pi.git
 
 # Build the fortran drivers
 cd i-pi/drivers/f90
