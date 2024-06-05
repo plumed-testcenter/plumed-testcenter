@@ -18,43 +18,47 @@ class mdcode :
        }
        return params
 
-   def runMD( self, mdparams ) : 
-       inp = " &control \n"
-       if mdparams["ensemble"]=="nvt" : 
-          inp = inp + "    calculation='md' \n"
+   def runMD( self, mdparams ) :
+       
+       calculation='md'
+       cell_dynamics=""
+       if mdparams["ensemble"]=="nvt" :
+           calculation='md'
        elif mdparams["ensemble"]=="npt" :
-          inp = inp + "    calculation='vc-md' \n" 
-       inp = inp + "    pseudo_dir='./' \n"
-       inp = inp + "    dt=" + str(mdparams["tstep"]) + ", \n"
-       inp = inp + "    nstep=" + str(mdparams["nsteps"]) + " \n"
-       inp = inp + " / \n"
-       inp = inp + " &system \n"
-       inp = inp + "    ibrav= 2, celldm(1)=10.18, nat=  2, ntyp= 1, \n"
-       inp = inp + "    ecutwfc = 8.0, nosym=.true. \n"
-       # Code to deal with restraint 
-       if "restraint" in mdparams and mdparams["restraint"]>0 : inp = inp + "" 
-       inp = inp + " / \n"
-       inp = inp + " &electrons \n"
-       inp = inp + "    conv_thr =  1.0e-8 \n"
-       inp = inp + "    mixing_beta = 0.7 \n"
-       inp = inp + " / \n"
-       inp = inp + " &ions \n"
-       inp = inp + "    ion_temperature = 'berendsen' \n"
-       inp = inp + "    tempw = " + str(mdparams["temperature"]) + "\n"
-       inp = inp + "    nraise = 10\n"
-       inp = inp + " / \n"
-       if mdparams["ensemble"]=="npt" :
-          inp = inp + " &cell \n"
-          inp = inp + "    cell_dynamics = 'w', \n"
-          inp = inp + "    press = " + str(mdparams["pressure"]) + "\n"
-          inp = inp + " / \n"
-       inp = inp + "ATOMIC_SPECIES \n"
-       inp = inp + " Si  28.086  Si.pz-vbc.UPF \n"
-       inp = inp + "ATOMIC_POSITIONS {alat} \n"
-       inp = inp + " Si -0.123 -0.123 -0.123 \n"
-       inp = inp + " Si  0.123  0.123  0.123 \n"
-       inp = inp + "K_POINTS {automatic} \n"
-       inp = inp + " 1 1 1 0 0 0 \n"
+           calculation='vc-md'
+           cell_dynamics=f"""
+ &cell
+     cell_dynamics = 'w',
+     press = {mdparams["pressure"]}
+ /"""
+       inp=f""" &control
+    calculation='{calculation}'
+    pseudo_dir='./'
+    dt={mdparams["tstep"]},
+    nstep={mdparams["nsteps"]}
+ /
+ &system
+    ibrav= 2, celldm(1)=10.18, nat=  2, ntyp= 1,
+    ecutwfc = 8.0, nosym=.true.
+    { "" if "restraint" in mdparams and mdparams["restraint"]>0 else ""}
+ /
+ &electrons 
+    conv_thr =  1.0e-8 
+    mixing_beta = 0.7 
+ / 
+ &ions 
+    ion_temperature = 'berendsen' 
+    tempw ={mdparams["temperature"]}
+    nraise = 10
+ / {cell_dynamics}
+ ATOMIC_SPECIES
+  Si  28.086  Si.pz-vbc.UPF
+ ATOMIC_POSITIONS {{alat}}
+  Si -0.123 -0.123 -0.123
+  Si  0.123  0.123  0.123
+ K_POINTS {{automatic}}
+  1 1 1 0 0 0
+"""
        of = open("md.in","w+")
        of.write(inp)
        of.close()
@@ -130,3 +134,4 @@ class mdcode :
            ebrac = step.find("total_energy")
            energies.append( self.HaToKJ*float(ebrac.find("etot").text) )
        return energies
+   
