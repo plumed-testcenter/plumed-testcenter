@@ -1,0 +1,14 @@
+name: gromacs
+description: A free and open-source software suite for high-performance molecular dynamics and output analysis.
+executible: gromacs
+tolerance: 0.001
+link: https://www.gromacs.org 
+tests: 
+   positions: no
+   timestep: no
+   mass: no
+   charge: no
+   forces: no 
+   virial: no
+   energy: no
+   engforces: no
