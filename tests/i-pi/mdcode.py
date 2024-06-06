@@ -108,7 +108,8 @@ class mdcode :
        f = open( rundir + "/tut1.pos_0.xyz", "r" )
        lines = f.read().splitlines()
        f.close() 
-       natoms = int( lines[0] )
+       natoms, nframes = int( lines[0] ), int( len(lines) / (natoms+2) )
+       if len(lines)%(natoms+2)!=0 : raise Exception("found invalid xyz file")
        for i in range(1,nframes) : 
            cellstr = lines[i*(2+natoms)+1].split()
            cell[i-1,0], cell[i-1,4], cell[i-1,8] = float(cellstr[2]) / 10, float(cellstr[3]) / 10, float(cellstr[4]) / 10
