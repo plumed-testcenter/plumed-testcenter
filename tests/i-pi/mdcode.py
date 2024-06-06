@@ -103,13 +103,13 @@ class mdcode :
        return pos
 
    def getCell( self, rundir ) :
-       nframes = len( self.getNumberOfAtoms( rundir ) )
-       cell = np.zeros([nframes,9])
        f = open( rundir + "/tut1.pos_0.xyz", "r" )
        lines = f.read().splitlines()
        f.close() 
-       natoms, nframes = int( lines[0] ), int( len(lines) / (natoms+2) )
+       natoms = int( lines[0] ) 
+       nframes = int( len(lines) / (natoms+2) )
        if len(lines)%(natoms+2)!=0 : raise Exception("found invalid xyz file")
+       cell = np.zeros([len( self.getNumberOfAtoms( rundir ) ),9])  
        for i in range(1,nframes) : 
            cellstr = lines[i*(2+natoms)+1].split()
            cell[i-1,0], cell[i-1,4], cell[i-1,8] = float(cellstr[2]) / 10, float(cellstr[3]) / 10, float(cellstr[4]) / 10
