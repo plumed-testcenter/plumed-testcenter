@@ -20,5 +20,5 @@ make install
 # Write a script to execute gromacs calculations
 echo "#!/bin/bash" > $HOME/opt/bin/gromacs
 echo $HOME/opt/gromacs/bin/gmx grompp -p topol.top -c conf.gro -f md.mdp >> $HOME/opt/bin/gromacs
-echo $HOME/opt/gromacs/bin/gmx mdrun -plumed plumed.dat" >> $HOME/opt/bin/gromacs
+echo $HOME/opt/gromacs/bin/gmx mdrun -plumed plumed.dat >> $HOME/opt/bin/gromacs
 chmod u+x $HOME/opt/bin/gromacs
