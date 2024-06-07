@@ -98,6 +98,8 @@ def runTests(code,version,runner) :
    if version=="stable" : version = "v" + stable_version
    of.write("the " + version + " version of PLUMED is working correctly.\n\n") 
    if info["virial"]=="no" : of.write("WARNING: " + code + " does not pass the virial to PLUMED and it is thus not possible to run NPT simulations with this code\n\n")
+   if "warning" in ymldata.keys() : 
+      for warn in ymldata["warning"] : of.write("WARNING: " + warn + "\n\n")
 
    params, basic_md_failed = runner.setParams(), True
    if info["positions"]=="yes" or info["timestep"]=="yes" or info["mass"]=="yes" or info["charge"]=="yes" : 
