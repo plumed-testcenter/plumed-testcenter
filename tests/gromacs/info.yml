@@ -4,11 +4,11 @@ executible: gromacs
 tolerance: 0.001
 link: https://www.gromacs.org 
 tests: 
-   positions: no
-   timestep: no
+   positions: yes
+   timestep: yes 
    mass: no
    charge: no
    forces: no 
-   virial: no
+   virial: yes
    energy: no
-   engforces: no
+   engforces: yes
