@@ -133,12 +133,12 @@ def runTests(code,version,runner) :
 
       # Output results from tests on natoms
       writeReportPage( "natoms", code, version, basic_md_failed, ["basic"], np.array(codenatoms), np.array(plumednatoms), 0.01*np.ones(len(codenatoms)) ) 
-      of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, np.array(codenatoms), np.array(plumednatoms), 0.01*np.ones(len(codenatoms)) ), "natoms", code, version) + "| \n") 
+      of.write("| MD code number of atoms passed correctly | " + getBadge( check(basic_md_failed, np.array(codenatoms), np.array(plumednatoms), 0.01*np.ones(len(codenatoms)), 0 ), "natoms", code, version) + "| \n") 
       # Output results from tests on positions
       writeReportPage( "positions", code, version, basic_md_failed, ["basic"], np.array(codepos), plumedpos, tolerance*np.ones(plumedpos.shape) )
-      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, np.array(codepos), plumedpos, tolerance*np.ones(plumedpos.shape) ), "positions", code, version) + "| \n")
+      of.write("| MD code positions passed correctly | " + getBadge( check(basic_md_failed, np.array(codepos), plumedpos, tolerance*np.ones(plumedpos.shape), 0 ), "positions", code, version) + "| \n")
       writeReportPage( "cell", code, version, basic_md_failed, ["basic"], np.array(codecell), plumedcell, tolerance*np.ones(plumedcell.shape) )
-      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, np.array(codecell), plumedcell, tolerance*np.ones(plumedcell.shape) ), "cell", code, version) + " | \n")
+      of.write("| MD code cell vectors passed correctly | " + getBadge( check(basic_md_failed, np.array(codecell), plumedcell, tolerance*np.ones(plumedcell.shape), 0 ), "cell", code, version) + " | \n")
    if info["timestep"]=="yes" :
       md_tstep, plumed_tstep = 0.1, 0.1
       if not basic_md_failed :
@@ -147,17 +147,17 @@ def runTests(code,version,runner) :
          for i in range(1,len(plumedtimes)) : 
              if plumedtimes[i]-plumedtimes[i-1]!=plumed_tstep : ValueError("Timestep should be the same for all MD steps")
       writeReportPage( "timestep", code, version, basic_md_failed, ["basic"], md_tstep, plumed_tstep, 0.0001 )
-      of.write("| MD timestep passed correctly | " + getBadge( check(basic_md_failed, md_tstep, plumed_tstep, 0.0001), "timestep", code, version) + " | \n")
+      of.write("| MD timestep passed correctly | " + getBadge( check(basic_md_failed, md_tstep, plumed_tstep, 0.0001, 0 ), "timestep", code, version) + " | \n")
    if info["mass"]=="yes" : 
       md_masses, pl_masses = np.ones(10), np.ones(10)
       if not basic_md_failed : md_masses, pl_masses = runner.getMasses("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,1]
       writeReportPage( "mass", code, version, basic_md_failed, ["basic"], np.array(md_masses), pl_masses, tolerance*np.ones(pl_masses.shape) ) 
-      of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, np.array(md_masses), pl_masses, tolerance*np.ones(pl_masses.shape) ), "mass", code, version) + " | \n")
+      of.write("| MD code masses passed correctly | " + getBadge( check( basic_md_failed, np.array(md_masses), pl_masses, tolerance*np.ones(pl_masses.shape), 0 ), "mass", code, version) + " | \n")
    if info["charge"]=="yes" :
       md_charges, pl_charges = np.ones(10), np.ones(10)
       if not basic_md_failed : md_charges, pl_charges = runner.getCharges("tests/" + code + "/basic_" + version), np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:,2]
       writeReportPage( "charge", code, version, basic_md_failed, ["basic"], np.array(md_charges), pl_charges, tolerance*np.ones(pl_charges.shape) ) 
-      of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, np.array(md_charges), pl_charges, tolerance*np.ones(pl_charges.shape) ), "charge", code, version) + " | \n")
+      of.write("| MD code charges passed correctly | " + getBadge( check( basic_md_failed, np.array(md_charges), pl_charges, tolerance*np.ones(pl_charges.shape), 0 ), "charge", code, version) + " | \n")
    if info["forces"]=="yes" :
       # First run a calculation to find the reference distance between atom 1 and 2
       rparams = runner.setParams()
@@ -180,7 +180,7 @@ def runTests(code,version,runner) :
       md_failed, val1, val2 = mdrun or plrun, np.ones(1), np.ones(1) 
       if not md_failed : val1, val2 = np.loadtxt("tests/" + code + "/forces1_" + version + "/colvar")[:,1], np.loadtxt("tests/" + code + "/forces2_" + version + "/colvar")[:,1]
       writeReportPage( "forces", code, version, md_failed, ["forces1", "forces2"], val1, val2, tolerance*np.ones(val1.shape) )
-      of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2, tolerance*np.ones(val1.shape) ), "forces", code, version) + " | \n")
+      of.write("| PLUMED forces passed correctly | " + getBadge( check( md_failed, val1, val2, tolerance*np.ones(val1.shape), tolerance ), "forces", code, version) + " | \n")
    if info["virial"]=="yes" :
       params = runner.setParams()
       params["nsteps"], params["ensemble"] = 50, "npt"
@@ -193,14 +193,14 @@ def runTests(code,version,runner) :
       md_failed, val1, val2, val3 = run1 or run2 or run3, np.ones(1), np.ones(1), np.ones(1)
       if not md_failed : val1, val2, val3 = np.loadtxt("tests/" + code + "/virial1_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial2_" + version + "/volume")[:,1], np.loadtxt("tests/" + code + "/virial3_" + version + "/volume")[:,1]
       writeReportPage( "virial", code, version, md_failed, ["virial1", "virial2", "virial3"], val1, val2, np.abs(val3-val1) )
-      of.write("| PLUMED virial passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val3-val1) ), "virial", code, version) + " | \n")
+      of.write("| PLUMED virial passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val3-val1), tolerance ), "virial", code, version) + " | \n")
    if info["energy"]=="yes" :
       params["nsteps"], params["plumed"] = 150, "e: ENERGY \nPRINT ARG=e FILE=energy"
       md_failed, md_energy, pl_energy = runMDCalc( "energy", code, version, runner, params ), np.ones(1), np.ones(1) 
       if not md_failed and os.path.exists("tests/" + code + "/energy_" + version + "/energy") : md_energy, pl_energy = runner.getEnergy("tests/" + code + "/energy_" + version), np.loadtxt("tests/" + code + "/energy_" + version + "/energy")[:,1]
       else : md_failed = True
       writeReportPage( "energy", code, version, md_failed, ["energy"], md_energy, pl_energy, tolerance*np.ones(len(md_energy)) )
-      of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy, tolerance*np.ones(len(md_energy)) ), "energy", code, version) + " | \n") 
+      of.write("| MD code potential energy passed correctly | " + getBadge( check( md_failed, md_energy, pl_energy, tolerance*np.ones(len(md_energy)), tolerance ), "energy", code, version) + " | \n") 
       sqrtalpha = 1.1
       alpha = sqrtalpha*sqrtalpha
       if info["engforces"]=="yes" :
@@ -217,7 +217,7 @@ def runTests(code,version,runner) :
          md_failed, val1, val2, val3 = run1 or run2 or run3, np.ones(1), np.ones(1), np.ones(1)
          if not md_failed : val1, val2, val3 = np.loadtxt("tests/" + code + "/engforce1_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engforce2_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engforce3_" + version + "/energy")[:,1:]
          writeReportPage( "engforce", code, version, md_failed, ["engforce1", "engforce2", "engforce3"], val1, val2, np.abs(val1-val3) ) 
-         of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val1-val3) ), "engforce", code, version) + " | \n") 
+         of.write("| PLUMED forces on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val1-val3), tolerance ), "engforce", code, version) + " | \n") 
       if info["engforces"] and info["virial"]=="yes" :
          params = runner.setParams()
          params["nsteps"], params["ensemble"] = 150, "npt"
@@ -232,7 +232,7 @@ def runTests(code,version,runner) :
          md_failed, val1, val2, val3 = run1 or run2 or run3, np.ones(1), np.ones(1), np.ones(1)
          if not md_failed : val1, val2, val3 = np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[:,1:], np.loadtxt("tests/" + code + "/engvir3_" + version + "/energy")[:,1:]
          writeReportPage( "engvir", code, version, md_failed, ["engvir1", "engvir2", "engvir3"], val1, val2, np.abs(val1-val3) )
-         of.write("| PLUMED contribution to virial due to force on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val1-val3) ), "engvir", code, version) + " | \n") 
+         of.write("| PLUMED contribution to virial due to force on potential energy passed correctly | " + getBadge( check( md_failed, val1, val2, np.abs(val1-val3), tolerance ), "engvir", code, version) + " | \n") 
    of.close()
    # Read output file to get status
    ifn, of = open("tests/" + code + "/" + fname, "r"), open("tests/" + code + "/info.yml", "a")
@@ -302,11 +302,11 @@ def writeReportPage( filen, code, version, md_fail, zipfiles, ref, data, denom )
       of.write("| " + str(ref) + " | " + str(data) + " | " + str(denom) + " | " + str(100*np.abs(ref-data)/denom) + " | \n")
    of.close()
 
-def check( md_failed, val1, val2, val3 ) :
+def check( md_failed, val1, val2, val3, tolerance ) :
    if md_failed : return -1
    if hasattr(val2, "__len__") and len(val1)!=len(val2) : return -1
    if hasattr(val2, "__len__") and len(val3)!=len(val2) : return -1
-   percent_diff = 100*np.divide( np.abs( val1 - val2 ), val3, out=np.zeros_like(val3), where=val3!=0 ) 
+   percent_diff = 100*np.divide( np.abs( val1 - val2 ), val3, out=np.zeros_like(val3), where=val3>tolerance ) 
    return int(np.round( np.average( percent_diff ) )) 
 
 if __name__ == "__main__" :
