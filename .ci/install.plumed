@@ -37,10 +37,10 @@ git checkout $version
 
 hash=$(git rev-parse HEAD)
 
-#if test -f $HOME/opt/lib/$program_name/$hash
-#then
-#  echo "ALREADY AVAILABLE, NO NEED TO REINSTALL"
-#else
+if test -f $HOME/opt/lib/$program_name/$hash
+then
+  echo "ALREADY AVAILABLE, NO NEED TO REINSTALL"
+else
 
 rm -fr $HOME/opt/lib/$program_name
 rm -fr $HOME/opt/bin/$program_name
@@ -53,4 +53,4 @@ make install
 
 touch $HOME/opt/lib/$program_name/$hash
 
-#fi
+fi
