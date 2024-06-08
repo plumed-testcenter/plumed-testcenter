@@ -25,7 +25,7 @@ class mdcode :
 pcoupl                   = Parrinello-Rahman
 tau_p                    = {mdparams["prelaxtime"]}
 compressibility          = 4.46e-5
-ref_p                    = {mdparams["pressure]}
+ref_p                    = {mdparams["pressure"]}
 """
 
        inp = f"""
