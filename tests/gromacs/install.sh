@@ -25,6 +25,7 @@ if [ -f $HOME/opt/gromacs/bin/gmx ] ; then
    chmod u+x $HOME/opt/bin/gromacs
 else 
    echo "#!/bin/bash" > $HOME/opt/bin/gromacs
-   echo gmx executible was not generated >> >> $HOME/opt/bin/gromacs
+   echo gmx executible was not generated >> $HOME/opt/bin/gromacs
+   chmod u+x $HOME/opt/bin/gromacs
    exit 1
 fi
