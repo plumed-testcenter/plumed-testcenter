@@ -17,8 +17,14 @@ cmake .. -DGMX_BUILD_OWN_FFTW=ON -DCMAKE_INSTALL_PREFIX=$HOME/opt/gromacs
 make
 make install
 
-# Write a script to execute gromacs calculations
-echo "#!/bin/bash" > $HOME/opt/bin/gromacs
-echo $HOME/opt/gromacs/bin/gmx grompp -p topol.top -c conf.gro -f md.mdp >> $HOME/opt/bin/gromacs
-echo $HOME/opt/gromacs/bin/gmx mdrun -nt 1 -plumed plumed.dat >> $HOME/opt/bin/gromacs
-chmod u+x $HOME/opt/bin/gromacs
+if [ -f $HOME/opt/gromacs/bin/gmx ] ; then
+   # Write a script to execute gromacs calculations
+   echo "#!/bin/bash" > $HOME/opt/bin/gromacs
+   echo $HOME/opt/gromacs/bin/gmx grompp -p topol.top -c conf.gro -f md.mdp >> $HOME/opt/bin/gromacs
+   echo $HOME/opt/gromacs/bin/gmx mdrun -nt 1 -plumed plumed.dat >> $HOME/opt/bin/gromacs
+   chmod u+x $HOME/opt/bin/gromacs
+else 
+   echo "#!/bin/bash" > $HOME/opt/bin/gromacs
+   echo gmx executible was not generated >> >> $HOME/opt/bin/gromacs
+   exit 1
+fi
