@@ -96,7 +96,7 @@ ref-t                    = {mdparams["temperature"]}
              if fnum==1 : cell = np.array( [dim[0],0,0,0,dim[1],0,0,0,dim[2]] )
              elif fnum>0 : 
                 box = np.array( [dim[0],0,0,0,dim[1],0,0,0,dim[2]] )
-                cell = np.concatenage( (cell, box) )
+                cell = np.np.concatenate( (cell, box) )
              fnum = fnum + 1
        return cell
 
