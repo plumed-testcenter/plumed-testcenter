@@ -3,10 +3,10 @@ git clone https://gitlab.com/gromacs/gromacs.git
 
 # Checkout the correct version of gromacs
 cd gromacs
-git checkout v2023.2
+git checkout v2024.2
 
 # Patch with PLUMED
-plumed$suffix patch --engine gromacs-2023.2 -p --mode $mode
+plumed$suffix patch --engine gromacs-2024.2 -p --mode $mode
 
 # Run cmake
 mkdir build
