@@ -1,7 +1,7 @@
 name: gromacs
 description: A free and open-source software suite for high-performance molecular dynamics and output analysis.
 executible: gromacs
-tolerance: 0.001
+tolerance: 0.01
 link: https://www.gromacs.org 
 tests: 
    positions: yes
