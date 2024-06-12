@@ -72,19 +72,17 @@ ref-t                    = {mdparams["temperature"]}
        return 0.002
 
    def getNumberOfAtoms( self, rundir ) :
-       natoms, fnum = [], 0 
+       natoms = [] 
        with mda.coordinates.XTC.XTCFile( rundir + "/traj_comp.xtc") as xtc : 
-         for frame in xtc :
-             if fnum>0 : natoms.append( xtc.n_atoms )
-             fnum = fnum + 1
+         for frame in xtc : natoms.append( xtc.n_atoms )
        return natoms
        
    def getPositions( self, rundir ) :
        fnum = 0
        with mda.coordinates.XTC.XTCFile( rundir + "/traj_comp.xtc") as xtc :
          for frame in xtc :
-             if fnum==1 : pos = frame.x
-             elif fnum>0 : pos = np.concatenate( (pos, frame.x), axis=0 )
+             if fnum==0 : pos = frame.x
+             else : pos = np.concatenate( (pos, frame.x), axis=0 )
              fnum = fnum + 1
        return pos
 
@@ -93,8 +91,8 @@ ref-t                    = {mdparams["temperature"]}
        with mda.coordinates.XTC.XTCFile( rundir + "/traj_comp.xtc") as xtc :
          for frame in xtc :
              dim = [1,1,1,90,90,90]
-             if fnum==1 : cell = np.array( [dim[0],0,0,0,dim[1],0,0,0,dim[2]] )
-             elif fnum>0 : 
+             if fnum==0 : cell = np.array( [dim[0],0,0,0,dim[1],0,0,0,dim[2]] )
+             else : 
                 box = np.array( [dim[0],0,0,0,dim[1],0,0,0,dim[2]] )
                 cell = np.concatenate( (cell, box) )
              fnum = fnum + 1
