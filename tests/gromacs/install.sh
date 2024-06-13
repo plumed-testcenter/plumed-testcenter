@@ -22,6 +22,6 @@ if [ -f $HOME/opt/gromacs/bin/gmx ] ; then
    echo "#!/bin/bash" > $HOME/opt/bin/gromacs
    echo $HOME/opt/gromacs/bin/gmx grompp -p topol.top -c conf.gro -f md.mdp >> $HOME/opt/bin/gromacs
    echo $HOME/opt/gromacs/bin/gmx mdrun -nt 1 -plumed plumed.dat >> $HOME/opt/bin/gromacs
-   echo echo 5 | $HOME/opt/gromacs/bin/gmx energy 
+   echo echo 5 | $HOME/opt/gromacs/bin/gmx energy >> $HOME/opt/bin/gromacs
    chmod u+x $HOME/opt/bin/gromacs
 fi
