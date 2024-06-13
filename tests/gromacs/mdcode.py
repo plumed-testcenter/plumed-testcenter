@@ -88,15 +88,13 @@ ref-t                    = {mdparams["temperature"]}
        return pos
 
    def getCell( self, rundir ) :
-       fnum = 0 
-       with mda.coordinates.XTC.XTCFile( rundir + "/traj_comp.xtc") as xtc :
-         for frame in xtc :
-             dim = [1,1,1,90,90,90]
-             if fnum==0 : cell = np.array( [[dim[0],0,0,0,dim[1],0,0,0,dim[2]]] )
-             else : 
-                box = np.array( [[dim[0],0,0,0,dim[1],0,0,0,dim[2]]] )
-                cell = np.concatenate( (cell, box), axis=0 )
-             fnum = fnum + 1
+       first, traj = True, mda.coordinates.XTC.XTCReader( rundir + "/traj_comp.xtc") 
+       for frame in traj : 
+           dim = frame.dimensions
+           if first : first, cell = False, np.array( [[dim[0],0,0,0,dim[1],0,0,0,dim[2]]] )
+           else :
+              box = np.array( [[dim[0],0,0,0,dim[1],0,0,0,dim[2]]] )
+              cell = np.concatenate( (cell, box), axis=0 )  
        return cell
 
    def getMasses( self, rundir ) :
