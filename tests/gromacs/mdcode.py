@@ -36,6 +36,7 @@ nsteps                   = {mdparams["nsteps"]}
 nstenergy                = 1
 nstlog                   = 1
 nstxout-compressed       = 1
+compressed-x-precision   = 100000
 
 continuation             = yes
 constraint-algorithm     = lincs
@@ -105,4 +106,5 @@ ref-t                    = {mdparams["temperature"]}
        return 0
   
    def getEnergy( self, rundir ) :
-       return 0
+       eng = np.loadtxt("energy.xvg", comments=["#","@"])
+       return eng[:,1]
