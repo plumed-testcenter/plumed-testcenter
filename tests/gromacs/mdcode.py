@@ -91,9 +91,9 @@ ref-t                    = {mdparams["temperature"]}
        first, traj = True, mda.coordinates.XTC.XTCReader( rundir + "/traj_comp.xtc") 
        for frame in traj : 
            dim = frame.dimensions
-           if first : first, cell = False, np.array( [[dim[0],0,0,0,dim[1],0,0,0,dim[2]]] )
+           if first : first, cell = False, np.array( [[dim[0]/10,0,0,0,dim[1]/10,0,0,0,dim[2]/10]] )
            else :
-              box = np.array( [[dim[0],0,0,0,dim[1],0,0,0,dim[2]]] )
+              box = np.array( [[dim[0]/10,0,0,0,dim[1]/10,0,0,0,dim[2]/10]] )
               cell = np.concatenate( (cell, box), axis=0 )  
        return cell
 
