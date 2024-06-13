@@ -104,5 +104,5 @@ ref-t                    = {mdparams["temperature"]}
        return 0
   
    def getEnergy( self, rundir ) :
-       eng = np.loadtxt("energy.xvg", comments=["#","@"])
+       eng = np.loadtxt( rundir + "/energy.xvg", comments=["#","@"] )
        return eng[:,1]
