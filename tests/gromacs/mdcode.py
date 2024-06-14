@@ -98,7 +98,7 @@ ref-t                    = {mdparams["temperature"]}
        return cell
 
    def getMasses( self, rundir ) :
-       natoms = getNumberOfAtoms( rundir )
+       natoms = self.getNumberOfAtoms( rundir )
        nmols, masses, k = natoms[0] / 4, np.zeros(len(natoms)*natoms[0]), 0
        for frame in natoms :
            for i in range(nmols) : 
@@ -109,7 +109,7 @@ ref-t                    = {mdparams["temperature"]}
        return masses
 
    def getCharges( self, rundir ) :
-       natoms = getNumberOfAtoms( rundir )
+       natoms = self.getNumberOfAtoms( rundir )
        nmols, charges, k = natoms[0] / 4, np.zeros(len(natoms)*natoms[0]), 0
        for frame in natoms :
            for i in range(nmols) : 
