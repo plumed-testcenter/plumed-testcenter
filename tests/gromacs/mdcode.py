@@ -101,10 +101,10 @@ ref-t                    = {mdparams["temperature"]}
        natoms = self.getNumberOfAtoms( rundir )
        nmols, masses, k = int(natoms[0] / 4), np.zeros(natoms[0]), 0
        for i in range(nmols) : 
-           masses[k+0] = 16.00000
-           masses[k+1] = 1.00800
-           masses[k+2] = 1.00800
-           masses[k+3] = 0.00000
+           masses[4*k+0] = 16.00000
+           masses[4*k+1] = 1.00800
+           masses[4*k+2] = 1.00800
+           masses[4*k+3] = 0.00000
            k = k + 1
        return masses
 
@@ -112,10 +112,10 @@ ref-t                    = {mdparams["temperature"]}
        natoms = self.getNumberOfAtoms( rundir )
        nmols, charges, k = int(natoms[0] / 4), np.zeros(natoms[0]), 0
        for i in range(nmols) : 
-           charges[k+0] = 0.0
-           charges[k+1] = 0.52422
-           charges[k+2] = 0.52422
-           charges[k+3] = -1.04844
+           charges[4*k+0] = 0.0
+           charges[4*k+1] = 0.52422
+           charges[4*k+2] = 0.52422
+           charges[4*k+3] = -1.04844
            k = k + 1
        return charges
   
