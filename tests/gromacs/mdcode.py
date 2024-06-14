@@ -98,10 +98,26 @@ ref-t                    = {mdparams["temperature"]}
        return cell
 
    def getMasses( self, rundir ) :
-       return 0
+       natoms = getNumberOfAtoms( rundir )
+       nmols, masses, k = natoms[0] / 4, np.zeros(len(natoms)*natoms[0]), 0
+       for frame in natoms :
+           for i in range(nmols) : 
+               masses[k+0] = 16.00000
+               masses[k+1] = 1.00800
+               masses[k+2] = 1.00800
+               masses[k+3] = 0.00000
+       return masses
 
    def getCharges( self, rundir ) :
-       return 0
+       natoms = getNumberOfAtoms( rundir )
+       nmols, charges, k = natoms[0] / 4, np.zeros(len(natoms)*natoms[0]), 0
+       for frame in natoms :
+           for i in range(nmols) : 
+               charges[k+0] = 0.0
+               charges[k+1] = 0.52422
+               charges[k+2] = 0.52422
+               charges[k+3] = -1.04844
+       return charges
   
    def getEnergy( self, rundir ) :
        eng = np.loadtxt( rundir + "/energy.xvg", comments=["#","@"] )

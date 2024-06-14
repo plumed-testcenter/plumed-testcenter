@@ -6,8 +6,8 @@ link: https://www.gromacs.org
 tests: 
    positions: yes
    timestep: yes 
-   mass: no
-   charge: no
+   mass: yes
+   charge: yes
    forces: no 
    virial: yes
    energy: yes
