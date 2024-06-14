@@ -105,6 +105,7 @@ ref-t                    = {mdparams["temperature"]}
            masses[k+1] = 1.00800
            masses[k+2] = 1.00800
            masses[k+3] = 0.00000
+           k = k + 1
        return masses
 
    def getCharges( self, rundir ) :
@@ -115,6 +116,7 @@ ref-t                    = {mdparams["temperature"]}
            charges[k+1] = 0.52422
            charges[k+2] = 0.52422
            charges[k+3] = -1.04844
+           k = k + 1
        return charges
   
    def getEnergy( self, rundir ) :
