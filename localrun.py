@@ -4,8 +4,14 @@ import shutil
 import importlib
 from runtests import buildTestPages, runTests
 
-
 if __name__ == "__main__":
+    code = "quantum_espresso"
+    local = "local_"
+    plumedToRun = [{"plumed": "plumed", "printJson": False}]
+    print("Code: " + code)
+    buildTestPages("tests/" + code, local, plumedToRun)
+    buildTestPages("pages", local, plumedToRun)
+if __name__ == "__main_":
     code, version, argv = "", "", sys.argv[1:]
     try:
         opts, args = getopt.getopt(argv, "hc:v:", ["code="])

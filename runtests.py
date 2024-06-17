@@ -6,10 +6,16 @@ import shutil
 import subprocess
 import numpy as np
 import importlib
+from pathlib import Path
 import MDAnalysis as mda
 from datetime import date
 from contextlib import contextmanager
 from PlumedToHTML import test_plumed, get_html
+
+STANDARD_RUN_SETTINGS = [
+    {"plumed": "plumed", "printJson": False},
+    {"plumed": "plumed_master", "printJson": True, "version": "master"},
+]
 
 
 @contextmanager
@@ -22,59 +28,86 @@ def cd(newdir):
         os.chdir(prevdir)
 
 
-def processMarkdown(filename):
+def processMarkdown(filename, prefix="", runSettings=STANDARD_RUN_SETTINGS):
     if not os.path.exists(filename):
         raise RuntimeError("Found no file called " + filename)
-    f = open(filename, "r")
-    inp = f.read()
-    f.close()
-    ofile, inplumed, plumed_inp, ninputs = open(filename, "w+"), False, "", 0
-    for line in inp.splitlines():
-        # Detect and copy plumed input files
-        if "```plumed" in line:
-            inplumed, plumed_inp, ninputs = True, "", ninputs + 1
-        # Test plumed input files that have been found in tutorial
-        elif inplumed and "```" in line:
-            inplumed = False
-            solutionfile = "working" + str(ninputs) + ".dat"
-            sf = open(solutionfile, "w+")
-            sf.write(plumed_inp)
-            sf.close()
-            # Test whether the input solution can be parsed
-            success = success = test_plumed("plumed", solutionfile)
-            success_master = test_plumed("plumed_master", solutionfile, printjson=True)
-            # Find the stable version
-            stable_version = (
-                subprocess.check_output("plumed info --version", shell=True)
-                .decode("utf-8")
-                .strip()
-            )
-            # Use PlumedToHTML to create the input with all the bells and whistles
-            html = get_html(
-                plumed_inp,
-                solutionfile,
-                solutionfile,
-                ("v" + stable_version, "master"),
-                (success, success_master),
-                ("plumed", "plumed_master"),
-                usejson=(not success_master),
-            )
-            # Print the html for the solution
-            ofile.write("{% raw %}\n" + html + "\n {% endraw %} \n")
-        elif inplumed:
-            if "__FILL__" in line:
-                raise RuntimeError("Should not be incomplete files in this page")
-            plumed_inp += line + "\n"
-        # Just copy any line that isn't part of a plumed input
-        elif not inplumed:
-            ofile.write(line + "\n")
-    ofile.close()
+    with open(filename, "r") as f:
+        inp = f.read()
+
+    if prefix != "":
+        directory = prefix + os.path.dirname(filename)
+        Path(f"./{directory}").mkdir(parents=True, exist_ok=True)
+        shutil.copy(filename, prefix + filename)
+        filename = prefix + filename
+    with open(filename, "w+") as ofile:
+        inplumed = False
+        plumed_inp = ""
+        ninputs = 0
+        for line in inp.splitlines():
+            # Detect and copy plumed input files
+            if "```plumed" in line:
+                inplumed = True
+                plumed_inp = ""
+                ninputs += 1
+            # Test plumed input files that have been found in tutorial
+            elif inplumed and "```" in line:
+                inplumed = False
+                solutionfile = f"working{ninputs}.dat"
+                with open(solutionfile, "w+") as sf:
+                    sf.write(plumed_inp)
+                # preparing for get_html
+                successes = []
+                plumed_exec = []
+                versions = []
+                usejson = False
+                for plmd in runSettings:
+                    successes.append(
+                        test_plumed(
+                            plmd["plumed"], solutionfile, printjson=plmd["printJson"]
+                        )
+                    )
+                    plumed_exec.append(plmd["plumed"])
+                    # if we asked to print json and we suceed we can use json in the get_html
+                    if not usejson and not successes[-1] and plmd["printJson"]:
+                        usejson = True
+
+                    # Get the version
+                    if "version" in plmd:
+                        versions.append(plmd["version"])
+                    else:
+                        versions.append(
+                            subprocess.check_output(
+                                f"{plmd['plumed']} info --version", shell=True
+                            )
+                            .decode("utf-8")
+                            .strip()
+                        )
+
+                # Use PlumedToHTML to create the input with all the bells and whistles
+                html = get_html(
+                    plumed_inp,
+                    solutionfile,
+                    solutionfile,
+                    versions,
+                    successes,
+                    plumed_exec,
+                    usejson=usejson,
+                )
+                # Print the html for the solution
+                ofile.write("{% raw %}\n" + html + "\n {% endraw %} \n")
+            elif inplumed:
+                if "__FILL__" in line:
+                    raise RuntimeError("Should not be incomplete files in this page")
+                plumed_inp += line + "\n"
+            # Just copy any line that isn't part of a plumed input
+            elif not inplumed:
+                ofile.write(line + "\n")
 
 
-def buildTestPages(directory):
+def buildTestPages(directory, prefix="", runSettings=STANDARD_RUN_SETTINGS):
     for page in os.listdir(directory):
         if ".md" in page:
-            processMarkdown(directory + "/" + page)
+            processMarkdown(directory + "/" + page, prefix, runSettings)
 
 
 def runMDCalc(name, code, version, runner, params):
