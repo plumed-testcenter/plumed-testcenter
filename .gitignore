@@ -1,0 +1,9 @@
+__pycache__/
+.vscode/
+local*/
+/*colvar
+/energy*
+/*.xyz
+/working*
+/volume*
+/*_restraint
