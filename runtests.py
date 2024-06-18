@@ -28,6 +28,14 @@ def cd(newdir):
         os.chdir(prevdir)
 
 
+def yamlToDict(filename, **yamlOpts):
+    """Simply opens a yaml file an returns an object with the parsed data"""
+    with open(filename, "r") as stram:
+        ymldata = yaml.load(stram, **yamlOpts)
+        # the return closes the file :)
+        return ymldata
+
+
 def processMarkdown(filename, prefix="", runSettings=STANDARD_RUN_SETTINGS):
     if not os.path.exists(filename):
         raise RuntimeError("Found no file called " + filename)
@@ -110,140 +118,134 @@ def buildTestPages(directory, prefix="", runSettings=STANDARD_RUN_SETTINGS):
             processMarkdown(directory + "/" + page, prefix, runSettings)
 
 
-def runMDCalc(name, code, version, runner, params):
+def runMDCalc(name: str, code: str, version: str, runner, params: dict):
     # Get the name of the executible
-    stram = open("tests/" + code + "/info.yml", "r")
+    basedir = f"tests/{code}"
     params["executible"] = (
-        yaml.load(stram, Loader=yaml.BaseLoader)["executible"] + "_" + version
+        yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)["executible"]
+        + f"_{version}"
     )
-    stram.close()
+
     # Now test that the executable exists if it doesn't then the test is broken
     if shutil.which(params["executible"]) == None:
         return True
     # Copy all the input needed for the MD calculation
-    shutil.copytree(
-        "tests/" + code + "/input", "tests/" + code + "/" + name + "_" + version
-    )
+    wdir = f"{basedir}/{name}_{version}"
+    shutil.copytree(f"{basedir}/input", f"{wdir}")
     # Change to the directory to run the calculation
-    with cd("tests/" + code + "/" + name + "_" + version):
+    with cd(f"{wdir}"):
         # Output the plumed file
-        of = open("plumed.dat", "w+")
-        of.write(params["plumed"])
-        of.close()
+        with open("plumed.dat", "w+") as of:
+            of.write(params["plumed"])
         # Now run the MD calculation
-        broken = runner.runMD(params)
+        mdExitCode = runner.runMD(params)
     # Make a zip archive that contains the input and output
-    shutil.make_archive(
-        "tests/" + code + "/" + name + "_" + version,
-        "zip",
-        "tests/" + code + "/" + name + "_" + version,
-    )
-    return broken
+    shutil.make_archive(f"{wdir}", "zip", f"{wdir}")
+    return mdExitCode
 
 
-def runTests(code, version, runner):
+# the "*" forces the subsequent arguments to be named
+def runTests(code: str, version: str, runner):
     # Read in the information on the tests that should be run for this code
-    stram = open("tests/" + code + "/info.yml", "r")
-    ymldata = yaml.load(stram, Loader=yaml.BaseLoader)
-    info, tolerance = ymldata["tests"], float(ymldata["tolerance"])
-    stram.close()
+    basedir = f"tests/{code}"
+    ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)
+    info = ymldata["tests"]
+    tolerance = float(ymldata["tolerance"])
+    fname = "testout.md"
+    usestable = version == "stable"
 
-    fname, usestable = "testout.md", version == "stable"
     if version == "master":
         fname = "testout_" + version + ".md"
     elif version != "stable":
-        ValueError("version should be master or stable")
+        raise ValueError("version should be master or stable")
 
-    of = open("tests/" + code + "/" + fname, "w+")
-    of.write("Testing " + code + "\n")
+    of = open(f"{basedir}/{fname}", "w+")
+    of.write(f"Testing {code}\n")
     of.write("------------------------\n \n")
     stable_version = (
         subprocess.check_output("plumed info --version", shell=True)
         .decode("utf-8")
         .strip()
     )
-    of.write(
-        "The tests described in the following table were performed on __"
-        + date.today().strftime("%B %d, %Y")
-        + "__ to test whether the interface between "
-        + code
-        + " and "
-    )
     if version == "stable":
         version = "v" + stable_version
-    of.write("the " + version + " version of PLUMED is working correctly.\n\n")
+    # it looks strange, but strings do not need the + to be concatenated
+    of.write(
+        f"The tests described in the following table were performed on "
+        f"__{date.today().strftime('%B %d, %Y')}__ to test whether the "
+        f"interface between {code} and "
+        f"the {version} version of PLUMED is working correctly.\n\n"
+    )
     if info["virial"] == "no":
         of.write(
-            "WARNING: "
-            + code
-            + " does not pass the virial to PLUMED and it is thus not possible to run NPT simulations with this code\n\n"
+            f"WARNING: {code} does not pass the virial to PLUMED and it is thus "
+            "not possible to run NPT simulations with this code\n\n"
         )
     if "warning" in ymldata.keys():
         for warn in ymldata["warning"]:
-            of.write("WARNING: " + warn + "\n\n")
+            of.write(f"WARNING: {warn}\n\n")
 
-    params, basic_md_failed = runner.setParams(), True
+    params = runner.setParams()
+    basic_md_failed = True
     if (
         info["positions"] == "yes"
         or info["timestep"] == "yes"
         or info["mass"] == "yes"
         or info["charge"] == "yes"
     ):
-        params["plumed"] = "DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz\n"
-        params["plumed"] = (
-            params["plumed"] + "c: CELL \n PRINT ARG=c.* FILE=cell_data\n"
-        )
-        if info["mass"] == "yes" and info["charge"] == "yes":
-            params["plumed"] = params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed\n"
-        elif info["mass"] == "yes":
-            params["plumed"] = (
-                params["plumed"] + "DUMPMASSCHARGE FILE=mq_plumed ONLY_MASSES\n"
-            )
+        dumpMassesStr = ""
+        if info["mass"] == "yes":
+            dumpMassesStr = f"DUMPMASSCHARGE FILE=mq_plumed {'' if info['charge'] == 'yes' else 'ONLY_MASSES'}"
+        timeStepStr = ""
         if info["timestep"] == "yes":
-            params["plumed"] = params["plumed"] + "t1: TIME\nPRINT ARG=t1 FILE=colvar\n"
-        params["nsteps"], params["ensemble"] = 10, "npt"
+            timeStepStr = "t1: TIME\nPRINT ARG=t1 FILE=colvar"
+        params[
+            "plumed"
+        ] = f"""DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz
+c: CELL
+PRINT ARG=c.* FILE=cell_data
+{dumpMassesStr}
+{timeStepStr}
+"""
+        params["nsteps"] = 10
+        params["ensemble"] = "npt"
         basic_md_failed = runMDCalc("basic", code, version, runner, params)
 
     val1, val2 = 0.1, 0.1
     of.write("| Description of test | Status | \n")
     of.write("|:--------------------|:------:| \n")
     if info["positions"] == "yes":
-        plumednatoms, codenatoms, codepos, plumedpos, codecell, plumedcell = (
-            [],
-            [],
-            np.ones(10),
-            np.ones(10),
-            np.ones(10),
-            np.ones(10),
-        )
+        plumednatoms = []
+        codenatoms = []
+        codepos = np.ones(10)
+        plumedpos = np.ones(10)
+        codecell = np.ones(10)
+        plumedcell = np.ones(10)
+
         if not basic_md_failed:
             # Get the trajectory that was output by PLUMED
-            if os.path.exists("tests/" + code + "/basic_" + version + "/plumed.xyz"):
+            if os.path.exists(f"{basedir}/basic_{version}/plumed.xyz"):
                 plumedtraj = mda.coordinates.XYZ.XYZReader(
-                    "tests/" + code + "/basic_" + version + "/plumed.xyz"
+                    f"{basedir}/basic_{version}/plumed.xyz"
                 )
                 # Get the number of atoms in each frame from plumed trajectory
-                plumednatoms, codenatoms = [], runner.getNumberOfAtoms(
-                    "tests/" + code + "/basic_" + version
-                )
+                codenatoms = runner.getNumberOfAtoms(f"{basedir}/basic_{version}")
+                plumednatoms = []
                 for frame in plumedtraj.trajectory:
                     plumednatoms.append(frame.positions.shape[0])
                 # Concatenate all the trajectory frames
-                codepos, first = (
-                    runner.getPositions("tests/" + code + "/basic_" + version),
-                    True,
-                )
+                codepos = runner.getPositions(f"{basedir}/basic_{version}")
+                first = True
+
                 for frame in plumedtraj.trajectory:
                     if first:
-                        plumedpos, first = frame.positions.copy(), False
+                        first = False
+                        plumedpos = frame.positions.copy()
                     else:
                         plumedpos = np.concatenate((plumedpos, frame.positions), axis=0)
-                codecell, plumedcell = (
-                    runner.getCell("tests/" + code + "/basic_" + version),
-                    np.loadtxt("tests/" + code + "/basic_" + version + "/cell_data")[
-                        :, 1:
-                    ],
-                )
+                codecell = runner.getCell(f"{basedir}/basic_{version}")
+                plumedcell = np.loadtxt(f"{basedir}/basic_{version}/cell_data")[:, 1:]
+
             else:
                 basic_md_failed = True
 
@@ -328,15 +330,13 @@ def runTests(code, version, runner):
             + " | \n"
         )
     if info["timestep"] == "yes":
-        md_tstep, plumed_tstep = 0.1, 0.1
+        md_tstep = 0.1
+        plumed_tstep = 0.1
         if not basic_md_failed:
-            plumedtimes = np.loadtxt("tests/" + code + "/basic_" + version + "/colvar")[
-                :, 1
-            ]
-            md_tstep, plumed_tstep = (
-                runner.getTimestep(),
-                plumedtimes[1] - plumedtimes[0],
-            )
+            plumedtimes = np.loadtxt(f"{basedir}/basic_{version}/colvar")[:, 1]
+            md_tstep = runner.getTimestep()
+            plumed_tstep = plumedtimes[1] - plumedtimes[0]
+
             for i in range(1, len(plumedtimes)):
                 if plumedtimes[i] - plumedtimes[i - 1] != plumed_tstep:
                     ValueError("Timestep should be the same for all MD steps")
@@ -361,12 +361,11 @@ def runTests(code, version, runner):
             + " | \n"
         )
     if info["mass"] == "yes":
-        md_masses, pl_masses = np.ones(10), np.ones(10)
+        md_masses = np.ones(10)
+        pl_masses = np.ones(10)
         if not basic_md_failed:
-            md_masses, pl_masses = (
-                runner.getMasses("tests/" + code + "/basic_" + version),
-                np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:, 1],
-            )
+            md_masses = runner.getMasses(f"{basedir}/basic_{version}")
+            pl_masses = np.loadtxt(f"{basedir}/basic_{version}/mq_plumed")[:, 1]
         writeReportPage(
             "mass",
             code,
@@ -396,10 +395,8 @@ def runTests(code, version, runner):
     if info["charge"] == "yes":
         md_charges, pl_charges = np.ones(10), np.ones(10)
         if not basic_md_failed:
-            md_charges, pl_charges = (
-                runner.getCharges("tests/" + code + "/basic_" + version),
-                np.loadtxt("tests/" + code + "/basic_" + version + "/mq_plumed")[:, 2],
-            )
+            md_charges = runner.getCharges(f"{basedir}/basic_{version}")
+            pl_charges = np.loadtxt(f"{basedir}/basic_{version}/mq_plumed")[:, 2]
         writeReportPage(
             "charge",
             code,
@@ -429,18 +426,16 @@ def runTests(code, version, runner):
     if info["forces"] == "yes":
         # First run a calculation to find the reference distance between atom 1 and 2
         rparams = runner.setParams()
-        rparams["nsteps"], rparams["ensemble"] = 2, "nvt"
+        rparams["nsteps"] = 2
+        rparams["ensemble"] = "nvt"
         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
-        refrun, mdrun, plrun = (
-            runMDCalc("refres", code, version, runner, rparams),
-            True,
-            True,
-        )
+        refrun = runMDCalc("refres", code, version, runner, rparams)
+        mdrun = True
+        plrun = True
+
         if not refrun:
-            # Get the reference distance betwene the atoms
-            refdist = np.loadtxt("tests/" + code + "/refres_" + version + "/colvar")[
-                0, 1
-            ]
+            # Get the reference distance between the atoms
+            refdist = np.loadtxt(f"{basedir}/refres_{version}/colvar")[0, 1]
             # Run the calculation with the restraint applied by the MD code
             rparams["nsteps"], rparams["ensemble"] = 20, "nvt"
             rparams["restraint"] = refdist
@@ -449,18 +444,19 @@ def runTests(code, version, runner):
             # Run the calculation with the restraint applied by PLUMED
             rparams["restraint"] = -10
             rparams["plumed"] = (
-                "dd: DISTANCE ATOMS=1,2 \nRESTRAINT ARG=dd KAPPA=2000 AT="
-                + str(refdist)
-                + "\nPRINT ARG=dd FILE=colvar"
+                "dd: DISTANCE ATOMS=1,2\n"
+                f"RESTRAINT ARG=dd KAPPA=2000 AT={refdist}\n"
+                "PRINT ARG=dd FILE=colvar\n"
             )
             plrun = runMDCalc("forces2", code, version, runner, rparams)
-        # And create our reports from the two runs
-        md_failed, val1, val2 = mdrun or plrun, np.ones(1), np.ones(1)
+            # And create our reports from the two runs
+            md_failed = mdrun or plrun
+            val1 = np.ones(1)
+            val2 = np.ones(1)
         if not md_failed:
-            val1, val2 = (
-                np.loadtxt("tests/" + code + "/forces1_" + version + "/colvar")[:, 1],
-                np.loadtxt("tests/" + code + "/forces2_" + version + "/colvar")[:, 1],
-            )
+            val1 = np.loadtxt(f"{basedir}/forces1_{version}/colvar")[:, 1]
+            val2 = np.loadtxt(f"{basedir}/forces2_{version}/colvar")[:, 1]
+
         writeReportPage(
             "forces",
             code,
@@ -491,21 +487,20 @@ def runTests(code, version, runner):
         params["pressure"] = 1001 * params["pressure"]
         run3 = runMDCalc("virial3", code, version, runner, params)
         params["plumed"] = (
-            "vv: VOLUME \n RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429 \nPRINT ARG=vv FILE=volume"
+            "vv: VOLUME\n"
+            "RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429\n"
+            "PRINT ARG=vv FILE=volume\n"
         )
         run2 = runMDCalc("virial2", code, version, runner, params)
-        md_failed, val1, val2, val3 = (
-            run1 or run2 or run3,
-            np.ones(1),
-            np.ones(1),
-            np.ones(1),
-        )
+        md_failed = run1 or run2 or run3
+        val1 = np.ones(1)
+        val2 = np.ones(1)
+        val3 = np.ones(1)
+
         if not md_failed:
-            val1, val2, val3 = (
-                np.loadtxt("tests/" + code + "/virial1_" + version + "/volume")[:, 1],
-                np.loadtxt("tests/" + code + "/virial2_" + version + "/volume")[:, 1],
-                np.loadtxt("tests/" + code + "/virial3_" + version + "/volume")[:, 1],
-            )
+            val1 = np.loadtxt(f"{basedir}/virial1_{version}/volume")[:, 1]
+            val2 = np.loadtxt(f"{basedir}/virial2_{version}/volume")[:, 1]
+            val3 = np.loadtxt(f"{basedir}/virial3_{version}/volume")[:, 1]
         writeReportPage(
             "virial",
             code,
@@ -527,19 +522,16 @@ def runTests(code, version, runner):
             + " | \n"
         )
     if info["energy"] == "yes":
-        params["nsteps"], params["plumed"] = 150, "e: ENERGY \nPRINT ARG=e FILE=energy"
-        md_failed, md_energy, pl_energy = (
-            runMDCalc("energy", code, version, runner, params),
-            np.ones(1),
-            np.ones(1),
-        )
-        if not md_failed and os.path.exists(
-            "tests/" + code + "/energy_" + version + "/energy"
-        ):
-            md_energy, pl_energy = (
-                runner.getEnergy("tests/" + code + "/energy_" + version),
-                np.loadtxt("tests/" + code + "/energy_" + version + "/energy")[:, 1],
-            )
+        params["nsteps"] = 150
+        params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
+        md_failed = runMDCalc("energy", code, version, runner, params)
+        md_energy = np.ones(1)
+        pl_energy = np.ones(1)
+
+        if not md_failed and os.path.exists(f"{basedir}/energy_{version}/energy"):
+            md_energy = runner.getEnergy(f"{basedir}/energy_{version}")
+            pl_energy = np.loadtxt(f"{basedir}/energy_{version}/energy")[:, 1]
+
         else:
             md_failed = True
         writeReportPage(
@@ -573,35 +565,36 @@ def runTests(code, version, runner):
         if info["engforces"] == "yes":
             params = runner.setParams()
             params["nsteps"], params["ensemble"] = 50, "nvt"
-            params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy"
+            params[
+                "plumed"
+            ] = """e: ENERGY
+v: VOLUME
+PRINT ARG=e,v FILE=energy
+"""
             run1 = runMDCalc("engforce1", code, version, runner, params)
             params["temperature"] = params["temperature"] * alpha
             params["relaxtime"] = params["relaxtime"] / sqrtalpha
             params["tstep"] = params["tstep"] / sqrtalpha
             run3 = runMDCalc("engforce3", code, version, runner, params)
-            params["plumed"] = (
-                "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy \n RESTRAINT AT=0.0 ARG=e SLOPE="
-                + str(alpha - 1)
-            )
+            params[
+                "plumed"
+            ] = f"""e: ENERGY
+v: VOLUME
+PRINT ARG=e,v FILE=energy
+RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}
+"""
+
             run2 = runMDCalc("engforce2", code, version, runner, params)
-            md_failed, val1, val2, val3 = (
-                run1 or run2 or run3,
-                np.ones(1),
-                np.ones(1),
-                np.ones(1),
-            )
+            md_failed = run1 or run2 or run3
+            val1 = np.ones(1)
+            val2 = np.ones(1)
+            val3 = np.ones(1)
+
             if not md_failed:
-                val1, val2, val3 = (
-                    np.loadtxt("tests/" + code + "/engforce1_" + version + "/energy")[
-                        :, 1:
-                    ],
-                    np.loadtxt("tests/" + code + "/engforce2_" + version + "/energy")[
-                        :, 1:
-                    ],
-                    np.loadtxt("tests/" + code + "/engforce3_" + version + "/energy")[
-                        :, 1:
-                    ],
-                )
+                val1 = np.loadtxt(f"{basedir}/engforce1_{version}/energy")[:, 1:]
+                val2 = np.loadtxt(f"{basedir}/engforce2_{version}/energy")[:, 1:]
+                val3 = np.loadtxt(f"{basedir}/engforce3_{version}/energy")[:, 1:]
+
             writeReportPage(
                 "engforce",
                 code,
@@ -624,7 +617,8 @@ def runTests(code, version, runner):
             )
         if info["engforces"] and info["virial"] == "yes":
             params = runner.setParams()
-            params["nsteps"], params["ensemble"] = 150, "npt"
+            params["nsteps"] = 150
+            params["ensemble"] = "npt"
             params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy"
             run1 = runMDCalc("engvir1", code, version, runner, params)
             params["temperature"] = params["temperature"] * alpha
@@ -635,28 +629,22 @@ def runTests(code, version, runner):
             params["tstep"] = params["tstep"] / sqrtalpha
             run3 = runMDCalc("engvir3", code, version, runner, params)
             params["plumed"] = (
-                "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy \n RESTRAINT AT=0.0 ARG=e SLOPE="
-                + str(alpha - 1)
+                "e: ENERGY\n"
+                "v: VOLUME\n"
+                "PRINT ARG=e,v FILE=energy\n"
+                f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}"
             )
             run2 = runMDCalc("engvir2", code, version, runner, params)
-            md_failed, val1, val2, val3 = (
-                run1 or run2 or run3,
-                np.ones(1),
-                np.ones(1),
-                np.ones(1),
-            )
+            md_failed = run1 or run2 or run3
+            val1 = np.ones(1)
+            val2 = np.ones(1)
+            val3 = np.ones(1)
+
             if not md_failed:
-                val1, val2, val3 = (
-                    np.loadtxt("tests/" + code + "/engvir1_" + version + "/energy")[
-                        :, 1:
-                    ],
-                    np.loadtxt("tests/" + code + "/engvir2_" + version + "/energy")[
-                        :, 1:
-                    ],
-                    np.loadtxt("tests/" + code + "/engvir3_" + version + "/energy")[
-                        :, 1:
-                    ],
-                )
+                val1 = np.loadtxt(f"{basedir}/engvir1_{version}/energy")[:, 1:]
+                val2 = np.loadtxt(f"{basedir}/engvir2_{version}/energy")[:, 1:]
+                val3 = np.loadtxt(f"{basedir}/engvir3_{version}/energy")[:, 1:]
+
             writeReportPage(
                 "engvir",
                 code,
@@ -679,41 +667,38 @@ def runTests(code, version, runner):
             )
     of.close()
     # Read output file to get status
-    ifn, of = open("tests/" + code + "/" + fname, "r"), open(
-        "tests/" + code + "/info.yml", "a"
-    )
-    inp = ifn.read()
-    ifn.close()
+    with open(f"{basedir}/" + fname, "r") as ifn:
+        inp = ifn.read()
+
+    of = open(f"{basedir}/info.yml", "a")
     if "failed-red.svg" in inp:
-        of.write("test_plumed" + version + ": broken \n")
+        of.write(f"test_plumed{version}: broken \n")
     elif "%25-green.svg" in inp and ("%25-red.svg" in inp or "%25-yellow.svg" in inp):
-        of.write("test_plumed" + version + ": partial\n")
+        of.write(f"test_plumed{version}: partial\n")
     elif "%25-yellow.svg" in inp:
-        of.write("test_plumed" + version + ": partial\n")
+        of.write(f"test_plumed{version}: partial\n")
     elif "%25-green.svg" in inp:
-        of.write("test_plumed" + version + ": working \n")
+        of.write(f"test_plumed{version}: working \n")
     elif "%25-red.svg" in inp:
-        of.write("test_plumed" + version + ": broken \n")
+        of.write(f"test_plumed{version}: broken \n")
     else:
         raise Exception(
-            "Found no test badges in output for tests on " + code + " with " + version
+            f"Found no test badges in output for tests on {code} with " + version
         )
     of.close()
 
 
-def getBadge(sucess, filen, code, version):
-    badge = (
-        "[![tested on " + version + "](https://img.shields.io/badge/" + version + "-"
-    )
+def getBadge(sucess, filen, code, version: str):
+    badge = f"[![tested on {version}](https://img.shields.io/badge/{version}-"
     if sucess < 0:
         badge = badge + "failed-red.svg"
     elif sucess < 5:
-        badge = badge + "fail " + str(sucess) + "%25-green.svg"
+        badge = badge + f"fail {sucess}%25-green.svg"
     elif sucess < 20:
-        badge = badge + "fail " + str(sucess) + "%25-yellow.svg"
+        badge = badge + f"fail {sucess}%25-yellow.svg"
     else:
-        badge = badge + "fail " + str(sucess) + "%25-yellow.svg"
-    return badge + ")](" + filen + "_" + version + ".html)"
+        badge = badge + f"fail {sucess}%25-yellow.svg"
+    return badge + f")]({filen}_{version}.html)"
 
 
 def writeReportPage(filen, code, version, md_fail, zipfiles, ref, data, denom):
@@ -722,7 +707,7 @@ def writeReportPage(filen, code, version, md_fail, zipfiles, ref, data, denom):
     inp = f.read()
     f.close()
     # Now output the file
-    of = open("tests/" + code + "/" + filen + "_" + version + ".md", "w+")
+    of = open(f"tests/{code}/{filen}_{version}.md", "w+")
     for line in inp.splitlines():
         if "Trajectory" in line and "#" in line:
             if len(zipfiles) != 1:
@@ -887,7 +872,7 @@ if __name__ == "__main__":
     # Build the default test pages
     buildTestPages("pages")
     # Create an __init__.py module for the desired code
-    ipf = open("tests/" + code + "/__init__.py", "w+")
+    ipf = open(f"tests/{code}/__init__.py", "w+")
     ipf.write("from .mdcode import mdcode\n")
     ipf.close()
     # Now import the module

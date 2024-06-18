@@ -11,6 +11,15 @@ if __name__ == "__main__":
     print("Code: " + code)
     buildTestPages("tests/" + code, local, plumedToRun)
     buildTestPages("pages", local, plumedToRun)
+    # Create an __init__.py module for the desired code
+    with open("tests/" + code + "/__init__.py", "w") as ipf:
+        ipf.write("from .mdcode import mdcode\n")
+    d = importlib.import_module("tests." + code, "mdcode")
+    # And create the class that interfaces with the MD code output
+    runner = d.mdcode()
+    # Now run the tests
+    runTests(code, version, runner)
+
 if __name__ == "__main_":
     code, version, argv = "", "", sys.argv[1:]
     try:
