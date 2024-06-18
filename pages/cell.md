@@ -2,7 +2,7 @@ Cell vectors are passed correctly
 ---------------------------------
 
 PLUMED must receive the cell vectors from the MD code in order to calculate CVs correctly.  
-To test these cell vectors are passed correctly to PLUMED we run a short trajectory and output the celll vectors 
+To test that cell vectors are passed correctly to PLUMED we run a short trajectory and output the cell vectors 
 that are passed to PLUMED using the following command: 
 
 ```plumed

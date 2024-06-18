@@ -2,7 +2,7 @@ Timestep is passed correctly
 ----------------------------
 
 PLUMED must receive the timestep from an MD code in order to correctly print the times at which the CV took particular values in COLVAR files. 
-To test that the timestep is passed correctly we run a short trajectory and output the time after each sstep using the following command:
+To test that the timestep is passed correctly we run a short trajectory and output the time after each step using the following command:
 
 ```plumed
 t1: TIME

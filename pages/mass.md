@@ -2,7 +2,7 @@ Masses are passed correctly
 ---------------------------
 
 PLUMED must receive the masses from an MD code in order to calculate many CVs correctly.
-To test these masses are passed correctly to PLUMED we run a short trajectory and output the masses of all the atoms that 
+To test that masses are passed correctly to PLUMED we run a short trajectory and output the masses of all the atoms that 
 are passed to PLUMED using the following command: 
 
 ```plumed

@@ -15,7 +15,7 @@ PRINT ARG=v FILE=volume
 
 We then run a second constant pressure MD simulation at a pressure of 1001 bar and the input above.
 
-If the virial has been imlemented correctly within PLUMED the following PLUMED restraint will apply a negative pressure of 1000bar, which should compensate the fact that the
+If the virial has been implemented correctly within PLUMED the following PLUMED restraint will apply a negative pressure of 1000bar, which should compensate the fact that the
 second calculation was run at higher pressure.  We thus run a third MD calculation with the following input file:
 
 ```plumed
@@ -25,7 +25,7 @@ RESTRAINT AT=0.0 ARG=v SLOPE=-60.2214129
 PRINT ARG=v FILE=volume2
 ```
 
-The time series for the volumes that are output by the files `volume` and `volume2` above should thus be close to identicial. 
+The time series for the volumes that are output by the files `volume` and `volume2` above should thus be close to identical. 
 
 # Trajectories
 
