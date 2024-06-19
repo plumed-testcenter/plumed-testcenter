@@ -11,6 +11,7 @@ from MDAnalysis.coordinates.XYZ import XYZReader
 from datetime import date
 from contextlib import contextmanager
 from PlumedToHTML import test_plumed, get_html
+from runhelper import writeReportForSimulations
 
 STANDARD_RUN_SETTINGS = [
     {"plumed": "plumed", "printJson": False},
@@ -244,6 +245,14 @@ PRINT ARG=c.* FILE=cell_data
     val2 = 0.1
     testout.write("| Description of test | Status | \n")
     testout.write("|:--------------------|:------:| \n")
+    basicSR = writeReportForSimulations(
+        testout,
+        code,
+        version,
+        basic_md_failed,
+        ["basic"],
+        prefix=prefix,
+    )
     if info["positions"] == "yes":
         plumednatoms = np.empty(0)
         codenatoms = np.empty(0)
@@ -277,90 +286,31 @@ PRINT ARG=c.* FILE=cell_data
 
             else:
                 basic_md_failed = True
-
         # Output results from tests on natoms
-        writeReportPage(
+        basicSR.writeReportAndTable(
             "natoms",
-            code,
-            version,
-            basic_md_failed,
-            ["basic"],
+            "MD code number of atoms passed correctly",
             codenatoms,
             plumednatoms,
-            0.01 * np.ones(len(codenatoms)),
-            prefix=prefix,
-        )
-        testout.write(
-            "| MD code number of atoms passed correctly | "
-            + getBadge(
-                check(
-                    basic_md_failed,
-                    codenatoms,
-                    plumednatoms,
-                    0.01 * np.ones(len(codenatoms)),
-                    0,
-                ),
-                "natoms",
-                code,
-                version,
-            )
-            + "| \n"
+            0.01 * np.ones(codenatoms.shape[0]),
         )
         # Output results from tests on positions
-        writeReportPage(
+        basicSR.writeReportAndTable(
             "positions",
-            code,
-            version,
-            basic_md_failed,
-            ["basic"],
-            np.array(codepos),
+            "MD code positions passed correctly",
+            codepos,
             plumedpos,
             tolerance * np.ones(plumedpos.shape),
-            prefix=prefix,
         )
-        testout.write(
-            "| MD code positions passed correctly | "
-            + getBadge(
-                check(
-                    basic_md_failed,
-                    np.array(codepos),
-                    plumedpos,
-                    tolerance * np.ones(plumedpos.shape),
-                    0,
-                ),
-                "positions",
-                code,
-                version,
-            )
-            + "| \n"
-        )
-        writeReportPage(
+        # Output results from tests on cell
+        basicSR.writeReportAndTable(
             "cell",
-            code,
-            version,
-            basic_md_failed,
-            ["basic"],
-            np.array(codecell),
+            "MD code cell vectors passed correctly",
+            codecell,
             plumedcell,
             tolerance * np.ones(plumedcell.shape),
-            prefix=prefix,
         )
-        testout.write(
-            "| MD code cell vectors passed correctly | "
-            + getBadge(
-                check(
-                    basic_md_failed,
-                    np.array(codecell),
-                    plumedcell,
-                    tolerance * np.ones(plumedcell.shape),
-                    0,
-                ),
-                "cell",
-                code,
-                version,
-            )
-            + " | \n"
-        )
+
     if info["timestep"] == "yes":
         md_tstep = 0.1
         plumed_tstep = 0.1
@@ -372,26 +322,14 @@ PRINT ARG=c.* FILE=cell_data
             for i in range(1, len(plumedtimes)):
                 if plumedtimes[i] - plumedtimes[i - 1] != plumed_tstep:
                     ValueError("Timestep should be the same for all MD steps")
-        writeReportPage(
+
+        # Output results from tests on timestep
+        basicSR.writeReportAndTable(
             "timestep",
-            code,
-            version,
-            basic_md_failed,
-            ["basic"],
+            "MD timestep passed correctly",
             md_tstep,
             plumed_tstep,
             0.0001,
-            prefix=prefix,
-        )
-        testout.write(
-            "| MD timestep passed correctly | "
-            + getBadge(
-                check(basic_md_failed, md_tstep, plumed_tstep, 0.0001, 0),
-                "timestep",
-                code,
-                version,
-            )
-            + " | \n"
         )
     if info["mass"] == "yes":
         md_masses = np.ones(10)
@@ -399,66 +337,33 @@ PRINT ARG=c.* FILE=cell_data
         if not basic_md_failed:
             md_masses = np.array(runner.getMasses(f"{basicDir}"))
             pl_masses = np.loadtxt(f"{basicDir}/mq_plumed")[:, 1]
-        writeReportPage(
+
+        # Output results from tests on mass
+        basicSR.writeReportAndTable(
             "mass",
-            code,
-            version,
-            basic_md_failed,
-            ["basic"],
+            "MD code masses passed correctly",
             md_masses,
             pl_masses,
-            tolerance * np.ones(pl_masses.shape),
-            prefix=prefix,
+            0.01 * np.ones(pl_masses.shape),
         )
-        testout.write(
-            "| MD code masses passed correctly | "
-            + getBadge(
-                check(
-                    basic_md_failed,
-                    md_masses,
-                    pl_masses,
-                    tolerance * np.ones(pl_masses.shape),
-                    0,
-                ),
-                "mass",
-                code,
-                version,
-            )
-            + " | \n"
-        )
+
     if info["charge"] == "yes":
         md_charges = np.ones(10)
         pl_charges = np.ones(10)
         if not basic_md_failed:
             md_charges = np.array(runner.getCharges(f"{basicDir}"))
             pl_charges = np.loadtxt(f"{basicDir}/mq_plumed")[:, 2]
-        writeReportPage(
+
+        # Output results from tests on charge
+        basicSR.writeReportAndTable(
             "charge",
-            code,
-            version,
-            basic_md_failed,
-            ["basic"],
+            "MD code charges passed correctly",
             md_charges,
             pl_charges,
             tolerance * np.ones(pl_charges.shape),
-            prefix=prefix,
         )
-        testout.write(
-            "| MD code charges passed correctly | "
-            + getBadge(
-                check(
-                    basic_md_failed,
-                    md_charges,
-                    pl_charges,
-                    tolerance * np.ones(pl_charges.shape),
-                    0,
-                ),
-                "charge",
-                code,
-                version,
-            )
-            + " | \n"
-        )
+
+    # the next runs are not based on the basic run
     if info["forces"] == "yes":
         # First run a calculation to find the reference distance between atom 1 and 2
         rparams = runner.setParams()
@@ -493,30 +398,23 @@ PRINT ARG=c.* FILE=cell_data
         if not md_failed:
             val1 = np.loadtxt(f"{outdir}/forces1_{version}/colvar")[:, 1]
             val2 = np.loadtxt(f"{outdir}/forces2_{version}/colvar")[:, 1]
-
-        writeReportPage(
-            "forces",
+        forcesSR = writeReportForSimulations(
+            testout,
             code,
             version,
             md_failed,
             ["forces1", "forces2"],
+            prefix=prefix,
+        )
+        forcesSR.writeReportAndTable(
+            "forces",
+            "PLUMED forces passed correctly",
             val1,
             val2,
             tolerance * np.ones(val1.shape),
-            prefix=prefix,
+            tolerance=tolerance,
         )
-        testout.write(
-            "| PLUMED forces passed correctly | "
-            + getBadge(
-                check(
-                    md_failed, val1, val2, tolerance * np.ones(val1.shape), tolerance
-                ),
-                "forces",
-                code,
-                version,
-            )
-            + " | \n"
-        )
+
     if info["virial"] == "yes":
         params = runner.setParams()
         params["nsteps"] = 50
@@ -540,27 +438,23 @@ PRINT ARG=c.* FILE=cell_data
             val1 = np.loadtxt(f"{outdir}/virial1_{version}/volume")[:, 1]
             val2 = np.loadtxt(f"{outdir}/virial2_{version}/volume")[:, 1]
             val3 = np.loadtxt(f"{outdir}/virial3_{version}/volume")[:, 1]
-        writeReportPage(
-            "virial",
+        virialSR = writeReportForSimulations(
+            testout,
             code,
             version,
             md_failed,
             ["virial1", "virial2", "virial3"],
+            prefix=prefix,
+        )
+        virialSR.writeReportAndTable(
+            "virial",
+            "PLUMED virial passed correctly",
             val1,
             val2,
             np.abs(val3 - val1),
-            prefix=prefix,
+            tolerance=tolerance,
         )
-        testout.write(
-            "| PLUMED virial passed correctly | "
-            + getBadge(
-                check(md_failed, val1, val2, np.abs(val3 - val1), tolerance),
-                "virial",
-                code,
-                version,
-            )
-            + " | \n"
-        )
+
     if info["energy"] == "yes":
         params["nsteps"] = 150
         params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
@@ -574,32 +468,21 @@ PRINT ARG=c.* FILE=cell_data
 
         else:
             md_failed = True
-        writeReportPage(
-            "energy",
+        energySR = writeReportForSimulations(
+            testout,
             code,
             version,
             md_failed,
             ["energy"],
+            prefix=prefix,
+        )
+        energySR.writeReportAndTable(
+            "energy",
+            "MD code potential energy passed correctly",
             md_energy,
             pl_energy,
             tolerance * np.ones(len(md_energy)),
-            prefix=prefix,
-        )
-        testout.write(
-            "| MD code potential energy passed correctly | "
-            + getBadge(
-                check(
-                    md_failed,
-                    md_energy,
-                    pl_energy,
-                    tolerance * np.ones(len(md_energy)),
-                    tolerance,
-                ),
-                "energy",
-                code,
-                version,
-            )
-            + " | \n"
+            tolerance=tolerance,
         )
         sqrtalpha = 1.1
         alpha = sqrtalpha * sqrtalpha
@@ -637,27 +520,23 @@ RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}
                 val2 = np.loadtxt(f"{outdir}/engforce2_{version}/energy")[:, 1:]
                 val3 = np.loadtxt(f"{outdir}/engforce3_{version}/energy")[:, 1:]
 
-            writeReportPage(
-                "engforce",
+            engforceSR = writeReportForSimulations(
+                testout,
                 code,
                 version,
                 md_failed,
                 ["engforce1", "engforce2", "engforce3"],
+                prefix=prefix,
+            )
+            engforceSR.writeReportAndTable(
+                "engforce",
+                "PLUMED forces on potential energy passed correctly",
                 val1,
                 val2,
                 np.abs(val1 - val3),
-                prefix=prefix,
+                tolerance=tolerance,
             )
-            testout.write(
-                "| PLUMED forces on potential energy passed correctly | "
-                + getBadge(
-                    check(md_failed, val1, val2, np.abs(val1 - val3), tolerance),
-                    "engforce",
-                    code,
-                    version,
-                )
-                + " | \n"
-            )
+
         if info["engforces"] and info["virial"] == "yes":
             params = runner.setParams()
             params["nsteps"] = 150
@@ -686,27 +565,23 @@ RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}
                 val2 = np.loadtxt(f"{outdir}/engvir2_{version}/energy")[:, 1:]
                 val3 = np.loadtxt(f"{outdir}/engvir3_{version}/energy")[:, 1:]
 
-            writeReportPage(
-                "engvir",
+            engvirSR = writeReportForSimulations(
+                testout,
                 code,
                 version,
                 md_failed,
                 ["engvir1", "engvir2", "engvir3"],
+                prefix=prefix,
+            )
+            engvirSR.writeReportAndTable(
+                "engvir",
+                "PLUMED contribution to virial due to force on potential energy passed correctly",
                 val1,
                 val2,
                 np.abs(val1 - val3),
-                prefix=prefix,
+                tolerance=tolerance,
             )
-            testout.write(
-                "| PLUMED contribution to virial due to force on potential energy passed correctly | "
-                + getBadge(
-                    check(md_failed, val1, val2, np.abs(val1 - val3), tolerance),
-                    "engvir",
-                    code,
-                    version,
-                )
-                + " | \n"
-            )
+
     testout.close()
     # Read output file to get status
     with open(f"{outdir}/" + fname, "r") as ifn:
@@ -730,131 +605,6 @@ RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}
     infoOut.close()
 
 
-def getBadge(sucess, filen, code, version: str):
-    badge = f"[![tested on {version}](https://img.shields.io/badge/{version}-"
-    if sucess < 0:
-        badge = badge + "failed-red.svg"
-    elif sucess < 5:
-        badge = badge + f"fail {sucess}%25-green.svg"
-    elif sucess < 20:
-        badge = badge + f"fail {sucess}%25-yellow.svg"
-    else:
-        badge = badge + f"fail {sucess}%25-yellow.svg"
-    return badge + f")]({filen}_{version}.html)"
-
-
-def writeReportPage(
-    filen, code, version, md_fail, zipfiles, ref, data, denom, *, prefix=""
-):
-    # Read in the file
-    with open(f"{prefix}pages/{filen}.md", "r") as f:
-        inp = f.read()
-
-    # Now output the file
-    with open(f"{prefix}tests/{code}/{filen}_{version}.md", "w+") as of:
-        for line in inp.splitlines():
-            if "Trajectory" in line and "#" in line:
-                if len(zipfiles) != 1:
-                    raise ValueError("wrong number of trajectories")
-                of.write(
-                    f"{line}\n"
-                    "Input and output files for the test calculation are available in "
-                    f"this [zip archive]({zipfiles[0]}_{version}.zip)\n\n"
-                )
-            elif "Trajectories" in line and "#" in line:
-                if len(zipfiles) == 2:
-                    of.write(
-                        f"{line}\n"
-                        "1. Input and output files for the calculation where the restraint "
-                        "is applied by the MD code available in "
-                        f"this [zip archive]({zipfiles[0]}_{version}.zip)\n"
-                        "2. Input and output files for the calculation where the restraint "
-                        "is applied by PLUMED are available in t"
-                        f"his [zip archive]({zipfiles[1]}_{version}.zip)\n\n"
-                    )
-                elif len(zipfiles) == 3:
-                    of.write(
-                        f"{line}\n"
-                        "1. Input and output files for the unpeturbed calculation "
-                        "are available in "
-                        f"this [zip archive]({zipfiles[0]}_{version}.zip)\n"
-                        "2. Input and output files for the peturbed calculation "
-                        "are available in "
-                        f"this [zip archive]({zipfiles[2]}_{version}.zip)\n\n"
-                        "3. Input and output files for the peturbed calculation in "
-                        "which a PLUMED restraint is used to undo the effect of the "
-                        "changed MD parameters are available in "
-                        f"this [zip archive]({zipfiles[1]}_{version}.zip)\n\n"
-                    )
-                else:
-                    raise ValueError("wrong number of trajectories")
-            elif "Results" in line and "#" in line and md_fail:
-                of.write(line + "\n")
-                of.write(
-                    "Calculations were not sucessful and no data was generated for comparison\n"
-                )
-            else:
-                of.write(line + "\n")
-        if not md_fail and hasattr(data, "__len__"):
-            if len(zipfiles) == 1:
-                of.write(
-                    "\n| MD code output | PLUMED output | Tolerance | % Difference | \n"
-                )
-            else:
-                of.write(
-                    "\n| Original result | Result with PLUMED | Effect of peturbation | % Difference | \n"
-                )
-            of.write(
-                "|:-------------|:--------------|:--------------|:--------------| \n"
-            )
-            nlines = min(20, len(ref))
-            percent_diff = 100 * np.divide(
-                np.abs(ref - data), denom, out=np.zeros_like(denom), where=denom != 0
-            )
-            for i in range(nlines):
-                if hasattr(ref[i], "__len__"):
-                    ref_strings = " ".join([f"{x:.4f}" for x in ref[i]])
-                    data_strings = " ".join([f"{x:.4f}" for x in data[i]])
-                    denom_strings = " ".join([f"{x:.4f}" for x in denom[i]])
-                    pp_strings = " ".join([f"{x:.4f}" for x in percent_diff[i]])
-                    of.write(
-                        f"| {ref_strings} | {data_strings} | {denom_strings} | {pp_strings} | \n"
-                    )
-                else:
-                    # TODO:ask if also this needs formatting (just append ":.4f")
-                    of.write(
-                        f"| {ref[i]} | {data[i]} | {denom[i]} | {percent_diff[i]} |\n"
-                    )
-        elif not md_fail:
-            if len(zipfiles) == 1:
-                of.write(
-                    "\n| MD code output | PLUMED output | Tolerance | % Difference | \n"
-                )
-            else:
-                of.write(
-                    "| Original result | Result with PLUMED | Effect of peturbation | % Difference | \n"
-                )
-            of.write(
-                "|:-------------|:--------------|:--------------|:--------------| \n"
-            )
-            of.write(
-                f"| {ref} | {data} | {denom} | {100 * np.abs(ref - data) / denom} | \n"
-            )
-
-
-def check(md_failed: "int|bool", val1, val2, val3, tolerance: float = 0.0) -> int:
-    if md_failed:
-        return -1
-    if hasattr(val2, "__len__") and len(val1) != len(val2):
-        return -1
-    if hasattr(val2, "__len__") and len(val3) != len(val2):
-        return -1
-    percent_diff = 100 * np.divide(
-        np.abs(val1 - val2), val3, out=np.zeros_like(val3), where=val3 > tolerance
-    )
-    return int(np.round(np.average(percent_diff)))
-
-
 if __name__ == "__main__":
     code, version, argv = "", "", sys.argv[1:]
     try:
@@ -873,7 +623,7 @@ if __name__ == "__main__":
 
     # Build all the pages that describe the tests for this code
     buildTestPages("tests/" + code)
-    # Copy the engforce file
+    # Engforce and engvir share the same procedure
     shutil.copy("pages/engforce.md", "pages/engvir.md")
     # Build the default test pages
     buildTestPages("pages")

@@ -11,6 +11,7 @@ if __name__ == "__main__":
     plumedToRun = [{"plumed": "plumed", "printJson": False}]
     print("Code: " + code)
     print("Preparing pages")
+    # Engforce and engvir share the same procedure
     shutil.copy("pages/engforce.md", "pages/engvir.md")
     # buildTestPages("tests/" + code, prefix, plumedToRun)
     buildTestPages("pages", prefix, plumedToRun)
