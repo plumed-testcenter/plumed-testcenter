@@ -240,28 +240,30 @@ PRINT ARG=c.* FILE=cell_data
         params["ensemble"] = "npt"
         basic_md_failed = runMDCalc("basic", params=params, **runMDCalcSettings)
 
-    val1, val2 = 0.1, 0.1
+    val1 = 0.1
+    val2 = 0.1
     testout.write("| Description of test | Status | \n")
     testout.write("|:--------------------|:------:| \n")
     if info["positions"] == "yes":
-        plumednatoms = []
-        codenatoms = []
-        codepos = np.ones(10)
-        plumedpos = np.ones(10)
-        codecell = np.ones(10)
-        plumedcell = np.ones(10)
+        plumednatoms = np.empty(0)
+        codenatoms = np.empty(0)
+        codepos = np.ones(params["nsteps"])
+        plumedpos = np.ones(params["nsteps"])
+        codecell = np.ones(params["nsteps"])
+        plumedcell = np.ones(params["nsteps"])
 
         if not basic_md_failed:
+            basicDir = f"{outdir}/basic_{version}"
             # Get the trajectory that was output by PLUMED
-            if os.path.exists(f"{outdir}/basic_{version}/plumed.xyz"):
-                plumedtraj = XYZReader(f"{outdir}/basic_{version}/plumed.xyz")
+            if os.path.exists(f"{basicDir}/plumed.xyz"):
+                plumedtraj = XYZReader(f"{basicDir}/plumed.xyz")
                 # Get the number of atoms in each frame from plumed trajectory
-                codenatoms = runner.getNumberOfAtoms(f"{outdir}/basic_{version}")
-                plumednatoms = []
-                for frame in plumedtraj.trajectory:
-                    plumednatoms.append(frame.positions.shape[0])
+                codenatoms = np.array(runner.getNumberOfAtoms(f"{basicDir}"))
+                plumednatoms = np.array(
+                    [frame.positions.shape[0] for frame in plumedtraj.trajectory]
+                )
                 # Concatenate all the trajectory frames
-                codepos = runner.getPositions(f"{outdir}/basic_{version}")
+                codepos = np.array(runner.getPositions(f"{basicDir}"))
                 first = True
 
                 for frame in plumedtraj.trajectory:
@@ -270,8 +272,8 @@ PRINT ARG=c.* FILE=cell_data
                         plumedpos = frame.positions.copy()
                     else:
                         plumedpos = np.concatenate((plumedpos, frame.positions), axis=0)
-                codecell = runner.getCell(f"{outdir}/basic_{version}")
-                plumedcell = np.loadtxt(f"{outdir}/basic_{version}/cell_data")[:, 1:]
+                codecell = np.array(runner.getCell(f"{basicDir}"))
+                plumedcell = np.loadtxt(f"{basicDir}/cell_data")[:, 1:]
 
             else:
                 basic_md_failed = True
@@ -283,8 +285,8 @@ PRINT ARG=c.* FILE=cell_data
             version,
             basic_md_failed,
             ["basic"],
-            np.array(codenatoms),
-            np.array(plumednatoms),
+            codenatoms,
+            plumednatoms,
             0.01 * np.ones(len(codenatoms)),
             prefix=prefix,
         )
@@ -293,8 +295,8 @@ PRINT ARG=c.* FILE=cell_data
             + getBadge(
                 check(
                     basic_md_failed,
-                    np.array(codenatoms),
-                    np.array(plumednatoms),
+                    codenatoms,
+                    plumednatoms,
                     0.01 * np.ones(len(codenatoms)),
                     0,
                 ),
@@ -363,7 +365,7 @@ PRINT ARG=c.* FILE=cell_data
         md_tstep = 0.1
         plumed_tstep = 0.1
         if not basic_md_failed:
-            plumedtimes = np.loadtxt(f"{outdir}/basic_{version}/colvar")[:, 1]
+            plumedtimes = np.loadtxt(f"{basicDir}/colvar")[:, 1]
             md_tstep = runner.getTimestep()
             plumed_tstep = plumedtimes[1] - plumedtimes[0]
 
@@ -395,15 +397,15 @@ PRINT ARG=c.* FILE=cell_data
         md_masses = np.ones(10)
         pl_masses = np.ones(10)
         if not basic_md_failed:
-            md_masses = runner.getMasses(f"{outdir}/basic_{version}")
-            pl_masses = np.loadtxt(f"{outdir}/basic_{version}/mq_plumed")[:, 1]
+            md_masses = np.array(runner.getMasses(f"{basicDir}"))
+            pl_masses = np.loadtxt(f"{basicDir}/mq_plumed")[:, 1]
         writeReportPage(
             "mass",
             code,
             version,
             basic_md_failed,
             ["basic"],
-            np.array(md_masses),
+            md_masses,
             pl_masses,
             tolerance * np.ones(pl_masses.shape),
             prefix=prefix,
@@ -413,7 +415,7 @@ PRINT ARG=c.* FILE=cell_data
             + getBadge(
                 check(
                     basic_md_failed,
-                    np.array(md_masses),
+                    md_masses,
                     pl_masses,
                     tolerance * np.ones(pl_masses.shape),
                     0,
@@ -425,17 +427,18 @@ PRINT ARG=c.* FILE=cell_data
             + " | \n"
         )
     if info["charge"] == "yes":
-        md_charges, pl_charges = np.ones(10), np.ones(10)
+        md_charges = np.ones(10)
+        pl_charges = np.ones(10)
         if not basic_md_failed:
-            md_charges = runner.getCharges(f"{outdir}/basic_{version}")
-            pl_charges = np.loadtxt(f"{outdir}/basic_{version}/mq_plumed")[:, 2]
+            md_charges = np.array(runner.getCharges(f"{basicDir}"))
+            pl_charges = np.loadtxt(f"{basicDir}/mq_plumed")[:, 2]
         writeReportPage(
             "charge",
             code,
             version,
             basic_md_failed,
             ["basic"],
-            np.array(md_charges),
+            md_charges,
             pl_charges,
             tolerance * np.ones(pl_charges.shape),
             prefix=prefix,
@@ -445,7 +448,7 @@ PRINT ARG=c.* FILE=cell_data
             + getBadge(
                 check(
                     basic_md_failed,
-                    np.array(md_charges),
+                    md_charges,
                     pl_charges,
                     tolerance * np.ones(pl_charges.shape),
                     0,
@@ -462,18 +465,19 @@ PRINT ARG=c.* FILE=cell_data
         rparams["nsteps"] = 2
         rparams["ensemble"] = "nvt"
         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
-        refrun = runMDCalc("refres", params=rparams, **runMDCalcSettings)
-        mdrun = True
-        plrun = True
+        refrun_fail = runMDCalc("refres", params=rparams, **runMDCalcSettings)
+        mdrun_fail = True
+        plrun_fail = True
 
-        if not refrun:
+        if not refrun_fail:
             # Get the reference distance between the atoms
             refdist = np.loadtxt(f"{outdir}/refres_{version}/colvar")[0, 1]
             # Run the calculation with the restraint applied by the MD code
-            rparams["nsteps"], rparams["ensemble"] = 20, "nvt"
+            rparams["nsteps"] = 20
+            rparams["ensemble"] = "nvt"
             rparams["restraint"] = refdist
             rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
-            mdrun = runMDCalc("forces1", params=rparams, **runMDCalcSettings)
+            mdrun_fail = runMDCalc("forces1", params=rparams, **runMDCalcSettings)
             # Run the calculation with the restraint applied by PLUMED
             rparams["restraint"] = -10
             rparams["plumed"] = (
@@ -481,9 +485,9 @@ PRINT ARG=c.* FILE=cell_data
                 f"RESTRAINT ARG=dd KAPPA=2000 AT={refdist}\n"
                 "PRINT ARG=dd FILE=colvar\n"
             )
-            plrun = runMDCalc("forces2", params=rparams, **runMDCalcSettings)
+            plrun_fail = runMDCalc("forces2", params=rparams, **runMDCalcSettings)
             # And create our reports from the two runs
-            md_failed = mdrun or plrun
+            md_failed = mdrun_fail or plrun_fail
             val1 = np.ones(1)
             val2 = np.ones(1)
         if not md_failed:
@@ -515,18 +519,19 @@ PRINT ARG=c.* FILE=cell_data
         )
     if info["virial"] == "yes":
         params = runner.setParams()
-        params["nsteps"], params["ensemble"] = 50, "npt"
+        params["nsteps"] = 50
+        params["ensemble"] = "npt"
         params["plumed"] = "vv: VOLUME \n PRINT ARG=vv FILE=volume"
-        run1 = runMDCalc("virial1", params=params, **runMDCalcSettings)
+        run1_fail = runMDCalc("virial1", params=params, **runMDCalcSettings)
         params["pressure"] = 1001 * params["pressure"]
-        run3 = runMDCalc("virial3", params=params, **runMDCalcSettings)
+        run3_fail = runMDCalc("virial3", params=params, **runMDCalcSettings)
         params["plumed"] = (
             "vv: VOLUME\n"
             "RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429\n"
             "PRINT ARG=vv FILE=volume\n"
         )
-        run2 = runMDCalc("virial2", params=params, **runMDCalcSettings)
-        md_failed = run1 or run2 or run3
+        run2_fail = runMDCalc("virial2", params=params, **runMDCalcSettings)
+        md_failed = run1_fail or run2_fail or run3_fail
         val1 = np.ones(1)
         val2 = np.ones(1)
         val3 = np.ones(1)
@@ -600,18 +605,19 @@ PRINT ARG=c.* FILE=cell_data
         alpha = sqrtalpha * sqrtalpha
         if info["engforces"] == "yes":
             params = runner.setParams()
-            params["nsteps"], params["ensemble"] = 50, "nvt"
+            params["nsteps"] = 50
+            params["ensemble"] = "nvt"
             params[
                 "plumed"
             ] = """e: ENERGY
 v: VOLUME
 PRINT ARG=e,v FILE=energy
 """
-            run1 = runMDCalc("engforce1", params=params, **runMDCalcSettings)
+            run1_fail = runMDCalc("engforce1", params=params, **runMDCalcSettings)
             params["temperature"] = params["temperature"] * alpha
             params["relaxtime"] = params["relaxtime"] / sqrtalpha
             params["tstep"] = params["tstep"] / sqrtalpha
-            run3 = runMDCalc("engforce3", params=params, **runMDCalcSettings)
+            run3_fail = runMDCalc("engforce3", params=params, **runMDCalcSettings)
             params[
                 "plumed"
             ] = f"""e: ENERGY
@@ -620,8 +626,8 @@ PRINT ARG=e,v FILE=energy
 RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}
 """
 
-            run2 = runMDCalc("engforce2", params=params, **runMDCalcSettings)
-            md_failed = run1 or run2 or run3
+            run2_fail = runMDCalc("engforce2", params=params, **runMDCalcSettings)
+            md_failed = run1_fail or run2_fail or run3_fail
             val1 = np.ones(1)
             val2 = np.ones(1)
             val3 = np.ones(1)
@@ -657,22 +663,20 @@ RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}
             params["nsteps"] = 150
             params["ensemble"] = "npt"
             params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy"
-            run1 = runMDCalc("engvir1", params=params, **runMDCalcSettings)
+            run1_fail = runMDCalc("engvir1", params=params, **runMDCalcSettings)
             params["temperature"] = params["temperature"] * alpha
-            params["relaxtime"], params["prelaxtime"] = (
-                params["relaxtime"] / sqrtalpha,
-                params["prelaxtime"] / sqrtalpha,
-            )
+            params["relaxtime"] = params["relaxtime"] / sqrtalpha
+            params["prelaxtime"] = params["prelaxtime"] / sqrtalpha
             params["tstep"] = params["tstep"] / sqrtalpha
-            run3 = runMDCalc("engvir3", params=params, **runMDCalcSettings)
+            run3_fail = runMDCalc("engvir3", params=params, **runMDCalcSettings)
             params["plumed"] = (
                 "e: ENERGY\n"
                 "v: VOLUME\n"
                 "PRINT ARG=e,v FILE=energy\n"
                 f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}"
             )
-            run2 = runMDCalc("engvir2", params=params, **runMDCalcSettings)
-            md_failed = run1 or run2 or run3
+            run2_fail = runMDCalc("engvir2", params=params, **runMDCalcSettings)
+            md_failed = run1_fail or run2_fail or run3_fail
             val1 = np.ones(1)
             val2 = np.ones(1)
             val3 = np.ones(1)
@@ -777,7 +781,7 @@ def writeReportPage(
                         "2. Input and output files for the peturbed calculation "
                         "are available in "
                         f"this [zip archive]({zipfiles[2]}_{version}.zip)\n\n"
-                        "2. Input and output files for the peturbed calculation in "
+                        "3. Input and output files for the peturbed calculation in "
                         "which a PLUMED restraint is used to undo the effect of the "
                         "changed MD parameters are available in "
                         f"this [zip archive]({zipfiles[1]}_{version}.zip)\n\n"
@@ -838,7 +842,7 @@ def writeReportPage(
             )
 
 
-def check(md_failed, val1, val2, val3, tolerance) -> int:
+def check(md_failed: "int|bool", val1, val2, val3, tolerance: float = 0.0) -> int:
     if md_failed:
         return -1
     if hasattr(val2, "__len__") and len(val1) != len(val2):
