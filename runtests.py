@@ -493,25 +493,18 @@ def runEnergyTests(
         params = runner.setParams()
         params["nsteps"] = 50
         params["ensemble"] = "nvt"
-        params[
-            "plumed"
-        ] = """e: ENERGY
-v: VOLUME
-PRINT ARG=e,v FILE=energy
-"""
+        params["plumed"] = "e: ENERGY\n" "v: VOLUME\n" "PRINT ARG=e,v FILE=energy\n"
         run1_fail = runMDCalc("engforce1", params=params, **runMDCalcSettings)
         params["temperature"] = params["temperature"] * alpha
         params["relaxtime"] = params["relaxtime"] / sqrtalpha
         params["tstep"] = params["tstep"] / sqrtalpha
         run3_fail = runMDCalc("engforce3", params=params, **runMDCalcSettings)
-        params[
-            "plumed"
-        ] = f"""e: ENERGY
-v: VOLUME
-PRINT ARG=e,v FILE=energy
-RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}
-"""
-
+        params["plumed"] = (
+            "e: ENERGY\n"
+            "v: VOLUME\n"
+            "PRINT ARG=e,v FILE=energy\n"
+            f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}\n"
+        )
         run2_fail = runMDCalc("engforce2", params=params, **runMDCalcSettings)
         md_failed = run1_fail or run2_fail or run3_fail
         val1 = np.ones(1)
@@ -539,12 +532,13 @@ RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}
             np.abs(val1 - val3),
             tolerance=tolerance,
         )
-
+    sqrtalpha = 1.1
+    alpha = sqrtalpha * sqrtalpha
     if info["engforces"] and info["virial"] == "yes":
         params = runner.setParams()
         params["nsteps"] = 150
         params["ensemble"] = "npt"
-        params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy"
+        params["plumed"] = "e: ENERGY\n" "v: VOLUME\n" "PRINT ARG=e,v FILE=energy\n"
         run1_fail = runMDCalc("engvir1", params=params, **runMDCalcSettings)
         params["temperature"] = params["temperature"] * alpha
         params["relaxtime"] = params["relaxtime"] / sqrtalpha
@@ -555,7 +549,7 @@ RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}
             "e: ENERGY\n"
             "v: VOLUME\n"
             "PRINT ARG=e,v FILE=energy\n"
-            f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}"
+            f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}\n"
         )
         run2_fail = runMDCalc("engvir2", params=params, **runMDCalcSettings)
         md_failed = run1_fail or run2_fail or run3_fail
