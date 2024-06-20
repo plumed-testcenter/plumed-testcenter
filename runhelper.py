@@ -5,13 +5,17 @@ import numpy as np
 def getBadge(sucess, filen, code, version: str):
     badge = f"[![tested on {version}](https://img.shields.io/badge/{version}-"
     if sucess < 0:
-        badge = badge + "failed-red.svg"
-    elif sucess < 5:
-        badge = badge + f"fail {sucess}%25-green.svg"
-    elif sucess < 20:
-        badge = badge + f"fail {sucess}%25-yellow.svg"
+        badge += "failed-red.svg"
     else:
-        badge = badge + f"fail {sucess}%25-yellow.svg"
+        color = "red"
+        if sucess < 5:
+            color = "green"
+        elif sucess < 20:
+            color = "yellow"
+        else:
+            # shoudn't this be red?
+            color = "yellow"
+        badge += f"fail%20{sucess}%25-{color}.svg"
     return badge + f")]({filen}_{version}.html)"
 
 
