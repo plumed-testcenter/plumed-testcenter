@@ -393,9 +393,9 @@ PRINT ARG=c.* FILE=cell_data
             )
             plrun_fail = runMDCalc("forces2", params=rparams, **runMDCalcSettings)
             # And create our reports from the two runs
-            md_failed = mdrun_fail or plrun_fail
-            val1 = np.ones(1)
-            val2 = np.ones(1)
+        md_failed = mdrun_fail or plrun_fail
+        val1 = np.ones(1)
+        val2 = np.ones(1)
         if not md_failed:
             val1 = np.loadtxt(f"{outdir}/forces1_{version}/colvar")[:, 1]
             val2 = np.loadtxt(f"{outdir}/forces2_{version}/colvar")[:, 1]
