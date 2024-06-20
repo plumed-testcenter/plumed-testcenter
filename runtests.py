@@ -12,6 +12,7 @@ from datetime import date
 from contextlib import contextmanager
 from PlumedToHTML import test_plumed, get_html
 from runhelper import writeReportForSimulations
+from typing import TextIO
 
 STANDARD_RUN_SETTINGS = [
     {"plumed": "plumed", "printJson": False},
@@ -148,6 +149,8 @@ def runMDCalc(
         wdir = f"{prefix}{wdir}"
     shutil.copytree(f"{basedir}/input", f"{wdir}")
     # Change to the directory to run the calculation
+    print(f"for run {name}")
+    print(f"{params=}")
     with cd(f"{wdir}"):
         # Output the plumed file
         with open("plumed.dat", "w+") as of:
@@ -160,63 +163,20 @@ def runMDCalc(
     return mdExitCode
 
 
-def runTests(
+def runBasicTests(
+    testout: TextIO,
     code: str,
     version: str,
+    outdir: str,
+    info: dict,
     runner,
+    runMDCalcSettings: dict,
+    tolerance: float,
     *,
     prefix: str = "",
-    settigsFor_runMDCalc: dict = {},
 ):
-    # Read in the information on the tests that should be run for this code
-    basedir = f"tests/{code}"
-    outdir = basedir
-    if prefix != "":
-        outdir = f"{prefix}{outdir}"
-        Path(f"./{outdir}").mkdir(parents=True, exist_ok=True)
-    ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)
-    info = ymldata["tests"]
-    tolerance = float(ymldata["tolerance"])
-    fname = "testout.md"
-    usestable = version == "stable"
-
-    if version == "master":
-        fname = "testout_" + version + ".md"
-    elif version != "stable":
-        raise ValueError("version should be master or stable")
-
-    testout = open(f"{outdir}/{fname}", "w+")
-    testout.write(f"Testing {code}\n")
-    testout.write("------------------------\n \n")
-    stable_version = (
-        subprocess.check_output("plumed info --version", shell=True)
-        .decode("utf-8")
-        .strip()
-    )
-    if version == "stable":
-        version = "v" + stable_version
-    # it looks strange, but strings do not need the + to be concatenated
-    testout.write(
-        f"The tests described in the following table were performed on "
-        f"__{date.today().strftime('%B %d, %Y')}__ to test whether the "
-        f"interface between {code} and "
-        f"the {version} version of PLUMED is working correctly.\n\n"
-    )
-    if info["virial"] == "no":
-        testout.write(
-            f"WARNING: {code} does not pass the virial to PLUMED and it is thus "
-            "not possible to run NPT simulations with this code\n\n"
-        )
-    if "warning" in ymldata.keys():
-        for warn in ymldata["warning"]:
-            testout.write(f"WARNING: {warn}\n\n")
-
+    """run the (eventual) MD test for position, timestep, mass, and charge"""
     params = runner.setParams()
-    # sugar with the settings that are always the same for runMDCalc
-    # note that if i modify directly settigsFor_runMDCalc, i will change the default parameteres on subsequent calls
-    runMDCalcSettings = dict(
-        code=code, version=version, runner=runner, prefix=prefix, **settigsFor_runMDCalc
-    )
     basic_md_failed = True
     if (
         info["positions"] == "yes"
@@ -242,8 +202,6 @@ PRINT ARG=c.* FILE=cell_data
         params["ensemble"] = "npt"
         basic_md_failed = runMDCalc("basic", params=params, **runMDCalcSettings)
 
-    val1 = 0.1
-    val2 = 0.1
     testout.write("| Description of test | Status | \n")
     testout.write("|:--------------------|:------:| \n")
     basicSR = writeReportForSimulations(
@@ -364,226 +322,379 @@ PRINT ARG=c.* FILE=cell_data
             tolerance * np.ones(pl_charges.shape),
         )
 
-    # the next runs are not based on the basic run
-    if info["forces"] == "yes":
-        # First run a calculation to find the reference distance between atom 1 and 2
-        rparams = runner.setParams()
-        rparams["nsteps"] = 2
+
+def runForcesTest(
+    testout: TextIO,
+    code: str,
+    version: str,
+    outdir: str,
+    runner,
+    runMDCalcSettings: dict,
+    tolerance: float,
+    *,
+    prefix: str = "",
+):
+    # First run a calculation to find the reference distance between atom 1 and 2
+    rparams = runner.setParams()
+    rparams["nsteps"] = 2
+    rparams["ensemble"] = "nvt"
+    rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
+    refrun_fail = runMDCalc("refres", params=rparams, **runMDCalcSettings)
+    mdrun_fail = True
+    plrun_fail = True
+
+    if not refrun_fail:
+        # Get the reference distance between the atoms
+        refdist = np.loadtxt(f"{outdir}/refres_{version}/colvar")[0, 1]
+        # Run the calculation with the restraint applied by the MD code
+        rparams["nsteps"] = 20
         rparams["ensemble"] = "nvt"
+        rparams["restraint"] = refdist
         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
-        refrun_fail = runMDCalc("refres", params=rparams, **runMDCalcSettings)
-        mdrun_fail = True
-        plrun_fail = True
-
-        if not refrun_fail:
-            # Get the reference distance between the atoms
-            refdist = np.loadtxt(f"{outdir}/refres_{version}/colvar")[0, 1]
-            # Run the calculation with the restraint applied by the MD code
-            rparams["nsteps"] = 20
-            rparams["ensemble"] = "nvt"
-            rparams["restraint"] = refdist
-            rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
-            mdrun_fail = runMDCalc("forces1", params=rparams, **runMDCalcSettings)
-            # Run the calculation with the restraint applied by PLUMED
-            rparams["restraint"] = -10
-            rparams["plumed"] = (
-                "dd: DISTANCE ATOMS=1,2\n"
-                f"RESTRAINT ARG=dd KAPPA=2000 AT={refdist}\n"
-                "PRINT ARG=dd FILE=colvar\n"
-            )
-            plrun_fail = runMDCalc("forces2", params=rparams, **runMDCalcSettings)
-            # And create our reports from the two runs
-        md_failed = mdrun_fail or plrun_fail
-        val1 = np.ones(1)
-        val2 = np.ones(1)
-        if not md_failed:
-            val1 = np.loadtxt(f"{outdir}/forces1_{version}/colvar")[:, 1]
-            val2 = np.loadtxt(f"{outdir}/forces2_{version}/colvar")[:, 1]
-        forcesSR = writeReportForSimulations(
-            testout,
-            code,
-            version,
-            md_failed,
-            ["forces1", "forces2"],
-            prefix=prefix,
+        mdrun_fail = runMDCalc("forces1", params=rparams, **runMDCalcSettings)
+        # Run the calculation with the restraint applied by PLUMED
+        rparams["restraint"] = -10
+        rparams["plumed"] = (
+            "dd: DISTANCE ATOMS=1,2\n"
+            f"RESTRAINT ARG=dd KAPPA=2000 AT={refdist}\n"
+            "PRINT ARG=dd FILE=colvar\n"
         )
-        forcesSR.writeReportAndTable(
-            "forces",
-            "PLUMED forces passed correctly",
-            val1,
-            val2,
-            tolerance * np.ones(val1.shape),
-            tolerance=tolerance,
-        )
+        plrun_fail = runMDCalc("forces2", params=rparams, **runMDCalcSettings)
+    # And create our reports from the two runs
+    md_failed = mdrun_fail or plrun_fail
+    val1 = np.ones(1)
+    val2 = np.ones(1)
+    if not md_failed:
+        val1 = np.loadtxt(f"{outdir}/forces1_{version}/colvar")[:, 1]
+        val2 = np.loadtxt(f"{outdir}/forces2_{version}/colvar")[:, 1]
+    forcesSR = writeReportForSimulations(
+        testout,
+        code,
+        version,
+        md_failed,
+        ["forces1", "forces2"],
+        prefix=prefix,
+    )
+    forcesSR.writeReportAndTable(
+        "forces",
+        "PLUMED forces passed correctly",
+        val1,
+        val2,
+        tolerance * np.ones(val1.shape),
+        tolerance=tolerance,
+    )
 
-    if info["virial"] == "yes":
+
+def runVirialTest(
+    testout: TextIO,
+    code: str,
+    version: str,
+    outdir: str,
+    runner,
+    runMDCalcSettings: dict,
+    tolerance: float,
+    *,
+    prefix: str = "",
+):
+    params = runner.setParams()
+    params["nsteps"] = 50
+    params["ensemble"] = "npt"
+    params["plumed"] = "vv: VOLUME \n PRINT ARG=vv FILE=volume"
+    run1_fail = runMDCalc("virial1", params=params, **runMDCalcSettings)
+    params["pressure"] = 1001 * params["pressure"]
+    run3_fail = runMDCalc("virial3", params=params, **runMDCalcSettings)
+    params["plumed"] = (
+        "vv: VOLUME\n"
+        "RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429\n"
+        "PRINT ARG=vv FILE=volume\n"
+    )
+    run2_fail = runMDCalc("virial2", params=params, **runMDCalcSettings)
+    md_failed = run1_fail or run2_fail or run3_fail
+    val1 = np.ones(1)
+    val2 = np.ones(1)
+    val3 = np.ones(1)
+
+    if not md_failed:
+        val1 = np.loadtxt(f"{outdir}/virial1_{version}/volume")[:, 1]
+        val2 = np.loadtxt(f"{outdir}/virial2_{version}/volume")[:, 1]
+        val3 = np.loadtxt(f"{outdir}/virial3_{version}/volume")[:, 1]
+    virialSR = writeReportForSimulations(
+        testout,
+        code,
+        version,
+        md_failed,
+        ["virial1", "virial2", "virial3"],
+        prefix=prefix,
+    )
+    virialSR.writeReportAndTable(
+        "virial",
+        "PLUMED virial passed correctly",
+        val1,
+        val2,
+        np.abs(val3 - val1),
+        tolerance=tolerance,
+    )
+
+
+def runEnergyTests(
+    testout: TextIO,
+    code: str,
+    version: str,
+    outdir: str,
+    info: dict,
+    runner,
+    runMDCalcSettings: dict,
+    tolerance: float,
+    *,
+    prefix: str = "",
+):
+    params = runner.setParams()
+    params["nsteps"] = 150
+    ############################################################################
+    # QUESTION: in the original the ensemble and the pressure are in the state of the last run in
+    # which 'param' has been used
+    # for example the 'ensemble' is "npt" if:
+    # - info["virial"] is "yes"
+    # - info["positions"]=="yes" or info["timestep"]=="yes" or info["mass"]=="yes" or info["charge"]=="yes"
+    # there they are set to behave in the same way as if everithing was set to "yes"
+    params["ensemble"] = "npt"
+    params["pressure"] = 1001 * params["pressure"]
+    ############################################################################
+    params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
+    md_failed = runMDCalc("energy", params=params, **runMDCalcSettings)
+    md_energy = np.ones(1)
+    pl_energy = np.ones(1)
+
+    if not md_failed and os.path.exists(f"{outdir}/energy_{version}/energy"):
+        md_energy = runner.getEnergy(f"{outdir}/energy_{version}")
+        pl_energy = np.loadtxt(f"{outdir}/energy_{version}/energy")[:, 1]
+
+    else:
+        md_failed = True
+    energySR = writeReportForSimulations(
+        testout,
+        code,
+        version,
+        md_failed,
+        ["energy"],
+        prefix=prefix,
+    )
+    energySR.writeReportAndTable(
+        "energy",
+        "MD code potential energy passed correctly",
+        md_energy,
+        pl_energy,
+        tolerance * np.ones(len(md_energy)),
+        tolerance=tolerance,
+    )
+    sqrtalpha = 1.1
+    alpha = sqrtalpha * sqrtalpha
+    if info["engforces"] == "yes":
         params = runner.setParams()
         params["nsteps"] = 50
-        params["ensemble"] = "npt"
-        params["plumed"] = "vv: VOLUME \n PRINT ARG=vv FILE=volume"
-        run1_fail = runMDCalc("virial1", params=params, **runMDCalcSettings)
-        params["pressure"] = 1001 * params["pressure"]
-        run3_fail = runMDCalc("virial3", params=params, **runMDCalcSettings)
-        params["plumed"] = (
-            "vv: VOLUME\n"
-            "RESTRAINT AT=0.0 ARG=vv SLOPE=-60.221429\n"
-            "PRINT ARG=vv FILE=volume\n"
-        )
-        run2_fail = runMDCalc("virial2", params=params, **runMDCalcSettings)
+        params["ensemble"] = "nvt"
+        params[
+            "plumed"
+        ] = """e: ENERGY
+v: VOLUME
+PRINT ARG=e,v FILE=energy
+"""
+        run1_fail = runMDCalc("engforce1", params=params, **runMDCalcSettings)
+        params["temperature"] = params["temperature"] * alpha
+        params["relaxtime"] = params["relaxtime"] / sqrtalpha
+        params["tstep"] = params["tstep"] / sqrtalpha
+        run3_fail = runMDCalc("engforce3", params=params, **runMDCalcSettings)
+        params[
+            "plumed"
+        ] = f"""e: ENERGY
+v: VOLUME
+PRINT ARG=e,v FILE=energy
+RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}
+"""
+
+        run2_fail = runMDCalc("engforce2", params=params, **runMDCalcSettings)
         md_failed = run1_fail or run2_fail or run3_fail
         val1 = np.ones(1)
         val2 = np.ones(1)
         val3 = np.ones(1)
 
         if not md_failed:
-            val1 = np.loadtxt(f"{outdir}/virial1_{version}/volume")[:, 1]
-            val2 = np.loadtxt(f"{outdir}/virial2_{version}/volume")[:, 1]
-            val3 = np.loadtxt(f"{outdir}/virial3_{version}/volume")[:, 1]
-        virialSR = writeReportForSimulations(
+            val1 = np.loadtxt(f"{outdir}/engforce1_{version}/energy")[:, 1:]
+            val2 = np.loadtxt(f"{outdir}/engforce2_{version}/energy")[:, 1:]
+            val3 = np.loadtxt(f"{outdir}/engforce3_{version}/energy")[:, 1:]
+
+        engforceSR = writeReportForSimulations(
             testout,
             code,
             version,
             md_failed,
-            ["virial1", "virial2", "virial3"],
+            ["engforce1", "engforce2", "engforce3"],
             prefix=prefix,
         )
-        virialSR.writeReportAndTable(
-            "virial",
-            "PLUMED virial passed correctly",
+        engforceSR.writeReportAndTable(
+            "engforce",
+            "PLUMED forces on potential energy passed correctly",
             val1,
             val2,
-            np.abs(val3 - val1),
+            np.abs(val1 - val3),
             tolerance=tolerance,
         )
 
-    if info["energy"] == "yes":
+    if info["engforces"] and info["virial"] == "yes":
+        params = runner.setParams()
         params["nsteps"] = 150
-        params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
-        md_failed = runMDCalc("energy", params=params, **runMDCalcSettings)
-        md_energy = np.ones(1)
-        pl_energy = np.ones(1)
+        params["ensemble"] = "npt"
+        params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy"
+        run1_fail = runMDCalc("engvir1", params=params, **runMDCalcSettings)
+        params["temperature"] = params["temperature"] * alpha
+        params["relaxtime"] = params["relaxtime"] / sqrtalpha
+        params["prelaxtime"] = params["prelaxtime"] / sqrtalpha
+        params["tstep"] = params["tstep"] / sqrtalpha
+        run3_fail = runMDCalc("engvir3", params=params, **runMDCalcSettings)
+        params["plumed"] = (
+            "e: ENERGY\n"
+            "v: VOLUME\n"
+            "PRINT ARG=e,v FILE=energy\n"
+            f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}"
+        )
+        run2_fail = runMDCalc("engvir2", params=params, **runMDCalcSettings)
+        md_failed = run1_fail or run2_fail or run3_fail
+        val1 = np.ones(1)
+        val2 = np.ones(1)
+        val3 = np.ones(1)
 
-        if not md_failed and os.path.exists(f"{outdir}/energy_{version}/energy"):
-            md_energy = runner.getEnergy(f"{outdir}/energy_{version}")
-            pl_energy = np.loadtxt(f"{outdir}/energy_{version}/energy")[:, 1]
+        if not md_failed:
+            val1 = np.loadtxt(f"{outdir}/engvir1_{version}/energy")[:, 1:]
+            val2 = np.loadtxt(f"{outdir}/engvir2_{version}/energy")[:, 1:]
+            val3 = np.loadtxt(f"{outdir}/engvir3_{version}/energy")[:, 1:]
 
-        else:
-            md_failed = True
-        energySR = writeReportForSimulations(
+        engvirSR = writeReportForSimulations(
             testout,
             code,
             version,
             md_failed,
-            ["energy"],
+            ["engvir1", "engvir2", "engvir3"],
             prefix=prefix,
         )
-        energySR.writeReportAndTable(
-            "energy",
-            "MD code potential energy passed correctly",
-            md_energy,
-            pl_energy,
-            tolerance * np.ones(len(md_energy)),
+        engvirSR.writeReportAndTable(
+            "engvir",
+            "PLUMED contribution to virial due to force on potential energy passed correctly",
+            val1,
+            val2,
+            np.abs(val1 - val3),
             tolerance=tolerance,
         )
-        sqrtalpha = 1.1
-        alpha = sqrtalpha * sqrtalpha
-        if info["engforces"] == "yes":
-            params = runner.setParams()
-            params["nsteps"] = 50
-            params["ensemble"] = "nvt"
-            params[
-                "plumed"
-            ] = """e: ENERGY
-v: VOLUME
-PRINT ARG=e,v FILE=energy
-"""
-            run1_fail = runMDCalc("engforce1", params=params, **runMDCalcSettings)
-            params["temperature"] = params["temperature"] * alpha
-            params["relaxtime"] = params["relaxtime"] / sqrtalpha
-            params["tstep"] = params["tstep"] / sqrtalpha
-            run3_fail = runMDCalc("engforce3", params=params, **runMDCalcSettings)
-            params[
-                "plumed"
-            ] = f"""e: ENERGY
-v: VOLUME
-PRINT ARG=e,v FILE=energy
-RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}
-"""
 
-            run2_fail = runMDCalc("engforce2", params=params, **runMDCalcSettings)
-            md_failed = run1_fail or run2_fail or run3_fail
-            val1 = np.ones(1)
-            val2 = np.ones(1)
-            val3 = np.ones(1)
 
-            if not md_failed:
-                val1 = np.loadtxt(f"{outdir}/engforce1_{version}/energy")[:, 1:]
-                val2 = np.loadtxt(f"{outdir}/engforce2_{version}/energy")[:, 1:]
-                val3 = np.loadtxt(f"{outdir}/engforce3_{version}/energy")[:, 1:]
+def runTests(
+    code: str,
+    version: str,
+    runner,
+    *,
+    prefix: str = "",
+    settigsFor_runMDCalc: dict = {},
+):
+    # Read in the information on the tests that should be run for this code
+    basedir = f"tests/{code}"
+    outdir = basedir
+    if prefix != "":
+        outdir = f"{prefix}{outdir}"
+        Path(f"./{outdir}").mkdir(parents=True, exist_ok=True)
+    ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)
+    info = ymldata["tests"]
+    tolerance = float(ymldata["tolerance"])
+    fname = "testout.md"
+    usestable = version == "stable"
 
-            engforceSR = writeReportForSimulations(
+    if version == "master":
+        fname = "testout_" + version + ".md"
+    elif version != "stable":
+        raise ValueError("version should be master or stable")
+
+    with open(f"{outdir}/{fname}", "w+") as testout:
+        testout.write(f"Testing {code}\n")
+        testout.write("------------------------\n \n")
+        stable_version = (
+            subprocess.check_output("plumed info --version", shell=True)
+            .decode("utf-8")
+            .strip()
+        )
+        if version == "stable":
+            version = "v" + stable_version
+        # it looks strange, but strings do not need the + to be concatenated
+        testout.write(
+            f"The tests described in the following table were performed on "
+            f"__{date.today().strftime('%B %d, %Y')}__ to test whether the "
+            f"interface between {code} and "
+            f"the {version} version of PLUMED is working correctly.\n\n"
+        )
+        if info["virial"] == "no":
+            testout.write(
+                f"WARNING: {code} does not pass the virial to PLUMED and it is thus "
+                "not possible to run NPT simulations with this code\n\n"
+            )
+        if "warning" in ymldata.keys():
+            for warn in ymldata["warning"]:
+                testout.write(f"WARNING: {warn}\n\n")
+
+        # sugar with the settings that are always the same for runMDCalc
+        # note that if i modify directly settigsFor_runMDCalc, i will change the default parameteres on subsequent calls
+        runMDCalcSettings = dict(
+            code=code,
+            version=version,
+            runner=runner,
+            prefix=prefix,
+            **settigsFor_runMDCalc,
+        )
+        runBasicTests(
+            testout,
+            code,
+            version,
+            outdir,
+            info,
+            runner,
+            runMDCalcSettings,
+            tolerance,
+            prefix=prefix,
+        )
+        # the next runs are not based on the basic run
+        if info["forces"] == "yes":
+            runForcesTest(
                 testout,
                 code,
                 version,
-                md_failed,
-                ["engforce1", "engforce2", "engforce3"],
+                outdir,
+                runner,
+                runMDCalcSettings,
+                tolerance,
                 prefix=prefix,
             )
-            engforceSR.writeReportAndTable(
-                "engforce",
-                "PLUMED forces on potential energy passed correctly",
-                val1,
-                val2,
-                np.abs(val1 - val3),
-                tolerance=tolerance,
-            )
 
-        if info["engforces"] and info["virial"] == "yes":
-            params = runner.setParams()
-            params["nsteps"] = 150
-            params["ensemble"] = "npt"
-            params["plumed"] = "e: ENERGY\n v: VOLUME \n PRINT ARG=e,v FILE=energy"
-            run1_fail = runMDCalc("engvir1", params=params, **runMDCalcSettings)
-            params["temperature"] = params["temperature"] * alpha
-            params["relaxtime"] = params["relaxtime"] / sqrtalpha
-            params["prelaxtime"] = params["prelaxtime"] / sqrtalpha
-            params["tstep"] = params["tstep"] / sqrtalpha
-            run3_fail = runMDCalc("engvir3", params=params, **runMDCalcSettings)
-            params["plumed"] = (
-                "e: ENERGY\n"
-                "v: VOLUME\n"
-                "PRINT ARG=e,v FILE=energy\n"
-                f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}"
-            )
-            run2_fail = runMDCalc("engvir2", params=params, **runMDCalcSettings)
-            md_failed = run1_fail or run2_fail or run3_fail
-            val1 = np.ones(1)
-            val2 = np.ones(1)
-            val3 = np.ones(1)
-
-            if not md_failed:
-                val1 = np.loadtxt(f"{outdir}/engvir1_{version}/energy")[:, 1:]
-                val2 = np.loadtxt(f"{outdir}/engvir2_{version}/energy")[:, 1:]
-                val3 = np.loadtxt(f"{outdir}/engvir3_{version}/energy")[:, 1:]
-
-            engvirSR = writeReportForSimulations(
+        if info["virial"] == "yes":
+            runVirialTest(
                 testout,
                 code,
                 version,
-                md_failed,
-                ["engvir1", "engvir2", "engvir3"],
+                outdir,
+                runner,
+                runMDCalcSettings,
+                tolerance,
                 prefix=prefix,
             )
-            engvirSR.writeReportAndTable(
-                "engvir",
-                "PLUMED contribution to virial due to force on potential energy passed correctly",
-                val1,
-                val2,
-                np.abs(val1 - val3),
-                tolerance=tolerance,
+
+        if info["energy"] == "yes":
+            runEnergyTests(
+                testout,
+                code,
+                version,
+                outdir,
+                info,
+                runner,
+                runMDCalcSettings,
+                tolerance,
+                prefix=prefix,
             )
 
-    testout.close()
     # Read output file to get status
     with open(f"{outdir}/" + fname, "r") as ifn:
         inp = ifn.read()
