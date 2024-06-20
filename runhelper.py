@@ -1,4 +1,4 @@
-from typing import TextIO
+from typing import TextIO, Literal
 import numpy as np
 
 
@@ -116,7 +116,13 @@ def writeReportPage(
             )
 
 
-def check(md_failed: "int|bool", val1, val2, val3, tolerance: float = 0.0) -> int:
+def check(
+    md_failed: "int|bool",
+    val1: "float|np.ndarray",
+    val2: "float|np.ndarray",
+    val3: "float|np.ndarray",
+    tolerance: float = 0.0,
+) -> int:
     # this may be part of writeReportForSimulations
     if md_failed:
         return -1
@@ -133,13 +139,20 @@ def check(md_failed: "int|bool", val1, val2, val3, tolerance: float = 0.0) -> in
 class writeReportForSimulations:
     """helper class to write the report tof the simulations"""
 
+    testout: TextIO
+    code: str
+    version: Literal["master", "stable"]
+    md_failed: "bool | int"
+    simulations: list[str]
+    prefix: str = ""
+
     def __init__(
         self,
         testout: TextIO,
         code: str,
         version: str,
-        md_failed,
-        simulations,
+        md_failed: "bool | int",
+        simulations: list[str],
         *,
         prefix="",
     ) -> None:
@@ -155,9 +168,9 @@ class writeReportForSimulations:
         self,
         kind: str,
         docstring: str,
-        val1,
-        val2,
-        val3,
+        val1: "float|np.ndarray",
+        val2: "float|np.ndarray",
+        val3: "float|np.ndarray",
         *,
         tolerance: float = 0.0,
     ):

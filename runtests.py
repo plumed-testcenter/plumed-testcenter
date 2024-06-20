@@ -12,7 +12,7 @@ from datetime import date
 from contextlib import contextmanager
 from PlumedToHTML import test_plumed, get_html
 from runhelper import writeReportForSimulations
-from typing import TextIO
+from typing import TextIO, Literal
 
 STANDARD_RUN_SETTINGS = [
     {"plumed": "plumed", "printJson": False},
@@ -164,19 +164,10 @@ def runMDCalc(
 
 
 def runBasicTests(
-    testout: TextIO,
-    code: str,
-    version: str,
-    outdir: str,
-    info: dict,
-    runner,
-    runMDCalcSettings: dict,
-    tolerance: float,
-    *,
-    prefix: str = "",
+    testout: TextIO, outdir: str, info: dict, runMDCalcSettings: dict, tolerance: float
 ):
     """run the (eventual) MD test for position, timestep, mass, and charge"""
-    params = runner.setParams()
+    params = runMDCalcSettings["runner"].setParams()
     basic_md_failed = True
     if (
         info["positions"] == "yes"
@@ -206,12 +197,13 @@ PRINT ARG=c.* FILE=cell_data
     testout.write("|:--------------------|:------:| \n")
     basicSR = writeReportForSimulations(
         testout,
-        code,
-        version,
+        runMDCalcSettings["code"],
+        runMDCalcSettings["version"],
         basic_md_failed,
         ["basic"],
-        prefix=prefix,
+        prefix=runMDCalcSettings["prefix"],
     )
+    basicDir = f"{outdir}/basic_{runMDCalcSettings['version']}"
     if info["positions"] == "yes":
         plumednatoms = np.empty(0)
         codenatoms = np.empty(0)
@@ -220,31 +212,32 @@ PRINT ARG=c.* FILE=cell_data
         codecell = np.ones(params["nsteps"])
         plumedcell = np.ones(params["nsteps"])
 
-        if not basic_md_failed:
-            basicDir = f"{outdir}/basic_{version}"
+        if not basic_md_failed and os.path.exists(f"{basicDir}/plumed.xyz"):
             # Get the trajectory that was output by PLUMED
-            if os.path.exists(f"{basicDir}/plumed.xyz"):
-                plumedtraj = XYZReader(f"{basicDir}/plumed.xyz")
-                # Get the number of atoms in each frame from plumed trajectory
-                codenatoms = np.array(runner.getNumberOfAtoms(f"{basicDir}"))
-                plumednatoms = np.array(
-                    [frame.positions.shape[0] for frame in plumedtraj.trajectory]
-                )
-                # Concatenate all the trajectory frames
-                codepos = np.array(runner.getPositions(f"{basicDir}"))
-                first = True
+            plumedtraj = XYZReader(f"{basicDir}/plumed.xyz")
+            # Get the number of atoms in each frame from plumed trajectory
+            codenatoms = np.array(
+                runMDCalcSettings["runner"].getNumberOfAtoms(f"{basicDir}")
+            )
+            plumednatoms = np.array(
+                [frame.positions.shape[0] for frame in plumedtraj.trajectory]
+            )
+            # Concatenate all the trajectory frames
+            codepos = np.array(runMDCalcSettings["runner"].getPositions(f"{basicDir}"))
+            first = True
 
-                for frame in plumedtraj.trajectory:
-                    if first:
-                        first = False
-                        plumedpos = frame.positions.copy()
-                    else:
-                        plumedpos = np.concatenate((plumedpos, frame.positions), axis=0)
-                codecell = np.array(runner.getCell(f"{basicDir}"))
-                plumedcell = np.loadtxt(f"{basicDir}/cell_data")[:, 1:]
+            for frame in plumedtraj.trajectory:
+                if first:
+                    first = False
+                    plumedpos = frame.positions.copy()
+                else:
+                    plumedpos = np.concatenate((plumedpos, frame.positions), axis=0)
+            codecell = np.array(runMDCalcSettings["runner"].getCell(f"{basicDir}"))
+            plumedcell = np.loadtxt(f"{basicDir}/cell_data")[:, 1:]
 
-            else:
-                basic_md_failed = True
+        else:
+            basicSR.md_failed = True
+            basic_md_failed = True
         # Output results from tests on natoms
         basicSR.writeReportAndTable(
             "natoms",
@@ -275,7 +268,7 @@ PRINT ARG=c.* FILE=cell_data
         plumed_tstep = 0.1
         if not basic_md_failed:
             plumedtimes = np.loadtxt(f"{basicDir}/colvar")[:, 1]
-            md_tstep = runner.getTimestep()
+            md_tstep = runMDCalcSettings["runner"].getTimestep()
             plumed_tstep = plumedtimes[1] - plumedtimes[0]
 
             for i in range(1, len(plumedtimes)):
@@ -294,7 +287,7 @@ PRINT ARG=c.* FILE=cell_data
         md_masses = np.ones(10)
         pl_masses = np.ones(10)
         if not basic_md_failed:
-            md_masses = np.array(runner.getMasses(f"{basicDir}"))
+            md_masses = np.array(runMDCalcSettings["runner"].getMasses(f"{basicDir}"))
             pl_masses = np.loadtxt(f"{basicDir}/mq_plumed")[:, 1]
 
         # Output results from tests on mass
@@ -310,7 +303,7 @@ PRINT ARG=c.* FILE=cell_data
         md_charges = np.ones(10)
         pl_charges = np.ones(10)
         if not basic_md_failed:
-            md_charges = np.array(runner.getCharges(f"{basicDir}"))
+            md_charges = np.array(runMDCalcSettings["runner"].getCharges(f"{basicDir}"))
             pl_charges = np.loadtxt(f"{basicDir}/mq_plumed")[:, 2]
 
         # Output results from tests on charge
@@ -324,18 +317,10 @@ PRINT ARG=c.* FILE=cell_data
 
 
 def runForcesTest(
-    testout: TextIO,
-    code: str,
-    version: str,
-    outdir: str,
-    runner,
-    runMDCalcSettings: dict,
-    tolerance: float,
-    *,
-    prefix: str = "",
+    testout: TextIO, outdir: str, runMDCalcSettings: dict, tolerance: float
 ):
     # First run a calculation to find the reference distance between atom 1 and 2
-    rparams = runner.setParams()
+    rparams = runMDCalcSettings["runner"].setParams()
     rparams["nsteps"] = 2
     rparams["ensemble"] = "nvt"
     rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
@@ -367,15 +352,14 @@ def runForcesTest(
     if not md_failed:
         val1 = np.loadtxt(f"{outdir}/forces1_{version}/colvar")[:, 1]
         val2 = np.loadtxt(f"{outdir}/forces2_{version}/colvar")[:, 1]
-    forcesSR = writeReportForSimulations(
+    writeReportForSimulations(
         testout,
-        code,
+        runMDCalcSettings["code"],
         version,
         md_failed,
         ["forces1", "forces2"],
-        prefix=prefix,
-    )
-    forcesSR.writeReportAndTable(
+        prefix=runMDCalcSettings["prefix"],
+    ).writeReportAndTable(
         "forces",
         "PLUMED forces passed correctly",
         val1,
@@ -386,17 +370,10 @@ def runForcesTest(
 
 
 def runVirialTest(
-    testout: TextIO,
-    code: str,
-    version: str,
-    outdir: str,
-    runner,
-    runMDCalcSettings: dict,
-    tolerance: float,
-    *,
-    prefix: str = "",
+    testout: TextIO, outdir: str, runMDCalcSettings: dict, tolerance: float
 ):
-    params = runner.setParams()
+    version = runMDCalcSettings["version"]
+    params = runMDCalcSettings["runner"].setParams()
     params["nsteps"] = 50
     params["ensemble"] = "npt"
     params["plumed"] = "vv: VOLUME \n PRINT ARG=vv FILE=volume"
@@ -418,15 +395,14 @@ def runVirialTest(
         val1 = np.loadtxt(f"{outdir}/virial1_{version}/volume")[:, 1]
         val2 = np.loadtxt(f"{outdir}/virial2_{version}/volume")[:, 1]
         val3 = np.loadtxt(f"{outdir}/virial3_{version}/volume")[:, 1]
-    virialSR = writeReportForSimulations(
+    writeReportForSimulations(
         testout,
-        code,
+        runMDCalcSettings["code"],
         version,
         md_failed,
         ["virial1", "virial2", "virial3"],
-        prefix=prefix,
-    )
-    virialSR.writeReportAndTable(
+        prefix=runMDCalcSettings["prefix"],
+    ).writeReportAndTable(
         "virial",
         "PLUMED virial passed correctly",
         val1,
@@ -479,15 +455,14 @@ def energyTest(
         val2 = np.loadtxt(f"{outdir}/{title}2_{version}/energy")[:, 1:]
         val3 = np.loadtxt(f"{outdir}/{title}3_{version}/energy")[:, 1:]
 
-    SR = writeReportForSimulations(
+    writeReportForSimulations(
         testout,
         runMDCalcSettings["code"],
         version,
         md_failed,
         [f"{title}1", f"{title}2", f"{title}3"],
         prefix=prefix,
-    )
-    SR.writeReportAndTable(
+    ).writeReportAndTable(
         title,
         docstring,
         val1,
@@ -500,9 +475,9 @@ def energyTest(
 def runEnergyTests(
     testout: TextIO, outdir: str, info: dict, runMDCalcSettings: dict, tolerance: float
 ) -> None:
-    version = runMDCalcSettings["version"]
     code = runMDCalcSettings["code"]
     prefix = runMDCalcSettings["prefix"]
+    version = runMDCalcSettings["version"]
     params = runMDCalcSettings["runner"].setParams()
     params["nsteps"] = 150
     ############################################################################
@@ -576,7 +551,7 @@ def runEnergyTests(
 
 def runTests(
     code: str,
-    version: str,
+    version: Literal["master", "stable"],
     runner,
     *,
     prefix: str = "",
@@ -634,41 +609,13 @@ def runTests(
             prefix=prefix,
             **settigsFor_runMDCalc,
         )
-        runBasicTests(
-            testout,
-            code,
-            version,
-            outdir,
-            info,
-            runner,
-            runMDCalcSettings,
-            tolerance,
-            prefix=prefix,
-        )
+        runBasicTests(testout, outdir, info, runMDCalcSettings, tolerance)
         # the next runs are not based on the basic run
         if info["forces"] == "yes":
-            runForcesTest(
-                testout,
-                code,
-                version,
-                outdir,
-                runner,
-                runMDCalcSettings,
-                tolerance,
-                prefix=prefix,
-            )
+            runForcesTest(testout, outdir, runMDCalcSettings, tolerance)
 
         if info["virial"] == "yes":
-            runVirialTest(
-                testout,
-                code,
-                version,
-                outdir,
-                runner,
-                runMDCalcSettings,
-                tolerance,
-                prefix=prefix,
-            )
+            runVirialTest(testout, outdir, runMDCalcSettings, tolerance)
 
         if info["energy"] == "yes":
             runEnergyTests(testout, outdir, info, runMDCalcSettings, tolerance)
