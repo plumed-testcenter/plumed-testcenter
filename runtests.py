@@ -140,6 +140,7 @@ def runMDCalc(
 
     # Now test that the executable exists if it doesn't then the test is broken
     if shutil.which(params["executible"]) == None:
+        print(f"Executable {params['executible']} does not exist in current PATH.")
         return True
     # Copy all the input needed for the MD calculation
     wdir = f"{basedir}/{name}_{version}"
