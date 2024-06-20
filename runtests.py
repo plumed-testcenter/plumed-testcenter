@@ -436,19 +436,74 @@ def runVirialTest(
     )
 
 
-def runEnergyTests(
+def energyTest(
     testout: TextIO,
-    code: str,
-    version: str,
     outdir: str,
-    info: dict,
-    runner,
+    title: str,
+    nsteps: int,
+    ensemble: str,
+    sqrtalpha: float,
+    docstring: str,
     runMDCalcSettings: dict,
-    tolerance: float,
-    *,
-    prefix: str = "",
+    tolerance: float = 0.0,
+    prerelaxtime: bool = False,
 ):
-    params = runner.setParams()
+    alpha = sqrtalpha * sqrtalpha
+    prefix = runMDCalcSettings["prefix"]
+    version = runMDCalcSettings["version"]
+    params = runMDCalcSettings["runner"].setParams()
+    params["nsteps"] = nsteps
+    params["ensemble"] = ensemble
+    params["plumed"] = "e: ENERGY\n" "v: VOLUME\n" "PRINT ARG=e,v FILE=energy\n"
+    run1_fail = runMDCalc(f"{title}1", params=params, **runMDCalcSettings)
+    params["temperature"] = params["temperature"] * alpha
+    params["relaxtime"] = params["relaxtime"] / sqrtalpha
+    if prerelaxtime:
+        params["prelaxtime"] = params["prelaxtime"] / sqrtalpha
+    params["tstep"] = params["tstep"] / sqrtalpha
+    run3_fail = runMDCalc(f"{title}3", params=params, **runMDCalcSettings)
+    params["plumed"] = (
+        "e: ENERGY\n"
+        "v: VOLUME\n"
+        "PRINT ARG=e,v FILE=energy\n"
+        f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}\n"
+    )
+    run2_fail = runMDCalc(f"{title}2", params=params, **runMDCalcSettings)
+    md_failed = run1_fail or run2_fail or run3_fail
+    val1 = np.ones(1)
+    val2 = np.ones(1)
+    val3 = np.ones(1)
+
+    if not md_failed:
+        val1 = np.loadtxt(f"{outdir}/{title}1_{version}/energy")[:, 1:]
+        val2 = np.loadtxt(f"{outdir}/{title}2_{version}/energy")[:, 1:]
+        val3 = np.loadtxt(f"{outdir}/{title}3_{version}/energy")[:, 1:]
+
+    SR = writeReportForSimulations(
+        testout,
+        runMDCalcSettings["code"],
+        version,
+        md_failed,
+        [f"{title}1", f"{title}2", f"{title}3"],
+        prefix=prefix,
+    )
+    SR.writeReportAndTable(
+        title,
+        docstring,
+        val1,
+        val2,
+        np.abs(val1 - val3),
+        tolerance=tolerance,
+    )
+
+
+def runEnergyTests(
+    testout: TextIO, outdir: str, info: dict, runMDCalcSettings: dict, tolerance: float
+) -> None:
+    version = runMDCalcSettings["version"]
+    code = runMDCalcSettings["code"]
+    prefix = runMDCalcSettings["prefix"]
+    params = runMDCalcSettings["runner"].setParams()
     params["nsteps"] = 150
     ############################################################################
     # QUESTION: in the original the ensemble and the pressure are in the state of the last run in
@@ -466,7 +521,7 @@ def runEnergyTests(
     pl_energy = np.ones(1)
 
     if not md_failed and os.path.exists(f"{outdir}/energy_{version}/energy"):
-        md_energy = runner.getEnergy(f"{outdir}/energy_{version}")
+        md_energy = runMDCalcSettings["runner"].getEnergy(f"{outdir}/energy_{version}")
         pl_energy = np.loadtxt(f"{outdir}/energy_{version}/energy")[:, 1]
 
     else:
@@ -488,95 +543,34 @@ def runEnergyTests(
         tolerance=tolerance,
     )
     sqrtalpha = 1.1
-    alpha = sqrtalpha * sqrtalpha
+
     if info["engforces"] == "yes":
-        params = runner.setParams()
-        params["nsteps"] = 50
-        params["ensemble"] = "nvt"
-        params["plumed"] = "e: ENERGY\n" "v: VOLUME\n" "PRINT ARG=e,v FILE=energy\n"
-        run1_fail = runMDCalc("engforce1", params=params, **runMDCalcSettings)
-        params["temperature"] = params["temperature"] * alpha
-        params["relaxtime"] = params["relaxtime"] / sqrtalpha
-        params["tstep"] = params["tstep"] / sqrtalpha
-        run3_fail = runMDCalc("engforce3", params=params, **runMDCalcSettings)
-        params["plumed"] = (
-            "e: ENERGY\n"
-            "v: VOLUME\n"
-            "PRINT ARG=e,v FILE=energy\n"
-            f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}\n"
-        )
-        run2_fail = runMDCalc("engforce2", params=params, **runMDCalcSettings)
-        md_failed = run1_fail or run2_fail or run3_fail
-        val1 = np.ones(1)
-        val2 = np.ones(1)
-        val3 = np.ones(1)
-
-        if not md_failed:
-            val1 = np.loadtxt(f"{outdir}/engforce1_{version}/energy")[:, 1:]
-            val2 = np.loadtxt(f"{outdir}/engforce2_{version}/energy")[:, 1:]
-            val3 = np.loadtxt(f"{outdir}/engforce3_{version}/energy")[:, 1:]
-
-        engforceSR = writeReportForSimulations(
+        energyTest(
             testout,
-            code,
-            version,
-            md_failed,
-            ["engforce1", "engforce2", "engforce3"],
-            prefix=prefix,
-        )
-        engforceSR.writeReportAndTable(
+            outdir,
             "engforce",
+            50,
+            "nvt",
+            sqrtalpha,
             "PLUMED forces on potential energy passed correctly",
-            val1,
-            val2,
-            np.abs(val1 - val3),
-            tolerance=tolerance,
+            runMDCalcSettings,
+            tolerance,
         )
+
     sqrtalpha = 1.1
-    alpha = sqrtalpha * sqrtalpha
+
     if info["engforces"] and info["virial"] == "yes":
-        params = runner.setParams()
-        params["nsteps"] = 150
-        params["ensemble"] = "npt"
-        params["plumed"] = "e: ENERGY\n" "v: VOLUME\n" "PRINT ARG=e,v FILE=energy\n"
-        run1_fail = runMDCalc("engvir1", params=params, **runMDCalcSettings)
-        params["temperature"] = params["temperature"] * alpha
-        params["relaxtime"] = params["relaxtime"] / sqrtalpha
-        params["prelaxtime"] = params["prelaxtime"] / sqrtalpha
-        params["tstep"] = params["tstep"] / sqrtalpha
-        run3_fail = runMDCalc("engvir3", params=params, **runMDCalcSettings)
-        params["plumed"] = (
-            "e: ENERGY\n"
-            "v: VOLUME\n"
-            "PRINT ARG=e,v FILE=energy\n"
-            f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}\n"
-        )
-        run2_fail = runMDCalc("engvir2", params=params, **runMDCalcSettings)
-        md_failed = run1_fail or run2_fail or run3_fail
-        val1 = np.ones(1)
-        val2 = np.ones(1)
-        val3 = np.ones(1)
-
-        if not md_failed:
-            val1 = np.loadtxt(f"{outdir}/engvir1_{version}/energy")[:, 1:]
-            val2 = np.loadtxt(f"{outdir}/engvir2_{version}/energy")[:, 1:]
-            val3 = np.loadtxt(f"{outdir}/engvir3_{version}/energy")[:, 1:]
-
-        engvirSR = writeReportForSimulations(
+        energyTest(
             testout,
-            code,
-            version,
-            md_failed,
-            ["engvir1", "engvir2", "engvir3"],
-            prefix=prefix,
-        )
-        engvirSR.writeReportAndTable(
+            outdir,
             "engvir",
+            150,
+            "npt",
+            sqrtalpha,
             "PLUMED contribution to virial due to force on potential energy passed correctly",
-            val1,
-            val2,
-            np.abs(val1 - val3),
-            tolerance=tolerance,
+            runMDCalcSettings,
+            tolerance,
+            prerelaxtime=True,
         )
 
 
@@ -677,18 +671,7 @@ def runTests(
             )
 
         if info["energy"] == "yes":
-            runEnergyTests(
-                testout,
-                code,
-                version,
-                outdir,
-                info,
-                runner,
-                runMDCalcSettings,
-                tolerance,
-                prefix=prefix,
-            )
-
+            runEnergyTests(testout, outdir, info, runMDCalcSettings, tolerance)
     # Read output file to get status
     with open(f"{outdir}/" + fname, "r") as ifn:
         inp = ifn.read()
