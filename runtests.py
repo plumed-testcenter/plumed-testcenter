@@ -150,7 +150,7 @@ def runMDCalc(
     shutil.copytree(f"{basedir}/input", f"{wdir}")
     # Change to the directory to run the calculation
     print(f"for run {name}")
-    print(f"{params=}")
+    # print(f"{params=}")
     with cd(f"{wdir}"):
         # Output the plumed file
         with open("plumed.dat", "w+") as of:
@@ -320,6 +320,7 @@ def runForcesTest(
     testout: TextIO, outdir: str, runMDCalcSettings: dict, tolerance: float
 ):
     # First run a calculation to find the reference distance between atom 1 and 2
+    version = runMDCalcSettings["version"]
     rparams = runMDCalcSettings["runner"].setParams()
     rparams["nsteps"] = 2
     rparams["ensemble"] = "nvt"
@@ -481,12 +482,15 @@ def runEnergyTests(
     params = runMDCalcSettings["runner"].setParams()
     params["nsteps"] = 150
     ############################################################################
-    # QUESTION: in the original the ensemble and the pressure are in the state of the last run in
-    # which 'param' has been used
+    # QUESTION: in the original monolitic function the ensemble and the pressure
+    # are preset from the previous tests, so
     # for example the 'ensemble' is "npt" if:
     # - info["virial"] is "yes"
     # - info["positions"]=="yes" or info["timestep"]=="yes" or info["mass"]=="yes" or info["charge"]=="yes"
-    # there they are set to behave in the same way as if everithing was set to "yes"
+    # and pressure is left to the default if info["virial"] is "no", otherwise
+    # is set to 1001*pressure
+    #
+    # here I set the options to behave in the same way as if everithing was set to "yes"
     params["ensemble"] = "npt"
     params["pressure"] = 1001 * params["pressure"]
     ############################################################################
@@ -501,15 +505,14 @@ def runEnergyTests(
 
     else:
         md_failed = True
-    energySR = writeReportForSimulations(
+    writeReportForSimulations(
         testout,
         code,
         version,
         md_failed,
         ["energy"],
         prefix=prefix,
-    )
-    energySR.writeReportAndTable(
+    ).writeReportAndTable(
         "energy",
         "MD code potential energy passed correctly",
         md_energy,
@@ -517,8 +520,12 @@ def runEnergyTests(
         tolerance * np.ones(len(md_energy)),
         tolerance=tolerance,
     )
-    sqrtalpha = 1.1
+    # TODO:https://docs.python.org/3/library/string.html#template-strings
+    # the .md files can be templated with this string built-in feature,
+    # so in the engforces/engvir mds we can change sqrtalpha to an arbitray
+    # value for each code (and postprocess the mds a second time here)
 
+    sqrtalpha = 1.1
     if info["engforces"] == "yes":
         energyTest(
             testout,
@@ -533,7 +540,6 @@ def runEnergyTests(
         )
 
     sqrtalpha = 1.1
-
     if info["engforces"] and info["virial"] == "yes":
         energyTest(
             testout,
@@ -555,7 +561,7 @@ def runTests(
     runner,
     *,
     prefix: str = "",
-    settigsFor_runMDCalc: dict = {},
+    settingsFor_runMDCalc: dict = {},
 ):
     # Read in the information on the tests that should be run for this code
     basedir = f"tests/{code}"
@@ -601,13 +607,14 @@ def runTests(
                 testout.write(f"WARNING: {warn}\n\n")
 
         # sugar with the settings that are always the same for runMDCalc
-        # note that if i modify directly settigsFor_runMDCalc, i will change the default parameteres on subsequent calls
+        # note that if I modify directly the input `settingsFor_runMDCalc`,
+        # I will change the default parameteres on subsequent calls!!!
         runMDCalcSettings = dict(
             code=code,
             version=version,
             runner=runner,
             prefix=prefix,
-            **settigsFor_runMDCalc,
+            **settingsFor_runMDCalc,
         )
         runBasicTests(testout, outdir, info, runMDCalcSettings, tolerance)
         # the next runs are not based on the basic run
@@ -626,14 +633,14 @@ def runTests(
     infoOut = open(f"{outdir}/info.yml", "a")
     if "failed-red.svg" in inp:
         infoOut.write(f"test_plumed{version}: broken \n")
+    elif "%25-red.svg" in inp:
+        infoOut.write(f"test_plumed{version}: broken \n")
     elif "%25-green.svg" in inp and ("%25-red.svg" in inp or "%25-yellow.svg" in inp):
         infoOut.write(f"test_plumed{version}: partial\n")
     elif "%25-yellow.svg" in inp:
         infoOut.write(f"test_plumed{version}: partial\n")
     elif "%25-green.svg" in inp:
         infoOut.write(f"test_plumed{version}: working \n")
-    elif "%25-red.svg" in inp:
-        infoOut.write(f"test_plumed{version}: broken \n")
     else:
         raise Exception(
             f"Found no test badges in output for tests on {code} with " + version
@@ -668,8 +675,8 @@ if __name__ == "__main__":
     ipf.write("from .mdcode import mdcode\n")
     ipf.close()
     # Now import the module
-    d = importlib.import_module("tests." + code, "mdcode")
+    myMDcode = importlib.import_module("tests." + code, "mdcode")
     # And create the class that interfaces with the MD code output
-    runner = d.mdcode()
+    runner = myMDcode.mdcode()
     # Now run the tests
     runTests(code, version, runner)
