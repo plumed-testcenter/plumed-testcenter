@@ -517,7 +517,12 @@ def runEnergyTests(
         "MD code potential energy passed correctly",
         md_energy,
         pl_energy,
-        tolerance * np.ones(len(md_energy)),
+        ########################################################################
+        # since in check we have where=val3 > tolerance this make the test skip
+        # the badge and return a failure rate of 0, always
+        # tolerance * np.ones(len(md_energy)),
+        # could this be a valid alternative?
+        (np.abs(md_energy) + np.abs(pl_energy)) / 2.0,
         tolerance=tolerance,
     )
     # TODO:https://docs.python.org/3/library/string.html#template-strings
