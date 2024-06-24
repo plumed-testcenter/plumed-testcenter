@@ -8,9 +8,9 @@ git clone $repo lammps$suffix
 # Finding the latest stable version of lammps to build
 cd lammps$suffix
 #version=$(git tag --sort=-creatordate | grep stable | head -n 1)
-version="fix-plumed-cmake"
+#version="fix-plumed-cmake"
 echo "installing latest stable lammps $version"
-git checkout $version
+#git checkout $version
 
 # Building lammps using cmake
 mkdir build
