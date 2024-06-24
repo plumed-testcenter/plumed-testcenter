@@ -1,5 +1,6 @@
 # Cloning the lammps repository
-repo=https://github.com/gtribello/lammps.git
+#repo=https://github.com/gtribello/lammps.git
+repo=https://github.com/lammps/lammps.git
 # https://github.com/lammps/lammps.git
 echo "cloning repoisitory $repo"
 git clone $repo lammps$suffix
