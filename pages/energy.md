@@ -9,8 +9,7 @@ e: ENERGY
 PRINT ARG=e FILE=colvar
 ```
 
-We can then also output the energy from the MD code and check this matches the value output by PLUMED.  We ran a short trajectory to 
-test that the energy is passed correctly.
+We can then also output the energy from the MD code and check this matches the value output by PLUMED.  We run a short trajectory to test that the energy is passed correctly.
 
 # Trajectory
 

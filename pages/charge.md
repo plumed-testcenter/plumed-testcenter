@@ -2,7 +2,7 @@ Charges are passed correctly
 ---------------------------
 
 PLUMED must receive the charges from an MD code in order to calculate some CVs correctly.
-To test these charges are passed correctly to PLUMED we run a short trajectory and output the charges of all the atoms that 
+To test that charges are passed correctly to PLUMED we run a short trajectory and output the charges of all the atoms that 
 are passed to PLUMED using the following command: 
 
 ```plumed

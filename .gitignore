@@ -1,0 +1,16 @@
+#python
+__pycache__/
+#vscode
+.vscode/
+#local run files
+local*/
+/*colvar
+/energy*
+/*.xyz
+/working*
+/volume*
+/*_restraint
+/tests/*/__init__.py
+######## this is copyed from engforce.md, when they diverge THIS must be changed
+/pages/engvir.md
+########
