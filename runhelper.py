@@ -1,4 +1,4 @@
-from typing import TextIO
+from typing import TextIO, Literal
 import numpy as np
 
 
@@ -14,7 +14,7 @@ def getBadge(sucess, filen, code, version: str):
             color = "yellow"
         else:
             # shoudn't this be red?
-            color = "yellow"
+            color = "red"
         badge += f"fail%20{sucess}%25-{color}.svg"
     return badge + f")]({filen}_{version}.html)"
 
@@ -116,7 +116,13 @@ def writeReportPage(
             )
 
 
-def check(md_failed: "int|bool", val1, val2, val3, tolerance: float = 0.0) -> int:
+def check(
+    md_failed: "int|bool",
+    val1: "float|np.ndarray",
+    val2: "float|np.ndarray",
+    val3: "float|np.ndarray",
+    denominatorTolerance: float = 0.0,
+) -> int:
     # this may be part of writeReportForSimulations
     if md_failed:
         return -1
@@ -125,7 +131,10 @@ def check(md_failed: "int|bool", val1, val2, val3, tolerance: float = 0.0) -> in
     if hasattr(val2, "__len__") and len(val3) != len(val2):
         return -1
     percent_diff = 100 * np.divide(
-        np.abs(val1 - val2), val3, out=np.zeros_like(val3), where=val3 >= tolerance
+        np.abs(val1 - val2),
+        val3,
+        out=np.zeros_like(val3),
+        where=val3 > denominatorTolerance,
     )
     return int(np.round(np.average(percent_diff)))
 
@@ -133,13 +142,20 @@ def check(md_failed: "int|bool", val1, val2, val3, tolerance: float = 0.0) -> in
 class writeReportForSimulations:
     """helper class to write the report tof the simulations"""
 
+    testout: TextIO
+    code: str
+    version: Literal["master", "stable"]
+    md_failed: "bool | int"
+    simulations: list[str]
+    prefix: str = ""
+
     def __init__(
         self,
         testout: TextIO,
         code: str,
         version: str,
-        md_failed,
-        simulations,
+        md_failed: "bool | int",
+        simulations: list[str],
         *,
         prefix="",
     ) -> None:
@@ -155,11 +171,11 @@ class writeReportForSimulations:
         self,
         kind: str,
         docstring: str,
-        val1,
-        val2,
-        val3,
+        val1: "float|np.ndarray",
+        val2: "float|np.ndarray",
+        val3: "float|np.ndarray",
         *,
-        tolerance: float = 0.0,
+        denominatorTolerance: float = 0.0,
     ):
         writeReportPage(
             kind,
@@ -175,7 +191,13 @@ class writeReportForSimulations:
         self.testout.write(
             f"| {docstring} | "
             + getBadge(
-                check(self.md_failed, val1, val2, val3, tolerance=tolerance),
+                check(
+                    self.md_failed,
+                    val1,
+                    val2,
+                    val3,
+                    denominatorTolerance=denominatorTolerance,
+                ),
                 kind,
                 self.code,
                 self.version,
