@@ -14,7 +14,7 @@ def getBadge(sucess, filen, code, version: str):
             color = "yellow"
         else:
             # shoudn't this be red?
-            color = "yellow"
+            color = "red"
         badge += f"fail%20{sucess}%25-{color}.svg"
     return badge + f")]({filen}_{version}.html)"
 
@@ -121,7 +121,7 @@ def check(
     val1: "float|np.ndarray",
     val2: "float|np.ndarray",
     val3: "float|np.ndarray",
-    tolerance: float = 0.0,
+    denominatorTolerance: float = 0.0,
 ) -> int:
     # this may be part of writeReportForSimulations
     if md_failed:
@@ -131,7 +131,10 @@ def check(
     if hasattr(val2, "__len__") and len(val3) != len(val2):
         return -1
     percent_diff = 100 * np.divide(
-        np.abs(val1 - val2), val3, out=np.zeros_like(val3), where=val3 >= tolerance
+        np.abs(val1 - val2),
+        val3,
+        out=np.zeros_like(val3),
+        where=val3 > denominatorTolerance,
     )
     return int(np.round(np.average(percent_diff)))
 
@@ -172,7 +175,7 @@ class writeReportForSimulations:
         val2: "float|np.ndarray",
         val3: "float|np.ndarray",
         *,
-        tolerance: float = 0.0,
+        denominatorTolerance: float = 0.0,
     ):
         writeReportPage(
             kind,
@@ -188,7 +191,13 @@ class writeReportForSimulations:
         self.testout.write(
             f"| {docstring} | "
             + getBadge(
-                check(self.md_failed, val1, val2, val3, tolerance=tolerance),
+                check(
+                    self.md_failed,
+                    val1,
+                    val2,
+                    val3,
+                    denominatorTolerance=denominatorTolerance,
+                ),
                 kind,
                 self.code,
                 self.version,

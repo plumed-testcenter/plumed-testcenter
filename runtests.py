@@ -366,7 +366,6 @@ def runForcesTest(
         val1,
         val2,
         tolerance * np.ones(val1.shape),
-        tolerance=tolerance,
     )
 
 
@@ -409,7 +408,7 @@ def runVirialTest(
         val1,
         val2,
         np.abs(val3 - val1),
-        tolerance=tolerance,
+        denominatorTolerance=tolerance,
     )
 
 
@@ -469,7 +468,7 @@ def energyTest(
         val1,
         val2,
         np.abs(val1 - val3),
-        tolerance=tolerance,
+        denominatorTolerance=tolerance,
     )
 
 
@@ -479,7 +478,7 @@ def runEnergyTests(
     code = runMDCalcSettings["code"]
     prefix = runMDCalcSettings["prefix"]
     version = runMDCalcSettings["version"]
-    params = runMDCalcSettings["runner"].setParams()   
+    params = runMDCalcSettings["runner"].setParams()
     params["nsteps"] = 150
     params["ensemble"] = "npt"
     params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
@@ -505,13 +504,7 @@ def runEnergyTests(
         "MD code potential energy passed correctly",
         md_energy,
         pl_energy,
-        ########################################################################
-        # since in check we have where=val3 > tolerance this make the test skip
-        # the badge and return a failure rate of 0, always
-        # tolerance * np.ones(len(md_energy)),
-        # could this be a valid alternative?
-        (np.abs(md_energy) + np.abs(pl_energy)) / 2.0,
-        tolerance=tolerance,
+        tolerance * np.ones(len(md_energy)),
     )
     # TODO:https://docs.python.org/3/library/string.html#template-strings
     # the .md files can be templated with this string built-in feature,
