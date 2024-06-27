@@ -125,7 +125,7 @@ def check(md_failed: "int|bool", val1, val2, val3, tolerance: float = 0.0) -> in
     if hasattr(val2, "__len__") and len(val3) != len(val2):
         return -1
     percent_diff = 100 * np.divide(
-        np.abs(val1 - val2), val3, out=np.zeros_like(val3), where=val3 > tolerance
+        np.abs(val1 - val2), val3, out=np.zeros_like(val3), where=val3 >= tolerance
     )
     return int(np.round(np.average(percent_diff)))
 

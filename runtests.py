@@ -457,6 +457,7 @@ PRINT ARG=c.* FILE=cell_data
         )
 
     if info["energy"] == "yes":
+        params = runner.setParams()
         params["nsteps"] = 150
         params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
         md_failed = runMDCalc("energy", params=params, **runMDCalcSettings)
