@@ -479,21 +479,9 @@ def runEnergyTests(
     code = runMDCalcSettings["code"]
     prefix = runMDCalcSettings["prefix"]
     version = runMDCalcSettings["version"]
-    params = runMDCalcSettings["runner"].setParams()
+    params = runMDCalcSettings["runner"].setParams()   
     params["nsteps"] = 150
-    ############################################################################
-    # QUESTION: in the original monolitic function the ensemble and the pressure
-    # are preset from the previous tests, so
-    # for example the 'ensemble' is "npt" if:
-    # - info["virial"] is "yes"
-    # - info["positions"]=="yes" or info["timestep"]=="yes" or info["mass"]=="yes" or info["charge"]=="yes"
-    # and pressure is left to the default if info["virial"] is "no", otherwise
-    # is set to 1001*pressure
-    #
-    # here I set the options to behave in the same way as if everithing was set to "yes"
     params["ensemble"] = "npt"
-    params["pressure"] = 1001 * params["pressure"]
-    ############################################################################
     params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
     md_failed = runMDCalc("energy", params=params, **runMDCalcSettings)
     md_energy = np.ones(1)
