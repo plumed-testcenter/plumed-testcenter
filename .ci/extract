@@ -2,8 +2,10 @@
 
 root="$PWD"
 mkdir -p tmp/extract
-cd tmp/extract
-for file in `ls ../../testout-content*/testout.tar` ; do
-    tar xf $file
+cd tmp/extract || {
+    echo "Failed to create tmp/extract"
+    exit 1
+}
+for file in "${root}"/testout-content*/testout.tar; do
+    tar xf "$file"
 done
-cd $root
