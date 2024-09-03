@@ -1,66 +1,38 @@
 #! /bin/bash
 
-WHAT=$1
-
 set -x
 
-GIT_OWNER=plumed-testcenter
-GIT_REPO=plumed-testcenter
-
-if [[ "${GITHUB_REF##*/}" = main ]] ; then
-  PUSH_REPO=plumed-testcenter/plumed-testcenter.github.io.git
-elif [[ "${GITHUB_REF##*/}" = test ]] ; then
-  PUSH_REPO=plumed-testcenter/test-site.git
-else
-  echo "branch ${GITHUB_REF##*/}, skipping push"
-  exit 0
-fi
-
-hash=$( git log -1 --format="%h")
-
 root="$PWD"
-mkdir -p tmp/$$
+deploydir=deploy
+mkdir -p ${deploydir}
 
-tar cf all.tar $@
+tar cf all.tar "$@"
 #tar cf all.tar -T - # list of files from stdin
 
-cd tmp/$$
-tar xf ../../all.tar
+cd ${deploydir} || {
+  echo "failed to cd the the deploy directory"
+  exit
+}
+tar xf "${root}/all.tar"
 # Copy what was extracted in previous step
-mv ../extract/* .
-
-export GIT_BOT_EMAIL=giovanni.bussi+plumedbot@gmail.com
-
-git init
-git config user.email giovanni.bussi+plumedbot@gmail.com
-git config user.name plumedbot
-git remote add origin https://plumedbot:$PLUMED_TESTCENTER_GITHUB_TOKEN@github.com/$PUSH_REPO
+mv "${root}/extract/"* .
 
 # create README.md
-cat > README.md << EOF
+{
+  cat <<EOF
 Welcome to PLUMED-TESTCENTER!
 -----------------------------
 
 EOF
-
-# add general informations
-cat Info.md >> README.md
+  # add general informations
+  cat Info.md
+} >README.md
 # copy the browse file here
-cp $root/browse.md .
+cp "${root}/browse.md" .
 
-# cp $root/nest.png .
-# cp $root/pigeon.png .
-# cp $root/CNAME .
-
-if [[ "${GITHUB_REF##*/}" = test ]] ; then
-  sed "s/PLUMED-TESTCENTER/PLUMED-TESTCENTER-TEST-SITE/" _config.yml > _config.yml.tmp
-  mv _config.yml.tmp _config.yml
-  echo "baseurl: /test-site" >> _config.yml
-  rm CNAME
-fi
-
-git add --all .
-# >/dev/null to avoid excessive noise on travis log
-git commit -m "Update to @$hash" >/dev/null
-# -q and 2> is not to show the PLUMED_TESTCENTER_GITHUB_TOKEN log
-git push -f origin master 2> /dev/null 
+# if [[ "${GITHUB_REF##*/}" = test ]]; then
+#   sed "s/PLUMED-TESTCENTER/PLUMED-TESTCENTER-TEST-SITE/" _config.yml >_config.yml.tmp
+#   mv _config.yml.tmp _config.yml
+#   echo "baseurl: /test-site" >>_config.yml
+#   rm CNAME
+# fi

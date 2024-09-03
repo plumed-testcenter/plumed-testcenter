@@ -116,15 +116,25 @@ jobs:
     - uses: actions/checkout@v2
     - name: Download artifacts
       uses: actions/download-artifact@v3
-    - name: Upload
-      env:
-        PLUMED_TESTCENTER_GITHUB_TOKEN: ${{ secrets.PLUMED_TESTCENTER_GITHUB_TOKEN }}
+    - name: Prepare for upload
       run: |
         # This extracts the data that was uploaded to the artifacts
         bash .ci/extract
         # This builds the page with the results of the tests
         python build.py
         # This pushes everything to the final website 
+        #TODO: change push to "prepare"
         bash .ci/push _config.yml _layouts _data assets pigeon.png plumed.md nest.png contribute.md browse.md Info.md treadmill.png
-
-
+  
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      if: github.ref == 'refs/heads/main'
+      with:
+          external_repository: plumed-testcenter/plumed-testcenter.github.io
+          publish_branch: master
+          deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
+          publish_dir: deploy
+          force_orphan: true
+          enable_jekyll: true
+          
+          
