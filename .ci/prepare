@@ -3,9 +3,10 @@
 # set -x
 
 root="$PWD"
-deploydir=deploy
+deploydir=tmp/deploy
 mkdir -p ${deploydir}
 
+# why don't we do a simple cp?
 tar cf all.tar "$@"
 
 cd ${deploydir} || {
@@ -14,7 +15,7 @@ cd ${deploydir} || {
 }
 tar xf "${root}/all.tar"
 # Copy what was extracted in previous step
-mv "${root}/extract/"* .
+mv "${root}/tmp/extract/"* .
 
 # create README.md
 {

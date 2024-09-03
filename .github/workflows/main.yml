@@ -133,7 +133,7 @@ jobs:
           external_repository: plumed-testcenter/plumed-testcenter.github.io
           publish_branch: master
           deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
-          publish_dir: deploy
+          publish_dir: ./tmp/deploy
           force_orphan: true
           enable_jekyll: true
           
