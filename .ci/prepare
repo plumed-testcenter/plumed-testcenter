@@ -1,13 +1,12 @@
 #! /bin/bash
-
-set -x
+# set -x is for debugging
+# set -x
 
 root="$PWD"
 deploydir=deploy
 mkdir -p ${deploydir}
 
 tar cf all.tar "$@"
-#tar cf all.tar -T - # list of files from stdin
 
 cd ${deploydir} || {
   echo "failed to cd the the deploy directory"
@@ -29,10 +28,3 @@ EOF
 } >README.md
 # copy the browse file here
 cp "${root}/browse.md" .
-
-# if [[ "${GITHUB_REF##*/}" = test ]]; then
-#   sed "s/PLUMED-TESTCENTER/PLUMED-TESTCENTER-TEST-SITE/" _config.yml >_config.yml.tmp
-#   mv _config.yml.tmp _config.yml
-#   echo "baseurl: /test-site" >>_config.yml
-#   rm CNAME
-# fi

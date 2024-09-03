@@ -124,7 +124,7 @@ jobs:
         python build.py
         # This pushes everything to the final website 
         #TODO: change push to "prepare"
-        bash .ci/push _config.yml _layouts _data assets pigeon.png plumed.md nest.png contribute.md browse.md Info.md treadmill.png
+        bash .ci/prepare _config.yml _layouts _data assets pigeon.png plumed.md nest.png contribute.md browse.md Info.md treadmill.png
   
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
