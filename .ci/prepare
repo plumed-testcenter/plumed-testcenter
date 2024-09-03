@@ -1,13 +1,13 @@
 #! /bin/bash
-
-set -x
+# set -x is for debugging
+# set -x
 
 root="$PWD"
-deploydir=deploy
+deploydir=tmp/deploy
 mkdir -p ${deploydir}
 
+# why don't we do a simple cp?
 tar cf all.tar "$@"
-#tar cf all.tar -T - # list of files from stdin
 
 cd ${deploydir} || {
   echo "failed to cd the the deploy directory"
@@ -15,7 +15,7 @@ cd ${deploydir} || {
 }
 tar xf "${root}/all.tar"
 # Copy what was extracted in previous step
-mv "${root}/extract/"* .
+mv "${root}/tmp/extract/"* .
 
 # create README.md
 {
@@ -29,10 +29,3 @@ EOF
 } >README.md
 # copy the browse file here
 cp "${root}/browse.md" .
-
-# if [[ "${GITHUB_REF##*/}" = test ]]; then
-#   sed "s/PLUMED-TESTCENTER/PLUMED-TESTCENTER-TEST-SITE/" _config.yml >_config.yml.tmp
-#   mv _config.yml.tmp _config.yml
-#   echo "baseurl: /test-site" >>_config.yml
-#   rm CNAME
-# fi
