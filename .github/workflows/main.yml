@@ -136,5 +136,6 @@ jobs:
           publish_dir: ./tmp/deploy
           force_orphan: true
           enable_jekyll: true
-          
+          user_name: 'PlumedBot'
+          user_email: 'giovanni.bussi+plumedbot@gmail.com'
           
