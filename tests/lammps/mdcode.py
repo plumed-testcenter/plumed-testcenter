@@ -6,7 +6,7 @@ class mdcode :
    def setParams( self ) :
        params = {
          "temperature": 275,
-         "tstep": 2,
+         "tstep": 0.25,
          "relaxtime": 100,
          "pressure": 0.987,
          "prelaxtime": 400
@@ -25,7 +25,7 @@ class mdcode :
        inp = inp + "kspace_style    pppm 0.0001\n"
        inp = inp + "read_data       data.peptide\n"
        inp = inp + "neighbor        2.0 bin\n"
-       inp = inp + "neigh_modify    delay 5\n"
+       inp = inp + "neigh_modify    delay 2\n"
        inp = inp + "timestep        " + str(mdparams["tstep"]) + "\n"
        inp = inp + "group           peptide type <= 12\n"
        inp = inp + "group           one id 2 4 5 6\n"
@@ -33,10 +33,8 @@ class mdcode :
        inp = inp + "group           ref id 37\n"
        inp = inp + "group           colvar union one two ref\n"
        inp = inp + "fix             2 all plumed plumedfile plumed.dat outfile p.log\n"
-       inp = inp + "fix             4 all shake 0.0001 10 100 b 4 6 8 10 12 14 18 a 31\n"
        if mdparams["ensemble"]=="nvt" : inp = inp + "fix             1 all nvt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["relaxtime"]) + " tchain 1\n"
        elif mdparams["ensemble"]=="npt" : inp = inp + "fix           1 all npt temp  " + str(mdparams["temperature"]) + " " + str(mdparams["temperature"]) + " " + str(mdparams["relaxtime"]) + " iso " + str(mdparams["pressure"]) + " " + str(mdparams["pressure"]) + " " + str(mdparams["prelaxtime"]) + " tchain 1 \n"
-       inp = inp + "fix             2a ref setforce 0.0 0.0 0.0\n"
        # Code to deal with restraint 
        if "restraint" in mdparams and mdparams["restraint"]>0 : inp = inp + "fix 6 all restrain bond 1 2 10.0 10.0 " + str(10*mdparams["restraint"]) + "\n"
        inp = inp + "thermo_style    custom step temp etotal pe ke epair ebond f_2\n"
@@ -64,7 +62,7 @@ class mdcode :
        return out.returncode
 
    def getTimestep( self ) :
-       return 0.002
+       return 0.00025
 
    def getNumberOfAtoms( self, rundir ) :
        natoms, traj = [], mda.coordinates.XYZ.XYZReader( rundir + "/lammps.xyz")
