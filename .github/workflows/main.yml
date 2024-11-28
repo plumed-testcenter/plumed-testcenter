@@ -41,6 +41,7 @@ jobs:
           echo "branch=master" >> $GITHUB_OUTPUT
           echo "suffix=_master" >> $GITHUB_OUTPUT
           else
+          # gets the list of the v2.* branches and sort it by version
           gh api repos/plumed/plumed2/branches --paginate --jq '.[] | select( .name | match("^v2.[0-9]{1,2}$")) | {name:.name, sha:.commit.sha}'  | jq -s 'sort_by ( .name | sub("v";"") | split (".") | map(tonumber))[-1]' > latest_version
           branch=$(cat latest_version | jq -r '.name')
           sha=$(cat latest_version | jq -r '.sha')
@@ -85,17 +86,16 @@ jobs:
           suffix: "${{ steps.get-key.outputs.suffix }}"
           version: "${{ steps.get-key.outputs.branch }}"
           extra_options: --enable-boost_serialization --enable-fftw --enable-libtorch LDFLAGS=-Wl,-rpath,$LD_LIBRARY_PATH --disable-basic-warnings
-      # - name: prepare plumed tar
-      #   run: |
-      #     tar cf plumed-${{matrix.version}}.tar ~/opt/
+      - name: prepare plumed tar
+        run: |
+          cd $HOME
+          tar cf plumed-${{matrix.version}}.tar opt/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: plumed-${{matrix.version}}
-          # path: plumed-${{matrix.version}}.tar
-          path: |
-            /home/runner/opt/
+          path: ~/plumed-${{matrix.version}}.tar
           retention-days: 1
 
   build:
@@ -124,11 +124,15 @@ jobs:
         pattern: plumed-*
         #merge multiple should merge the two directories
         merge-multiple: true
-        path: /home/runner/opt/
+        path: ~/
+    - name: Unpacking the artifacts
+      run: |
+        cd $HOME
+        tar xf ~/plumed-master.tar
+        tar xf ~/plumed-stable.tar
 
     - name: Set paths
       run: |
-        ls -lrt /home/runner/opt/bin
         echo "$HOME/opt/bin" >> $GITHUB_PATH
         echo "CPATH=$HOME/opt/include:$HOME/opt/libtorch/include/torch/csrc/api/include/:$HOME/opt/libtorch/include/:$HOME/opt/libtorch/include/torch:$CPATH" >> $GITHUB_ENV
         echo "INCLUDE=$HOME/opt/include:$HOME/opt/libtorch/include/torch/csrc/api/include/:$HOME/opt/libtorch/include/:$HOME/opt/libtorch/include/torch:$INCLUDE" >> $GITHUB_ENV
