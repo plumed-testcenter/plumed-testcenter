@@ -128,7 +128,7 @@ jobs:
 
     - name: Set paths
       run: |
-        ls -R /home/runner/opt/
+        ls -lrt /home/runner/opt/bin
         echo "$HOME/opt/bin" >> $GITHUB_PATH
         echo "CPATH=$HOME/opt/include:$HOME/opt/libtorch/include/torch/csrc/api/include/:$HOME/opt/libtorch/include/:$HOME/opt/libtorch/include/torch:$CPATH" >> $GITHUB_ENV
         echo "INCLUDE=$HOME/opt/include:$HOME/opt/libtorch/include/torch/csrc/api/include/:$HOME/opt/libtorch/include/:$HOME/opt/libtorch/include/torch:$INCLUDE" >> $GITHUB_ENV
