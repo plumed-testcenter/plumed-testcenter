@@ -74,6 +74,7 @@ jobs:
           ccache -p
           ccache -s
           mkdir -p ~/.ccache/ccache
+          .ci/install.libtorch
       - name: Install plumed
         uses: Iximiel/install-plumed@v1
         with:
@@ -84,13 +85,13 @@ jobs:
           extra_options: --enable-boost_serialization --enable-fftw --enable-libtorch LDFLAGS=-Wl,-rpath,$LD_LIBRARY_PATH --disable-basic-warnings
       - name: prepare plumed tar
         run: |
-          tar cf plumded-${{matrix.version}}.tar ~/opt/
+          tar cf plumed-${{matrix.version}}.tar ~/opt/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: plumded-${{matrix.version}}
-          path: plumded-${{matrix.version}}.tar
+          name: plumed-${{matrix.version}}
+          path: plumed-${{matrix.version}}.tar
           retention-days: 1
 
   build:
@@ -121,6 +122,12 @@ jobs:
       with:
         python-version: 3.9
         cache: 'pip'
+    - name: Download artifacts
+      uses: actions/download-artifact@v4
+      with:
+        name:
+          plumed-stable.tar
+          plumed-master.tar
 
     - name: Set paths
       run: |
@@ -133,25 +140,16 @@ jobs:
         # needed to avoid MPI warning
         echo "OMPI_MCA_btl=^openib" >> $GITHUB_ENV
 
-    - name: Install PLUMED software
+    - name: Setup PLUMED software
       run: |
+        tar xvf plumed-stable.tar
+        tar xvf plumed-master.tar
         sudo apt update
         sudo apt install mpi-default-bin mpi-default-dev gfortran
         sudo apt install libfftw3-dev gsl-bin libgsl0-dev libboost-serialization-dev
-        sudo apt install ccache
         sudo apt-get update
         pip install -r requirements.txt
-        git clone --bare https://github.com/plumed/plumed2.git
-        sudo ln -s ccache /usr/local/bin/mpic++
-        export PATH=/usr/lib/ccache:${PATH}
-        ccache -s
         .ci/install.libtorch
-        # version=master or version=f123f12f3 to select a specific version
-        # pick newest release branch (alphabetic, will fail at v2.10)
-        CXX="mpic++" .ci/install.plumed version="$(cd plumed2.git ; git branch | sed "s/^ *//" | grep '^v2\.[0-9]$' | tail -n 1)" repo=$PWD/plumed2.git
-        # GB: in addition, we install master version as plumed_master
-        CXX="mpic++" .ci/install.plumed version=master suffix=_master repo=$PWD/plumed2.git
-        ccache -s
 
     - name: Install interface code
       run: |
