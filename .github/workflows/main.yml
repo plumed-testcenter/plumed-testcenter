@@ -128,8 +128,8 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         name:
-          plumed-stable.tar
-          plumed-master.tar
+          plumed-stable
+          plumed-master
 
     - name: Set paths
       run: |
