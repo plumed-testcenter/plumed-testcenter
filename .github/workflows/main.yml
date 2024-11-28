@@ -8,11 +8,97 @@ on: [push, pull_request]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a job called "build"
-  build:
+
+  #working on caches
+  setup-python:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
+        cache: 'pip'
+    - name: Setting up python
+      run: pip install -r requirements.txt
+
+  setup-plumed:
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        replica: ["simplemd", "lammps", "quantum_espresso", "i-pi", "gromacs"]
+        version:
+          - master
+          - stable 
+    steps:
+      - name: calculate cache key for the compilation
+        id: get-key
+        run: |
+          gh api repos/plumed/plumed2/branches  --paginate -q '.[] | select( .name | test("^v2.[0-9]{1,2}$"))  | {name,"sha":.commit.sha} | sort_by(.name | split(".") | map(tonumber)) [0]'
+          if [[ ${{ matrix.version }} -eq master ]];then
+          mastersha=$(gh api repos/plumed/plumed2/branches --paginate --jq '.[] | select( .name | match("^master$")) | .commit.sha')
+          echo "key=$mastersha" >> $GITHUB_OUTPUT
+          echo "branch=master" >> $GITHUB_OUTPUT
+          echo "suffix=_master" >> $GITHUB_OUTPUT
+          else
+          gh api repos/plumed/plumed2/branches --paginate --jq '.[] | select( .name | match("^v2.[0-9]{1,2}$")) | {name:.name, sha:.commit.sha}'  | jq -s 'sort_by ( .name | sub("v";"") | split (".") | map(tonumber))[-1]' > latest_version
+          branch=$(cat latest_version | jq -r '.name')
+          sha=$(cat latest_version | jq -r '.sha')
+          echo "key=$sha" >> $GITHUB_OUTPUT
+          echo "branch=$branch" >> $GITHUB_OUTPUT
+          echo "suffix=" >> $GITHUB_OUTPUT
+          fi
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.ccache
+            ~/opt
+          key: ccache-${{ runner.os }}-${{ matrix.version }}-${{ steps.get-key.outputs.key }}
+          # restore-keys: ccache-${{ runner.os }}-${{ matrix.version }}
+      - name: Set paths
+        run: |
+            echo "$HOME/opt/bin" >> $GITHUB_PATH
+            echo "CPATH=$HOME/opt/include:$HOME/opt/libtorch/include/torch/csrc/api/include/:$HOME/opt/libtorch/include/:$HOME/opt/libtorch/include/torch:$CPATH" >> $GITHUB_ENV
+            echo "INCLUDE=$HOME/opt/include:$HOME/opt/libtorch/include/torch/csrc/api/include/:$HOME/opt/libtorch/include/:$HOME/opt/libtorch/include/torch:$INCLUDE" >> $GITHUB_ENV
+            echo "LIBRARY_PATH=$HOME/opt/lib:$HOME/opt/libtorch/lib:$LIBRARY_PATH" >> $GITHUB_ENV
+            echo "LD_LIBRARY_PATH=$HOME/opt/lib:$HOME/opt/libtorch/lib:$LD_LIBRARY_PATH" >> $GITHUB_ENV
+            echo "PYTHONPATH=$HOME/opt/lib/plumed/python:$PYTHONPATH" >> $GITHUB_ENV
+            # needed to avoid MPI warning
+            echo "OMPI_MCA_btl=^openib" >> $GITHUB_ENV
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install mpi-default-bin mpi-default-dev
+          sudo apt install libfftw3-dev gsl-bin libgsl0-dev libboost-serialization-dev
+          sudo apt install ccache
+          ccache -p
+          ccache -s
+          mkdir -p ~/.ccache/ccache
+      - name: Install plumed
+        uses: Iximiel/install-plumed@v1
+        with:
+          CC: "ccache mpicc"
+          CXX: "ccache mpic++"
+          suffix: "${{ steps.get-key.outputs.suffix }}"
+          version: "${{ steps.get-key.outputs.branch }}"
+          extra_options: --enable-boost_serialization --enable-fftw --enable-libtorch LDFLAGS=-Wl,-rpath,$LD_LIBRARY_PATH --disable-basic-warnings
+      - name: prepare plumed tar
+        run: |
+          tar cf plumded-${{matrix.version}}.tar ~/opt/
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plumded-${{matrix.version}}
+          path: plumded-${{matrix.version}}.tar
+          retention-days: 1
+
+  build:
+    needs: 
+      - setup-python
+      - setup-plumed
+    strategy:
+      matrix:
+        replica: ["simplemd"] #["simplemd", "lammps", "quantum_espresso", "i-pi", "gromacs"]
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -33,6 +119,7 @@ jobs:
       uses: actions/setup-python@v5
       with:
         python-version: 3.9
+        cache: 'pip'
 
     - name: Set paths
       run: |
@@ -52,13 +139,7 @@ jobs:
         sudo apt install libfftw3-dev gsl-bin libgsl0-dev libboost-serialization-dev
         sudo apt install ccache
         sudo apt-get update
-        pip install PyYAML pytz
-        pip install nbconvert
-        pip install numpy
-        pip install nbformat
-        pip install PlumedToHTML
-        pip install cython
-        pip install MDAnalysis
+        pip install -r requirements.txt
         git clone --bare https://github.com/plumed/plumed2.git
         sudo ln -s ccache /usr/local/bin/mpic++
         export PATH=/usr/lib/ccache:${PATH}
@@ -98,7 +179,7 @@ jobs:
          tar cf testout.tar tests/${{matrix.replica}}/*.md tests/${{matrix.replica}}/*.yml tests/${{matrix.replica}}/*.zip stable_version.md pages
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: testout-content${{matrix.replica}}
         path: testout.tar
@@ -115,7 +196,7 @@ jobs:
     # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v4
     - name: Download artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
     - name: Prepare for upload
       run: |
         # This extracts the data that was uploaded to the artifacts
