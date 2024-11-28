@@ -65,6 +65,8 @@ jobs:
             echo "PYTHONPATH=$HOME/opt/lib/plumed/python:$PYTHONPATH" >> $GITHUB_ENV
             # needed to avoid MPI warning
             echo "OMPI_MCA_btl=^openib" >> $GITHUB_ENV
+      #we need to checkout to access .ci/install.libtorch
+      - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
           sudo apt update
