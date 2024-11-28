@@ -85,15 +85,18 @@ jobs:
           suffix: "${{ steps.get-key.outputs.suffix }}"
           version: "${{ steps.get-key.outputs.branch }}"
           extra_options: --enable-boost_serialization --enable-fftw --enable-libtorch LDFLAGS=-Wl,-rpath,$LD_LIBRARY_PATH --disable-basic-warnings
-      - name: prepare plumed tar
-        run: |
-          tar cf plumed-${{matrix.version}}.tar ~/opt/
+      # - name: prepare plumed tar
+      #   run: |
+      #     tar cf plumed-${{matrix.version}}.tar ~/opt/
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: plumed-${{matrix.version}}
-          path: plumed-${{matrix.version}}.tar
+          # path: plumed-${{matrix.version}}.tar
+          path: |
+            opt/
+            libtorch/
           retention-days: 1
 
   build:
@@ -128,10 +131,12 @@ jobs:
       uses: actions/download-artifact@v4
       with:
         pattern: plumed-*
+        #merge multiple should merge the two directories
         merge-multiple: true
 
     - name: Set paths
       run: |
+        ls -R
         echo "$HOME/opt/bin" >> $GITHUB_PATH
         echo "CPATH=$HOME/opt/include:$HOME/opt/libtorch/include/torch/csrc/api/include/:$HOME/opt/libtorch/include/:$HOME/opt/libtorch/include/torch:$CPATH" >> $GITHUB_ENV
         echo "INCLUDE=$HOME/opt/include:$HOME/opt/libtorch/include/torch/csrc/api/include/:$HOME/opt/libtorch/include/:$HOME/opt/libtorch/include/torch:$INCLUDE" >> $GITHUB_ENV
