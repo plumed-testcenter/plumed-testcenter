@@ -35,7 +35,6 @@ jobs:
       - name: calculate cache key for the compilation
         id: get-key
         run: |
-          gh api repos/plumed/plumed2/branches  --paginate -q '.[] | select( .name | test("^v2.[0-9]{1,2}$"))  | {name,"sha":.commit.sha} | sort_by(.name | split(".") | map(tonumber)) [0]'
           if [[ ${{ matrix.version }} -eq master ]];then
           mastersha=$(gh api repos/plumed/plumed2/branches --paginate --jq '.[] | select( .name | match("^master$")) | .commit.sha')
           echo "key=$mastersha" >> $GITHUB_OUTPUT
