@@ -28,7 +28,9 @@ jobs:
       matrix:
         version:
           - master
-          - stable 
+          - stable
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: calculate cache key for the compilation
         id: get-key
