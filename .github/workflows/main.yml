@@ -95,8 +95,7 @@ jobs:
           name: plumed-${{matrix.version}}
           # path: plumed-${{matrix.version}}.tar
           path: |
-            opt/
-            libtorch/
+            /home/runner/opt/
           retention-days: 1
 
   build:
