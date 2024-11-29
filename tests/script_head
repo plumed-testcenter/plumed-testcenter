@@ -1,8 +1,8 @@
 #!/bin/bash
-
+# shellcheck disable=SC2034
 mode="static"
 suffix=""
-basedir=`pwd`
+basedir=$(pwd)
 set -x
 
 # Copying arguments from input
@@ -17,3 +17,12 @@ case "$opt" in
 esac
 done
 
+# setting up the versionsuffix as in runtests scripts
+
+exeSuffix=$suffix
+
+if [[ $suffix != _master ]]; then
+  exeSuffix=v$("plumed$suffix" info --version)
+fi
+
+# cat the body of your install script here

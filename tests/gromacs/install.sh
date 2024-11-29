@@ -4,15 +4,6 @@
 # Clone direclty into the wanted gromacs version
 git clone --depth 1 --branch v2024.2 https://gitlab.com/gromacs/gromacs.git "gromacs$suffix"
 
-# setting up the versionsuffix as in runtests scripts
-versionSuffix
-
-exeSuffix=v$("plumed$suffix" info --version)
-
-if suffix="_master"; then
-   exeSuffix=""
-fi
-
 cd "gromacs$suffix" || exit 1
 
 # Patch with PLUMED
