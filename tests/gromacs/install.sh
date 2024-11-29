@@ -4,7 +4,11 @@
 # Clone direclty into the wanted gromacs version
 git clone --depth 1 --branch v2024.2 https://gitlab.com/gromacs/gromacs.git "gromacs$suffix"
 
-cd "gromacs$suffix" || exit 1
+cd "gromacs$suffix" || {
+   echo "cannot cd to gromacs$suffix" >&2
+   # we want to build the site regardless
+   exit 0
+}
 
 # Patch with PLUMED
 "plumed$suffix" patch --engine gromacs-2024.2 -p --mode "$mode"
@@ -13,7 +17,11 @@ prefix=$HOME/opt/gromacs$suffix
 
 # Run cmake
 mkdir build
-cd build || exit 1
+cd build || {
+   echo "cannot cd to build" >&2
+   # we want to build the site regardless
+   exit 0
+}
 cmake .. -DGMX_BUILD_OWN_FFTW=ON -DCMAKE_INSTALL_PREFIX="$prefix" -DGMX_ENABLE_CCACHE=ON
 
 cmake --build . -j4
@@ -29,4 +37,6 @@ mygmx=\$HOME/opt/gromacs$suffix/bin/gmx
 echo 5 | "\$mygmx" energy
 EOF
    chmod u+x "$HOME/opt/bin/gromacs$exeSuffix"
+else
+   echo "${prefix}/bin/gmx" have not been compiled or is not executable
 fi

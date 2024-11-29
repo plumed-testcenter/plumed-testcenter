@@ -1,5 +1,5 @@
 # shellcheck disable=SC2154,2148
-# formatted with shfmt_v3.6.0 
+# formatted with shfmt_v3.6.0
 # Cloning the lammps repository
 #repo=https://github.com/gtribello/lammps.git
 repo=https://github.com/lammps/lammps.git
@@ -7,7 +7,11 @@ sourcedir=lammps$suffix
 git clone --depth 1 "$repo" "$sourcedir"
 
 # Finding the latest stable version of lammps to build
-cd "$sourcedir" || exit 1
+cd "$sourcedir" || {
+   echo "cannot cd to $sourcedir" >&2
+   # we want to build the site regardless
+   exit 0
+}
 #TODO: go back to stable lammps
 #version=$(git tag --sort=-creatordate | grep stable | head -n 1)
 #version="fix-plumed-cmake"
@@ -17,7 +21,12 @@ echo "installing latest lammps version"
 
 # Building lammps using cmake
 mkdir -p build
-cd build || exit 1
+
+cd build || {
+   echo "cannot cd to build" >&2
+   # we want to build the site regardless
+   exit 0
+}
 export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$HOME/opt/lib/pkgconfig
 export CMAKE_C_COMPILER_LAUNCHER=ccache
 export CMAKE_CXX_COMPILER_LAUNCHER=ccache
