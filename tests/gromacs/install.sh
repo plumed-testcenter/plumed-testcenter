@@ -22,21 +22,23 @@ cd build || {
    # we want to build the site regardless
    exit 0
 }
-cmake .. -DGMX_BUILD_OWN_FFTW=ON -DCMAKE_INSTALL_PREFIX="$prefix" -DGMX_ENABLE_CCACHE=ON
+#Adding GMX_MPI so the statically linked version will link correcly to mpi things
+# -Wno-dev because we don't care about dev warnings here
+cmake .. -DGMX_BUILD_OWN_FFTW=ON -DCMAKE_INSTALL_PREFIX="$prefix" -DGMX_ENABLE_CCACHE=ON -Wno-dev -DGMX_MPI=ON
 
 cmake --build . -j4
 cmake --install .
 
-if [ -x "${prefix}/bin/gmx" ]; then
+if [ -x "${prefix}/bin/gmx_mpi" ]; then
    # Write a script to execute gromacs calculations
    cat <<EOF >"$HOME/opt/bin/gromacs$exeSuffix"
 #!/bin/bash
-mygmx=\$HOME/opt/gromacs$suffix/bin/gmx
+mygmx=\$HOME/opt/gromacs$suffix/bin/gmx_mpi
 "\$mygmx" grompp -p topol.top -c conf.gro -f md.mdp
 "\$mygmx" mdrun -nt 1 -plumed plumed.dat
 echo 5 | "\$mygmx" energy
 EOF
    chmod u+x "$HOME/opt/bin/gromacs$exeSuffix"
 else
-   echo "${prefix}/bin/gmx" have not been compiled or is not executable
+   echo "${prefix}/bin/gmx_mpi" have not been compiled or is not executable
 fi
