@@ -8,7 +8,8 @@ def zip(path):
     """ Zip a path removing the original file """
     with zipfile.ZipFile(path + ".zip", "w") as f_out:
         f_out.write(path)
-    os.remove(path)
+    # I need the file in the ouput
+    # os.remove(path)
 
 def buildInstallPage( code ) :
    # Zip all the logs
