@@ -1,9 +1,10 @@
 #!/bin/bash
 # shellcheck disable=SC2034
+set -x
 mode="static"
 suffix=""
 basedir=$PWD
-set -x
+
 
 # Copying arguments from input
 # Mode is how plumed is linked static/runtime
