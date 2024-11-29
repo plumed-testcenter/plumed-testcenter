@@ -132,6 +132,13 @@ jobs:
         tar xf ~/plumed-master.tar
         tar xf ~/plumed-stable.tar
 
+    - name: Set up ccache for the host program
+      uses: actions/cache@v4
+      with:
+        path: ~/.ccache
+        key: ccache-${{ runner.os }}-${{ matrix.replica }}-${{ github.sha }}
+        restore-keys: ccache-${{ runner.os }}-${{ matrix.replica }}
+
     - name: Set paths
       run: |
         echo "$HOME/opt/bin" >> $GITHUB_PATH
@@ -146,10 +153,12 @@ jobs:
     - name: Setup PLUMED software
       run: |
         sudo apt update
+        sudo apt install ccache
         sudo apt install mpi-default-bin mpi-default-dev gfortran
         sudo apt install libfftw3-dev gsl-bin libgsl0-dev libboost-serialization-dev
         sudo apt-get update
         pip install -r requirements.txt
+        mkdir -p ~/.ccache/ccache
         .ci/install.libtorch
 
     - name: Install interface code

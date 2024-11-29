@@ -1,8 +1,8 @@
 #!/bin/bash
-
+# shellcheck disable=SC2034
 mode="static"
 suffix=""
-basedir=`pwd`
+basedir=$PWD
 set -x
 
 # Copying arguments from input
@@ -17,3 +17,4 @@ case "$opt" in
 esac
 done
 
+#cat the install script here
