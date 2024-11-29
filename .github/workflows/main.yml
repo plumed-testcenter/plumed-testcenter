@@ -179,19 +179,20 @@ jobs:
          # And setup the installation pages with logs and details of scripts
          python setupInstall.py -c ${{matrix.replica}} 
 
-    - name: compile output for stable
-      run: | 
-        echo "stderr stable"
-        cat tests/${{matrix.replica}}/stderr.txt
-        echo "stdout stable"
-        cat tests/${{matrix.replica}}/stdout.txt
+    # when uncommenting these steps remembere to comment os.remove(path) in setupInstall.py
+    # - name: compile output for stable
+    #   run: | 
+    #     echo "stderr stable"
+    #     cat tests/${{matrix.replica}}/stderr.txt
+    #     echo "stdout stable"
+    #     cat tests/${{matrix.replica}}/stdout.txt
 
-    - name: compile output for master
-      run: | 
-        echo "stderr master"
-        cat tests/${{matrix.replica}}/stderr_master.txt
-        echo "stdout master"
-        cat tests/${{matrix.replica}}/stdout_master.txt
+    # - name: compile output for master
+    #   run: | 
+    #     echo "stderr master"
+    #     cat tests/${{matrix.replica}}/stderr_master.txt
+    #     echo "stdout master"
+    #     cat tests/${{matrix.replica}}/stdout_master.txt
     - name: Test code
       run: | 
          # Run the tests of the code with the stable version of PLUMED
