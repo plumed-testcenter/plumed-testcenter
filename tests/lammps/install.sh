@@ -34,6 +34,7 @@ cmake -D CMAKE_CXX_COMPILER=mpic++ -D PKG_MANYBODY=yes -D PKG_KSPACE=yes -D PKG_
 cmake --build . -j4
 
 if [[ -x lmp ]]; then
+   #need a way for solving the plumed_kernel question
    cp lmp "$HOME/opt/bin/lammps$exeSuffix"
 else
    echo "lmp is not executable or does not exist"

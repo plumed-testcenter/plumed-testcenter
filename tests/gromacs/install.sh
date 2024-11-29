@@ -33,6 +33,7 @@ if [ -x "${prefix}/bin/gmx_mpi" ]; then
    # Write a script to execute gromacs calculations
    cat <<EOF >"$HOME/opt/bin/gromacs$exeSuffix"
 #!/bin/bash
+export PLUMED_KERNEL=$plumedKernel
 mygmx=\$HOME/opt/gromacs$suffix/bin/gmx_mpi
 "\$mygmx" grompp -p topol.top -c conf.gro -f md.mdp
 "\$mygmx" mdrun -nt 1 -plumed plumed.dat

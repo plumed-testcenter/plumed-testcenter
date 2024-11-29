@@ -21,8 +21,12 @@ done
 
 exeSuffix=$suffix
 
+#two plumed versions coexists, I think this is needed
+plumedKernel=$HOME/opt/lib/libplumedKernel.so
+
 if [[ $suffix != _master ]]; then
-  exeSuffix=v$("plumed$suffix" info --version)
+  exeSuffix=_v$("plumed$suffix" info --version)
+  plumedKernel=$HOME/opt/lib/libplumed_masterKernel.so
 fi
 
 # cat the body of your install script here
