@@ -1,8 +1,8 @@
 #!/bin/bash
-
+# shellcheck disable=SC2034
 mode="static"
 suffix=""
-basedir=`pwd`
+basedir=$(pwd)
 set -x
 
 # Copying arguments from input
@@ -17,3 +17,16 @@ case "$opt" in
 esac
 done
 
+# setting up the versionsuffix as in runtests scripts
+
+exeSuffix=$suffix
+
+#two plumed versions coexists, I think this is needed
+plumedKernel=$HOME/opt/lib/libplumedKernel.so
+
+if [[ $suffix != _master ]]; then
+  exeSuffix=_v$("plumed$suffix" info --version)
+  plumedKernel=$HOME/opt/lib/libplumed_masterKernel.so
+fi
+
+# cat the body of your install script here

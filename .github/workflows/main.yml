@@ -106,6 +106,7 @@ jobs:
     strategy:
       matrix:
         replica: ["simplemd", "lammps", "quantum_espresso", "i-pi", "gromacs"]
+        #TODO: separate master and stable versions for running tests
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
@@ -132,6 +133,13 @@ jobs:
         tar xf ~/plumed-master.tar
         tar xf ~/plumed-stable.tar
 
+    - name: Set up ccache for the host program
+      uses: actions/cache@v4
+      with:
+        path: ~/.ccache
+        key: ccache-${{ runner.os }}-${{ matrix.replica }}-${{ github.sha }}
+        restore-keys: ccache-${{ runner.os }}-${{ matrix.replica }}
+
     - name: Set paths
       run: |
         echo "$HOME/opt/bin" >> $GITHUB_PATH
@@ -146,10 +154,12 @@ jobs:
     - name: Setup PLUMED software
       run: |
         sudo apt update
+        sudo apt install ccache
         sudo apt install mpi-default-bin mpi-default-dev gfortran
         sudo apt install libfftw3-dev gsl-bin libgsl0-dev libboost-serialization-dev
         sudo apt-get update
         pip install -r requirements.txt
+        mkdir -p ~/.ccache/ccache
         .ci/install.libtorch
 
     - name: Install interface code
@@ -169,6 +179,20 @@ jobs:
          # And setup the installation pages with logs and details of scripts
          python setupInstall.py -c ${{matrix.replica}} 
 
+    # when uncommenting these steps remembere to comment os.remove(path) in setupInstall.py
+    # - name: compile output for stable
+    #   run: | 
+    #     echo "stderr stable"
+    #     cat tests/${{matrix.replica}}/stderr.txt
+    #     echo "stdout stable"
+    #     cat tests/${{matrix.replica}}/stdout.txt
+
+    # - name: compile output for master
+    #   run: | 
+    #     echo "stderr master"
+    #     cat tests/${{matrix.replica}}/stderr_master.txt
+    #     echo "stdout master"
+    #     cat tests/${{matrix.replica}}/stdout_master.txt
     - name: Test code
       run: | 
          # Run the tests of the code with the stable version of PLUMED
@@ -221,4 +245,3 @@ jobs:
           enable_jekyll: true
           user_name: 'PlumedBot'
           user_email: 'giovanni.bussi+plumedbot@gmail.com'
-          
