@@ -168,11 +168,11 @@ jobs:
          chmod u+x install.sh
          echo Building ${{matrix.replica}} with stable plumed
          # Build static interface to latest stable version of PLUMED
-         ./install.sh mode=static 2> tests/${{matrix.replica}}/stderr.txt | tee tests/${{matrix.replica}}/stdout.txt
+         ./install.sh mode=static
          ./tests/check_status.sh code=${{matrix.replica}} 
          echo Building ${{matrix.replica}} with master plumed
          # Build runtime interface to (what will be) master version of PLUMED
-         ./install.sh mode=runtime suffix=_master 2> tests/${{matrix.replica}}/stderr_master.txt | tee tests/${{matrix.replica}}/stdout_master.txt 
+         ./install.sh mode=runtime suffix=_master
          ./tests/check_status.sh code=${{matrix.replica}}  suffix=_master
          echo Running setup install for ${{matrix.replica}}
          # And setup the installation pages with logs and details of scripts
@@ -230,4 +230,3 @@ jobs:
           enable_jekyll: true
           user_name: 'PlumedBot'
           user_email: 'giovanni.bussi+plumedbot@gmail.com'
-          
