@@ -15,7 +15,7 @@ prefix=$HOME/opt/gromacs$suffix
 mkdir build
 cd build || exit 1
 cmake .. -DGMX_BUILD_OWN_FFTW=ON -DCMAKE_INSTALL_PREFIX="$prefix" -DGMX_ENABLE_CCACHE=ON
-# -j is atomatic number of concurrent cores
+
 cmake --build . -j4
 cmake --install .
 
