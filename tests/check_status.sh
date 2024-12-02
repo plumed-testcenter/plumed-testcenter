@@ -23,6 +23,7 @@ executible_suffixed=$executible$suffix
 
 echo -n "Looking for executable ${executible_suffixed}..."
 if [[ -x $executible_suffixed ]]; then
+     # the install script should have done the homework (see below)
      echo "found"
      echo "install_plumed$suffix: working" >>"$info_yml"
 
@@ -33,6 +34,11 @@ fi
 
 echo -n "Looking for executable  ${executible}..."
 if [[ -x $executible ]]; then
+     # the install script did not do the homework
+     # this may be risky because means that the install script for _master will override the installed things from _stable
+     # In case of shared libraries this may be a problem if the plumed patch is invasive
+     # Or in the case the wrapper has changed between versions and it is not statically linked in the executable
+
      echo "found"
      echo "install_plumed$suffix: working" >>"$info_yml"
      # no need for the extra check, because of the if above
@@ -45,5 +51,7 @@ if [[ -x $executible ]]; then
 else
      echo "not found"
 fi
+
+echo "Something is wrong with the installation of the patched $code with plumed$suffix"
 
 echo "install_plumed$suffix: broken" >>"$info_yml"

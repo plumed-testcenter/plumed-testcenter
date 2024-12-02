@@ -37,7 +37,7 @@ if [ -x "${prefix}/bin/gmx_mpi" ]; then
 export PLUMED_KERNEL=$plumedKernel
 mygmx=$prefix/bin/gmx_mpi
 "\$mygmx" grompp -p topol.top -c conf.gro -f md.mdp
-"\$mygmx" mdrun -nt 1 -plumed plumed.dat
+"\$mygmx" mdrun -plumed plumed.dat
 echo 5 | "\$mygmx" energy
 EOF
    chmod u+x "$executible"
