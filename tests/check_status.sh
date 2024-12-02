@@ -23,6 +23,7 @@ executible_suffixed=$executible$suffix
 
 echo -n "Looking for executable ${executible_suffixed}..."
 if [[ -x $executible_suffixed ]]; then
+     echo "found"
      echo "install_plumed$suffix: working" >>"$info_yml"
 
      exit 0
@@ -32,10 +33,11 @@ fi
 
 echo -n "Looking for executable  ${executible}..."
 if [[ -x $executible ]]; then
+     echo "found"
      echo "install_plumed$suffix: working" >>"$info_yml"
      # no need for the extra check, because of the if above
      #if [[ ! -x $executible_suffixed ]]; then
-     echo "Creating $executible_suffixed"
+     echo "Copying $executible to $executible_suffixed"
      #this should be set up in the install script
      cp "$executible" "$executible_suffixed"
 
