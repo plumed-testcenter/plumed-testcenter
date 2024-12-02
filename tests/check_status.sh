@@ -21,17 +21,18 @@ executible=$(grep executible "$info_yml" | sed -e 's/executible: //')
 executible=$HOME/opt/bin/$executible
 executible_suffixed=$executible$suffix
 
+echo -n "Looking for executable ${executible_suffixed}..."
 if [[ -x $executible_suffixed ]]; then
-     echo "Found the executable $executible_suffixed"
      echo "install_plumed$suffix: working" >>"$info_yml"
 
      exit 0
+else
+     echo "not found"
 fi
 
+echo -n "Looking for executable  ${executible}..."
 if [[ -x $executible ]]; then
-     echo "Found the executable $executible"
      echo "install_plumed$suffix: working" >>"$info_yml"
-
      # no need for the extra check, because of the if above
      #if [[ ! -x $executible_suffixed ]]; then
      echo "Creating $executible_suffixed"
@@ -39,6 +40,8 @@ if [[ -x $executible ]]; then
      cp "$executible" "$executible_suffixed"
 
      exit 0
+else
+     echo "not found"
 fi
 
 echo "install_plumed$suffix: broken" >>"$info_yml"

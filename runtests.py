@@ -139,6 +139,7 @@ def runMDCalc(
     if execNameChanged:
         params["executible"] += f"_{version}"
 
+    print(f'Starting run "{name}"')
     # Now test that the executable exists if it doesn't then the test is broken
     if shutil.which(params["executible"]) == None:
         print(f"Executable {params['executible']} does not exist in current PATH.")
@@ -149,7 +150,6 @@ def runMDCalc(
         wdir = f"{prefix}{wdir}"
     shutil.copytree(f"{basedir}/input", f"{wdir}")
     # Change to the directory to run the calculation
-    print(f'Starting run "{name}"')
     # print(f"{params=}")
     with cd(f"{wdir}"):
         # Output the plumed file
