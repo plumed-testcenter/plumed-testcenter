@@ -3,7 +3,6 @@
 
 suffix=$(plumed info --version)
 suffix=_v$suffix
-set -x
 
 for opt; do
      case "$opt" in
@@ -16,17 +15,30 @@ for opt; do
      esac
 done
 
-executible=$(grep executible "tests/$code/info.yml" | sed -e 's/executible: //')
+info_yml=tests/$code/info.yml
 
-echo "Looking for '$HOME/opt/bin/$executible' or  for '$HOME/opt/bin/$executible$suffix'"
-#thest that at least the non suffixed version exists
-if [[ -x $HOME/opt/bin/$executible || -x $HOME/opt/bin/$executible$suffix ]]; then
-     echo "install_plumed$suffix: working" >>"tests/$code/info.yml"
-     # Ensures we do not overwrite master version of PLUMED when testing simplemd
-     if [[ ! -x $HOME/opt/bin/$executible$suffix ]]; then
-          #this should be set up in the install script
-          cp "$HOME/opt/bin/$executible" "$HOME/opt/bin/$executible$suffix"
-     fi
-else
-     echo "install_plumed$suffix: broken" >>"tests/$code/info.yml"
+executible=$(grep executible "$info_yml" | sed -e 's/executible: //')
+executible=$HOME/opt/bin/$executible
+executible_suffixed=$executible$suffix
+
+if [[ -x $executible_suffixed ]]; then
+     echo "Found the executable $executible_suffixed"
+     echo "install_plumed$suffix: working" >>"$info_yml"
+
+     exit 0
 fi
+
+if [[ -x $executible ]]; then
+     echo "Found the executable $executible"
+     echo "install_plumed$suffix: working" >>"$info_yml"
+
+     # no need for the extra check, because of the if above
+     #if [[ ! -x $executible_suffixed ]]; then
+     echo "Creating $executible_suffixed"
+     #this should be set up in the install script
+     cp "$executible" "$executible_suffixed"
+
+     exit 0
+fi
+
+echo "install_plumed$suffix: broken" >>"$info_yml"
