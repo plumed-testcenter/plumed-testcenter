@@ -199,9 +199,9 @@ jobs:
     #     cat tests/${{matrix.replica}}/stdout_master.txt
     - name: Test code
       run: | 
-         # Run the tests of the code with the stable version of PLUMED
+         echo Running tests for ${{matrix.replica}} with PLUMED from  stable branch
          python runtests.py -c ${{matrix.replica}} -v stable
-         # Run the tests of the code with the master version of PLUMED
+         echo Running tests for ${{matrix.replica}} with PLUMED from  master branch
          python runtests.py -c ${{matrix.replica}} -v master
          # Build tarball for upload 
          tar cf testout.tar tests/${{matrix.replica}}/*.md tests/${{matrix.replica}}/*.yml tests/${{matrix.replica}}/*.zip stable_version.md pages

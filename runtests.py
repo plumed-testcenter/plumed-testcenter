@@ -149,7 +149,7 @@ def runMDCalc(
         wdir = f"{prefix}{wdir}"
     shutil.copytree(f"{basedir}/input", f"{wdir}")
     # Change to the directory to run the calculation
-    print(f"for run {name}")
+    print(f'Starting run "{name}"')
     # print(f"{params=}")
     with cd(f"{wdir}"):
         # Output the plumed file
