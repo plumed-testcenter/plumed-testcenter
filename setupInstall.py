@@ -32,8 +32,8 @@ def buildInstallPage( code ) :
 
    with open("tests/" + code + "/install.sh", "r") as sf:   
     inp = sf.read()
-   for line in inp.splitlines() :
-      of.write( line + "\n")
+    for line in inp.splitlines() :
+        of.write( line + "\n")
    of.write("```\n\n")
    of.close()
 

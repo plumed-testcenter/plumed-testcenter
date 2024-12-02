@@ -188,19 +188,27 @@ class writeReportForSimulations:
             val3,
             prefix=self.prefix,
         )
+        failure_rate = check(
+            self.md_failed,
+            val1,
+            val2,
+            val3,
+            denominatorTolerance=denominatorTolerance,
+        )
         self.testout.write(
             f"| {docstring} | "
             + getBadge(
-                check(
-                    self.md_failed,
-                    val1,
-                    val2,
-                    val3,
-                    denominatorTolerance=denominatorTolerance,
-                ),
+                failure_rate,
                 kind,
                 self.code,
                 self.version,
             )
             + " |\n"
         )
+        #a small preview of the results before the rendering of the pages
+        if failure_rate == -1:
+            failure_rate = 100
+        title =" * " + docstring
+        if len(title)>61:
+            title=title[:58]+"..."
+        print(f"{title:<61} failure rate: {failure_rate:<3}%")
