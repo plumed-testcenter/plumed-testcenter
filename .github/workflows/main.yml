@@ -177,7 +177,11 @@ jobs:
          ./tests/check_status.sh code=${{matrix.replica}}  suffix=_master
          echo Running setup install for ${{matrix.replica}}
          # And setup the installation pages with logs and details of scripts
-         python setupInstall.py -c ${{matrix.replica}} 
+         python setupInstall.py -c ${{matrix.replica}}
+    - name: Display installation results
+      run: |
+        echo tests/${{matrix.replica}}/info.yml
+        cat tests/${{matrix.replica}}/info.yml
 
     # when uncommenting these steps remembere to comment os.remove(path) in setupInstall.py
     # - name: compile output for stable
@@ -201,6 +205,11 @@ jobs:
          python runtests.py -c ${{matrix.replica}} -v master
          # Build tarball for upload 
          tar cf testout.tar tests/${{matrix.replica}}/*.md tests/${{matrix.replica}}/*.yml tests/${{matrix.replica}}/*.zip stable_version.md pages
+
+    - name: Display test results
+      run: |
+        echo tests/${{matrix.replica}}/info.yml
+        cat tests/${{matrix.replica}}/info.yml
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
