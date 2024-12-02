@@ -183,7 +183,7 @@ jobs:
         echo tests/${{matrix.replica}}/info.yml
         cat tests/${{matrix.replica}}/info.yml
 
-    # when uncommenting these steps remembere to comment os.remove(path) in setupInstall.py
+    # when uncommenting these steps remember to comment os.remove(path) in setupInstall.py
     # - name: compile output for stable
     #   run: | 
     #     echo "stderr stable"

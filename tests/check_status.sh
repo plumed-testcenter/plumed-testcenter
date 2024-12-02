@@ -16,7 +16,7 @@ for opt; do
      esac
 done
 
-executible=$(grep "executible tests/$code/info.yml" | sed -e s/"executible: "//)
+executible=$(grep executible "tests/$code/info.yml" | sed -e 's/executible: //')
 
 #thest that at least the non suffixed version exists
 if [[ ! -x $HOME/opt/bin/$executible || ! -x $HOME/opt/bin/$executible$suffix ]]; then
