@@ -616,22 +616,26 @@ def runTests(
     with open(f"{outdir}/" + fname, "r") as ifn:
         inp = ifn.read()
 
-    infoOut = open(f"{outdir}/info.yml", "a")
+    test_result=""
+    #TODO: postpone the rendering of the badges and report with variables
     if "failed-red.svg" in inp:
-        infoOut.write(f"test_plumed{version}: broken \n")
+        test_result="broken"
     elif "%25-red.svg" in inp:
-        infoOut.write(f"test_plumed{version}: broken \n")
+        test_result="broken"
     elif "%25-green.svg" in inp and ("%25-red.svg" in inp or "%25-yellow.svg" in inp):
-        infoOut.write(f"test_plumed{version}: partial\n")
+        test_result="partial"
     elif "%25-yellow.svg" in inp:
-        infoOut.write(f"test_plumed{version}: partial\n")
+        test_result="partial"
     elif "%25-green.svg" in inp:
-        infoOut.write(f"test_plumed{version}: working \n")
+        test_result="working"
     else:
         raise Exception(
             f"Found no test badges in output for tests on {code} with " + version
         )
-    infoOut.close()
+    print(f"Test result for {code} with version {version}: {test_result}")
+    with open(f"{outdir}/info.yml", "a") as infoOut:
+        infoOut.write(f"test_plumed{version}: {test_result} \n")
+    
 
 
 if __name__ == "__main__":
