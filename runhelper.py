@@ -1,5 +1,6 @@
 from typing import TextIO, Literal
 import numpy as np
+# formatted with ruff 0.6.4
 
 
 def getBadge(sucess, filen, code, version: str):
@@ -176,21 +177,19 @@ class writeReportForSimulations:
         val3: "float|np.ndarray",
         *,
         denominatorTolerance: float = 0.0,
-    )->dict:
-        report={
-        "filen" : kind,
-        "code" : self.code,
-        "version" : self.version,
-        "md_fail" : self.md_failed,
-        "zipfiles" : self.simulations,
-        "ref" : val1,
-        "data" : val2,
-        "denom" : val3,
-        "prefix" : self.prefix,
+    ) -> dict:
+        report = {
+            "filen": kind,
+            "code": self.code,
+            "version": self.version,
+            "md_fail": self.md_failed,
+            "zipfiles": self.simulations,
+            "ref": val1,
+            "data": val2,
+            "denom": val3,
+            "prefix": self.prefix,
         }
-        writeReportPage(
-            **report
-        )
+        # writeReportPage(**report)
         failure_rate = check(
             self.md_failed,
             val1,
@@ -200,21 +199,55 @@ class writeReportForSimulations:
         )
         report["failure_rate"] = failure_rate
         report["docstring"] = docstring
-        self.testout.write(
-            f"| {docstring} | "
-            + getBadge(
-                failure_rate,
-                kind,
-                self.code,
-                self.version,
-            )
-            + " |\n"
-        )
-        #a small preview of the results before the rendering of the pages
+        # self.testout.write(
+        #     f"| {docstring} | "
+        #     + getBadge(
+        #         failure_rate,
+        #         kind,
+        #         self.code,
+        #         self.version,
+        #     )
+        #     + " |\n"
+        # )
+        # a small preview of the results before the rendering of the pages
         if failure_rate == -1:
             failure_rate = 100
-        title =" * " + docstring
-        if len(title)>61:
-            title=title[:58]+"..."
+        title = " * " + docstring
+        if len(title) > 61:
+            title = title[:58] + "..."
         print(f"{title:<61} failure rate: {failure_rate:<3}%")
-        return {kind:report}
+        return {kind: report}
+
+
+def dictToReport(input: dict):
+    # isolates the needed data from the dictionary
+    report = {
+        "filen": input["filen"],
+        "code": input["code"],
+        "version": input["version"],
+        "md_fail": input["md_fail"],
+        "zipfiles": input["zipfiles"],
+        "ref": input["ref"],
+        "data": input["data"],
+        "denom": input["denom"],
+        "prefix": input["prefix"],
+    }
+    writeReportPage(**report)
+
+
+def dictToTestoutTableEntry(input: dict):
+    docstring = input["docstring"]
+    failure_rate = input["failure_rate"]
+    kind = input["filen"]
+    code = input["code"]
+    version = input["version"]
+    return (
+        f"| {docstring} | "
+        + getBadge(
+            failure_rate,
+            kind,
+            code,
+            version,
+        )
+        + " |\n"
+    )

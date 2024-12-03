@@ -1,4 +1,4 @@
-#formatted with ruff 0.6.4
+# formatted with ruff 0.6.4
 import os
 import sys
 import yaml
@@ -12,7 +12,7 @@ from MDAnalysis.coordinates.XYZ import XYZReader
 from datetime import date
 from contextlib import contextmanager
 from PlumedToHTML import test_plumed, get_html
-from runhelper import writeReportForSimulations
+from runhelper import writeReportForSimulations, dictToReport, dictToTestoutTableEntry
 from typing import TextIO, Literal
 
 # for debugging
@@ -201,7 +201,7 @@ def runBasicTests(
 ) -> dict:
     """run the (eventual) MD test for position, timestep, mass, and charge"""
     params = runMDCalcSettings["runner"].setParams()
-    results = {}
+    results = {"mdruns": {}}
     basic_md_failed = True
     if (
         info["positions"] == "yes"
@@ -227,7 +227,7 @@ PRINT ARG=c.* FILE=cell_data
 
     testout.write("| Description of test | Status | \n")
     testout.write("|:--------------------|:------:| \n")
-    results["mdrun"] = basic_md_failed
+    results["mdruns"]["basic"] = basic_md_failed
     basicSR = writeReportForSimulations(
         testout,
         runMDCalcSettings["code"],
@@ -373,8 +373,8 @@ def runForcesTest(
     refrun_fail = runMDCalc("refres", params=rparams, **runMDCalcSettings)
     mdrun_fail = True
     plrun_fail = True
-    results = {"mdrun": {}}
-    results["mdrun"]["reference"] = refrun_fail
+    results = {"mdruns": {}}
+    results["mdruns"]["refres"] = refrun_fail
     if not refrun_fail:
         # Get the reference distance between the atoms
         refdist = np.loadtxt(f"{outdir}/refres_{version}/colvar")[0, 1]
@@ -384,7 +384,7 @@ def runForcesTest(
         rparams["restraint"] = refdist
         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
         mdrun_fail = runMDCalc("forces1", params=rparams, **runMDCalcSettings)
-        results["mdrun"]["run"] = mdrun_fail
+        results["mdruns"]["forces1"] = mdrun_fail
         # Run the calculation with the restraint applied by PLUMED
         rparams["restraint"] = -10
         rparams["plumed"] = (
@@ -393,7 +393,7 @@ def runForcesTest(
             "PRINT ARG=dd FILE=colvar\n"
         )
         plrun_fail = runMDCalc("forces2", params=rparams, **runMDCalcSettings)
-        results["mdrun"]["plumed"] = plrun_fail
+        results["mdruns"]["forces2"] = plrun_fail
     # And create our reports from the two runs
     md_failed = mdrun_fail or plrun_fail
     val1 = np.ones(1)
@@ -437,10 +437,10 @@ def runVirialTest(
         "PRINT ARG=vv FILE=volume\n"
     )
     run2_fail = runMDCalc("virial2", params=params, **runMDCalcSettings)
-    results = {"mdrun": {}}
-    results["mdrun"]["run1"] = run1_fail
-    results["mdrun"]["run2"] = run2_fail
-    results["mdrun"]["run3"] = run3_fail
+    results = {"mdruns": {}}
+    results["mdruns"]["virial1"] = run1_fail
+    results["mdruns"]["virial2"] = run2_fail
+    results["mdruns"]["virial3"] = run3_fail
     md_failed = run1_fail or run2_fail or run3_fail
     val1 = np.ones(1)
     val2 = np.ones(1)
@@ -503,10 +503,10 @@ def energyTest(
         f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}\n"
     )
     run2_fail = runMDCalc(f"{title}2", params=params, **runMDCalcSettings)
-    results = {"mdrun": {}}
-    results["mdrun"]["run1"] = run1_fail
-    results["mdrun"]["run2"] = run2_fail
-    results["mdrun"]["run3"] = run3_fail
+    results = {"mdruns": {}}
+    results["mdruns"][f"{title}1"] = run1_fail
+    results["mdruns"][f"{title}2"] = run2_fail
+    results["mdruns"][f"{title}3"] = run3_fail
     md_failed = run1_fail or run2_fail or run3_fail
     val1 = np.ones(1)
     val2 = np.ones(1)
@@ -547,8 +547,8 @@ def runEnergyTests(
     params["ensemble"] = "npt"
     params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
     md_failed = runMDCalc("energy", params=params, **runMDCalcSettings)
-    results = {"energy": {}}
-    results["energy"]["mdrun"] = md_failed
+    results = {"mdruns": {}}
+    results["mdruns"]["energy"] = md_failed
     md_energy = np.ones(1)
     pl_energy = np.ones(1)
 
@@ -558,7 +558,7 @@ def runEnergyTests(
 
     else:
         md_failed = True
-    results["energy"].update(
+    results.update(
         writeReportForSimulations(
             testout,
             code,
@@ -581,31 +581,35 @@ def runEnergyTests(
 
     sqrtalpha = 1.1
     if info["engforces"] == "yes":
-        results["engforces"] = energyTest(
-            testout,
-            outdir,
-            "engforce",
-            50,
-            "nvt",
-            sqrtalpha,
-            "PLUMED forces on potential energy passed correctly",
-            runMDCalcSettings,
-            tolerance,
+        results.update(
+            energyTest(
+                testout,
+                outdir,
+                "engforce",
+                50,
+                "nvt",
+                sqrtalpha,
+                "PLUMED forces on potential energy passed correctly",
+                runMDCalcSettings,
+                tolerance,
+            )
         )
 
     sqrtalpha = 1.1
     if info["engforces"] and info["virial"] == "yes":
-        results["engvir"] = energyTest(
-            testout,
-            outdir,
-            "engvir",
-            150,
-            "npt",
-            sqrtalpha,
-            "PLUMED contribution to virial due to force on potential energy passed correctly",
-            runMDCalcSettings,
-            tolerance,
-            prerelaxtime=True,
+        results.update(
+            energyTest(
+                testout,
+                outdir,
+                "engvir",
+                150,
+                "npt",
+                sqrtalpha,
+                "PLUMED contribution to virial due to force on potential energy passed correctly",
+                runMDCalcSettings,
+                tolerance,
+                prerelaxtime=True,
+            )
         )
     return results
 
@@ -671,26 +675,27 @@ def runTests(
             prefix=prefix,
             **settingsFor_runMDCalc,
         )
-        basicresults = runBasicTests(
-            testout, outdir, info, runMDCalcSettings, tolerance
-        )
+        results = runBasicTests(testout, outdir, info, runMDCalcSettings, tolerance)
 
         # the next runs are not based on the basic run
         if info["forces"] == "yes":
-            forcesresults = runForcesTest(testout, outdir, runMDCalcSettings, tolerance)
+            results.update(runForcesTest(testout, outdir, runMDCalcSettings, tolerance))
 
         if info["virial"] == "yes":
-            virialresults = runVirialTest(testout, outdir, runMDCalcSettings, tolerance)
+            results.update(runVirialTest(testout, outdir, runMDCalcSettings, tolerance))
 
         if info["energy"] == "yes":
-            energyresults = runEnergyTests(
-                testout, outdir, info, runMDCalcSettings, tolerance
+            results.update(
+                runEnergyTests(testout, outdir, info, runMDCalcSettings, tolerance)
             )
+        for test in TEST_ORDER:
+            if test in results.keys():
+                print(test)
+                dictToReport(results[test])
+                testout.write(dictToTestoutTableEntry(results[test]))
 
-        print("Basic results:")
-        pprint(basicresults)
         # print("Forces results:")
-        # pprint(forcesresults)
+        pprint(results["mdruns"])
         # print("Virial results:")
         # pprint(virialresults)
         # print("Energy results:")
