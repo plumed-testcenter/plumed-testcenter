@@ -97,8 +97,11 @@ jobs:
       - setup-plumed
     strategy:
       matrix:
-        replica: ["simplemd", "lammps", "quantum_espresso", "i-pi", "gromacs"]
-        #TODO: separate master and stable versions for running tests
+        replica: ["simplemd", "lammps", "quantum_espresso", "i-pi", "gromacs", "gromacs-vanilla"]
+        # TODO: separate master and stable versions for running tests
+        # plumed-version:
+        #   - master
+        #   - stable
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
