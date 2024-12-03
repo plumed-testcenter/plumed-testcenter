@@ -176,7 +176,8 @@ class writeReportForSimulations:
         val3: "float|np.ndarray",
         *,
         denominatorTolerance: float = 0.0,
-    ):
+    )->dict:
+        report={}
         writeReportPage(
             kind,
             self.code,
@@ -195,6 +196,8 @@ class writeReportForSimulations:
             val3,
             denominatorTolerance=denominatorTolerance,
         )
+        report["failure_rate"] = failure_rate
+        report["docstring"] = docstring
         self.testout.write(
             f"| {docstring} | "
             + getBadge(
@@ -212,3 +215,4 @@ class writeReportForSimulations:
         if len(title)>61:
             title=title[:58]+"..."
         print(f"{title:<61} failure rate: {failure_rate:<3}%")
+        return {kind:report}

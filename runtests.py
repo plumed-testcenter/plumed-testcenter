@@ -13,6 +13,8 @@ from contextlib import contextmanager
 from PlumedToHTML import test_plumed, get_html
 from runhelper import writeReportForSimulations
 from typing import TextIO, Literal
+#for debugging
+from pprint import pprint
 
 STANDARD_RUN_SETTINGS = [
     {"plumed": "plumed", "printJson": False},
@@ -165,9 +167,10 @@ def runMDCalc(
 
 def runBasicTests(
     testout: TextIO, outdir: str, info: dict, runMDCalcSettings: dict, tolerance: float
-):
+) -> dict:
     """run the (eventual) MD test for position, timestep, mass, and charge"""
     params = runMDCalcSettings["runner"].setParams()
+    results={}
     basic_md_failed = True
     if (
         info["positions"] == "yes"
@@ -195,6 +198,7 @@ PRINT ARG=c.* FILE=cell_data
 
     testout.write("| Description of test | Status | \n")
     testout.write("|:--------------------|:------:| \n")
+    results["mdrun"] = basic_md_failed
     basicSR = writeReportForSimulations(
         testout,
         runMDCalcSettings["code"],
@@ -211,7 +215,6 @@ PRINT ARG=c.* FILE=cell_data
         plumedpos = np.ones(params["nsteps"])
         codecell = np.ones(params["nsteps"])
         plumedcell = np.ones(params["nsteps"])
-
         if not basic_md_failed and os.path.exists(f"{basicDir}/plumed.xyz"):
             # Get the trajectory that was output by PLUMED
             plumedtraj = XYZReader(f"{basicDir}/plumed.xyz")
@@ -239,29 +242,29 @@ PRINT ARG=c.* FILE=cell_data
             basicSR.md_failed = True
             basic_md_failed = True
         # Output results from tests on natoms
-        basicSR.writeReportAndTable(
+        results.update(basicSR.writeReportAndTable(
             "natoms",
             "MD code number of atoms passed correctly",
             codenatoms,
             plumednatoms,
             0.01 * np.ones(codenatoms.shape[0]),
-        )
+        ))
         # Output results from tests on positions
-        basicSR.writeReportAndTable(
+        results.update(basicSR.writeReportAndTable(
             "positions",
             "MD code positions passed correctly",
             codepos,
             plumedpos,
             tolerance * np.ones(plumedpos.shape),
-        )
+        ))
         # Output results from tests on cell
-        basicSR.writeReportAndTable(
+        results.update(basicSR.writeReportAndTable(
             "cell",
             "MD code cell vectors passed correctly",
             codecell,
             plumedcell,
             tolerance * np.ones(plumedcell.shape),
-        )
+        ))
 
     if info["timestep"] == "yes":
         md_tstep = 0.1
@@ -276,13 +279,13 @@ PRINT ARG=c.* FILE=cell_data
                     ValueError("Timestep should be the same for all MD steps")
 
         # Output results from tests on timestep
-        basicSR.writeReportAndTable(
+        results.update(basicSR.writeReportAndTable(
             "timestep",
             "MD timestep passed correctly",
             md_tstep,
             plumed_tstep,
             0.0001,
-        )
+        ))
     if info["mass"] == "yes":
         md_masses = np.ones(10)
         pl_masses = np.ones(10)
@@ -291,13 +294,13 @@ PRINT ARG=c.* FILE=cell_data
             pl_masses = np.loadtxt(f"{basicDir}/mq_plumed")[:, 1]
 
         # Output results from tests on mass
-        basicSR.writeReportAndTable(
+        results.update(basicSR.writeReportAndTable(
             "mass",
             "MD code masses passed correctly",
             md_masses,
             pl_masses,
             0.01 * np.ones(pl_masses.shape),
-        )
+        ))
 
     if info["charge"] == "yes":
         md_charges = np.ones(10)
@@ -307,18 +310,19 @@ PRINT ARG=c.* FILE=cell_data
             pl_charges = np.loadtxt(f"{basicDir}/mq_plumed")[:, 2]
 
         # Output results from tests on charge
-        basicSR.writeReportAndTable(
+        results.update(basicSR.writeReportAndTable(
             "charge",
             "MD code charges passed correctly",
             md_charges,
             pl_charges,
             tolerance * np.ones(pl_charges.shape),
-        )
+        ))
+    return results
 
 
 def runForcesTest(
     testout: TextIO, outdir: str, runMDCalcSettings: dict, tolerance: float
-):
+)->dict:
     # First run a calculation to find the reference distance between atom 1 and 2
     version = runMDCalcSettings["version"]
     rparams = runMDCalcSettings["runner"].setParams()
@@ -328,7 +332,8 @@ def runForcesTest(
     refrun_fail = runMDCalc("refres", params=rparams, **runMDCalcSettings)
     mdrun_fail = True
     plrun_fail = True
-
+    results = {}
+    results["reference_run"]=refrun_fail
     if not refrun_fail:
         # Get the reference distance between the atoms
         refdist = np.loadtxt(f"{outdir}/refres_{version}/colvar")[0, 1]
@@ -338,6 +343,7 @@ def runForcesTest(
         rparams["restraint"] = refdist
         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
         mdrun_fail = runMDCalc("forces1", params=rparams, **runMDCalcSettings)
+        results["mdrun_run"]=mdrun_fail
         # Run the calculation with the restraint applied by PLUMED
         rparams["restraint"] = -10
         rparams["plumed"] = (
@@ -346,6 +352,7 @@ def runForcesTest(
             "PRINT ARG=dd FILE=colvar\n"
         )
         plrun_fail = runMDCalc("forces2", params=rparams, **runMDCalcSettings)
+        results["plumed_run"]=plrun_fail
     # And create our reports from the two runs
     md_failed = mdrun_fail or plrun_fail
     val1 = np.ones(1)
@@ -353,6 +360,7 @@ def runForcesTest(
     if not md_failed:
         val1 = np.loadtxt(f"{outdir}/forces1_{version}/colvar")[:, 1]
         val2 = np.loadtxt(f"{outdir}/forces2_{version}/colvar")[:, 1]
+    results.update(
     writeReportForSimulations(
         testout,
         runMDCalcSettings["code"],
@@ -366,7 +374,8 @@ def runForcesTest(
         val1,
         val2,
         tolerance * np.ones(val1.shape),
-    )
+    ))
+    return results
 
 
 def runVirialTest(
@@ -602,10 +611,14 @@ def runTests(
             prefix=prefix,
             **settingsFor_runMDCalc,
         )
-        runBasicTests(testout, outdir, info, runMDCalcSettings, tolerance)
+        basicresults=runBasicTests(testout, outdir, info, runMDCalcSettings, tolerance)
+        print("Basic results:")
+        pprint(basicresults)
         # the next runs are not based on the basic run
         if info["forces"] == "yes":
-            runForcesTest(testout, outdir, runMDCalcSettings, tolerance)
+            forcesresults=runForcesTest(testout, outdir, runMDCalcSettings, tolerance)
+            print("Forces results:")
+            pprint(forcesresults)
 
         if info["virial"] == "yes":
             runVirialTest(testout, outdir, runMDCalcSettings, tolerance)
