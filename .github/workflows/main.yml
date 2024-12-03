@@ -133,12 +133,18 @@ jobs:
         tar xf ~/plumed-master.tar
         tar xf ~/plumed-stable.tar
 
+    - run: |
+       echo ${{format('tests/{0}/install.sh',matrix.replica)}}
+
     - name: Set up ccache for the host program
       uses: actions/cache@v4
       with:
         path: ~/.ccache
-        key: ccache-${{ runner.os }}-${{ matrix.replica }}-${{ github.sha }}
-        restore-keys: ccache-${{ runner.os }}-${{ matrix.replica }}
+        # here I assume that the version of your code is hardcode in the install.sh
+        # so I am using it to reduce the number of caches
+        # in case something is going very wrong, you can always delete the cache
+        key: ccache-${{ runner.os }}-${{ matrix.replica }}-v${{ hashFiles( format('tests/{0}/install.sh',matrix.replica) ) }}
+        restore-keys: ccache-${{ runner.os }}-${{ matrix.replica }}-v
 
     - name: Set paths
       run: |
