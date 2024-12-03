@@ -8,8 +8,7 @@ cd "gromacs$suffix" || {
    exit 0
 }
 
-# look mum, no hands!
-# no plumed patch here ;D
+# look mum, no patch!
 
 prefix=$HOME/opt/gromacs-vanilla$suffix
 
