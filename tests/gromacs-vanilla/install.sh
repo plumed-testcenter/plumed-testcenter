@@ -23,6 +23,8 @@ cd build || {
 
 # this more or less works with thread_mpi IF you keep ONLY one thread
 cmake .. -DGMX_USE_PLUMED=ON -DGMX_BUILD_OWN_FFTW=ON -DCMAKE_INSTALL_PREFIX="$prefix" -DGMX_ENABLE_CCACHE=ON  -Wno-dev
+#I want plumed on
+cmake . -DGMX_USE_PLUMED=ON
 
 # Now make
 cmake --build . -j11
