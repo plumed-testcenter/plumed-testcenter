@@ -332,8 +332,8 @@ def runForcesTest(
     refrun_fail = runMDCalc("refres", params=rparams, **runMDCalcSettings)
     mdrun_fail = True
     plrun_fail = True
-    results = {}
-    results["reference_run"]=refrun_fail
+    results = {"mdrun":{}}
+    results["mdrun"]["reference"]=refrun_fail
     if not refrun_fail:
         # Get the reference distance between the atoms
         refdist = np.loadtxt(f"{outdir}/refres_{version}/colvar")[0, 1]
@@ -343,7 +343,7 @@ def runForcesTest(
         rparams["restraint"] = refdist
         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
         mdrun_fail = runMDCalc("forces1", params=rparams, **runMDCalcSettings)
-        results["mdrun_run"]=mdrun_fail
+        results["mdrun"]["run"]=mdrun_fail
         # Run the calculation with the restraint applied by PLUMED
         rparams["restraint"] = -10
         rparams["plumed"] = (
@@ -352,7 +352,7 @@ def runForcesTest(
             "PRINT ARG=dd FILE=colvar\n"
         )
         plrun_fail = runMDCalc("forces2", params=rparams, **runMDCalcSettings)
-        results["plumed_run"]=plrun_fail
+        results["mdrun"]["plumed"]=plrun_fail
     # And create our reports from the two runs
     md_failed = mdrun_fail or plrun_fail
     val1 = np.ones(1)
@@ -380,7 +380,7 @@ def runForcesTest(
 
 def runVirialTest(
     testout: TextIO, outdir: str, runMDCalcSettings: dict, tolerance: float
-):
+)->dict:
     version = runMDCalcSettings["version"]
     params = runMDCalcSettings["runner"].setParams()
     params["nsteps"] = 50
@@ -395,6 +395,10 @@ def runVirialTest(
         "PRINT ARG=vv FILE=volume\n"
     )
     run2_fail = runMDCalc("virial2", params=params, **runMDCalcSettings)
+    results = {"mdrun":{}}
+    results["mdrun"]["run1"]=run1_fail
+    results["mdrun"]["run2"]=run2_fail
+    results["mdrun"]["run3"]=run3_fail
     md_failed = run1_fail or run2_fail or run3_fail
     val1 = np.ones(1)
     val2 = np.ones(1)
@@ -404,6 +408,7 @@ def runVirialTest(
         val1 = np.loadtxt(f"{outdir}/virial1_{version}/volume")[:, 1]
         val2 = np.loadtxt(f"{outdir}/virial2_{version}/volume")[:, 1]
         val3 = np.loadtxt(f"{outdir}/virial3_{version}/volume")[:, 1]
+    results.update(
     writeReportForSimulations(
         testout,
         runMDCalcSettings["code"],
@@ -418,7 +423,8 @@ def runVirialTest(
         val2,
         np.abs(val3 - val1),
         denominatorTolerance=tolerance,
-    )
+    ))
+    return results
 
 
 def energyTest(
@@ -432,7 +438,7 @@ def energyTest(
     runMDCalcSettings: dict,
     tolerance: float = 0.0,
     prerelaxtime: bool = False,
-):
+)->dict:
     alpha = sqrtalpha * sqrtalpha
     prefix = runMDCalcSettings["prefix"]
     version = runMDCalcSettings["version"]
@@ -454,6 +460,10 @@ def energyTest(
         f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}\n"
     )
     run2_fail = runMDCalc(f"{title}2", params=params, **runMDCalcSettings)
+    results = {"mdrun":{}}
+    results["mdrun"]["run1"]=run1_fail
+    results["mdrun"]["run2"]=run2_fail
+    results["mdrun"]["run3"]=run3_fail
     md_failed = run1_fail or run2_fail or run3_fail
     val1 = np.ones(1)
     val2 = np.ones(1)
@@ -463,7 +473,7 @@ def energyTest(
         val1 = np.loadtxt(f"{outdir}/{title}1_{version}/energy")[:, 1:]
         val2 = np.loadtxt(f"{outdir}/{title}2_{version}/energy")[:, 1:]
         val3 = np.loadtxt(f"{outdir}/{title}3_{version}/energy")[:, 1:]
-
+    results.update(
     writeReportForSimulations(
         testout,
         runMDCalcSettings["code"],
@@ -478,12 +488,13 @@ def energyTest(
         val2,
         np.abs(val1 - val3),
         denominatorTolerance=tolerance,
-    )
+    ))
+    return results
 
 
 def runEnergyTests(
     testout: TextIO, outdir: str, info: dict, runMDCalcSettings: dict, tolerance: float
-) -> None:
+) -> dict:
     code = runMDCalcSettings["code"]
     prefix = runMDCalcSettings["prefix"]
     version = runMDCalcSettings["version"]
@@ -492,15 +503,18 @@ def runEnergyTests(
     params["ensemble"] = "npt"
     params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
     md_failed = runMDCalc("energy", params=params, **runMDCalcSettings)
+    results = {"energy": {}}
+    results["energy"]["mdrun"]=md_failed
     md_energy = np.ones(1)
     pl_energy = np.ones(1)
 
-    if not md_failed and os.path.exists(f"{outdir}/energy_{version}/energy"):
+    if not md_failed and os.path.exists(f"{outdir}/energy_{version}/ene rgy"):
         md_energy = runMDCalcSettings["runner"].getEnergy(f"{outdir}/energy_{version}")
         pl_energy = np.loadtxt(f"{outdir}/energy_{version}/energy")[:, 1]
 
     else:
         md_failed = True
+    results["energy"].update(
     writeReportForSimulations(
         testout,
         code,
@@ -514,7 +528,7 @@ def runEnergyTests(
         md_energy,
         pl_energy,
         tolerance * np.ones(len(md_energy)),
-    )
+    ))
     # TODO:https://docs.python.org/3/library/string.html#template-strings
     # the .md files can be templated with this string built-in feature,
     # so in the engforces/engvir mds we can change sqrtalpha to an arbitray
@@ -522,7 +536,7 @@ def runEnergyTests(
 
     sqrtalpha = 1.1
     if info["engforces"] == "yes":
-        energyTest(
+        results["engforces"]=energyTest(
             testout,
             outdir,
             "engforce",
@@ -536,7 +550,7 @@ def runEnergyTests(
 
     sqrtalpha = 1.1
     if info["engforces"] and info["virial"] == "yes":
-        energyTest(
+        results["engvir"]=energyTest(
             testout,
             outdir,
             "engvir",
@@ -548,7 +562,7 @@ def runEnergyTests(
             tolerance,
             prerelaxtime=True,
         )
-
+    return results
 
 def runTests(
     code: str,
@@ -612,19 +626,27 @@ def runTests(
             **settingsFor_runMDCalc,
         )
         basicresults=runBasicTests(testout, outdir, info, runMDCalcSettings, tolerance)
-        print("Basic results:")
-        pprint(basicresults)
+        
         # the next runs are not based on the basic run
         if info["forces"] == "yes":
             forcesresults=runForcesTest(testout, outdir, runMDCalcSettings, tolerance)
-            print("Forces results:")
-            pprint(forcesresults)
+            
 
         if info["virial"] == "yes":
-            runVirialTest(testout, outdir, runMDCalcSettings, tolerance)
+            virialresults = runVirialTest(testout, outdir, runMDCalcSettings, tolerance)
+            
 
         if info["energy"] == "yes":
-            runEnergyTests(testout, outdir, info, runMDCalcSettings, tolerance)
+            energyresults = runEnergyTests(testout, outdir, info, runMDCalcSettings, tolerance)
+            
+        print("Basic results:")
+        pprint(basicresults)
+        print("Forces results:")
+        pprint(forcesresults)
+        print("Virial results:")
+        pprint(virialresults)
+        print("Energy results:")
+        pprint(energyresults)
     # Read output file to get status
     with open(f"{outdir}/" + fname, "r") as ifn:
         inp = ifn.read()
