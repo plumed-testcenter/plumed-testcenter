@@ -1,14 +1,6 @@
-# This is a basic workflow to help you get started with Actions
-
 name: CI
-
-# Controls when the action will run. Triggers the workflow on push or pull request
-# events but only for the master branch
 on: [push, pull_request]
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-
   # setting up the python cache
   setup-python:
     runs-on: ubuntu-latest
@@ -110,9 +102,7 @@ jobs:
     # The type of runner that the job will run on
     runs-on: ubuntu-latest
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v4
 
     - name: Set up Python 3.9
@@ -137,8 +127,14 @@ jobs:
       uses: actions/cache@v4
       with:
         path: ~/.ccache
-        key: ccache-${{ runner.os }}-${{ matrix.replica }}-${{ github.sha }}
-        restore-keys: ccache-${{ runner.os }}-${{ matrix.replica }}
+        # here I assume that the version of your code is hardcode in the install.sh
+        # so I am using it to reduce the number of caches
+        # in case something is going very wrong, you can always delete the cache
+        key: ccache-${{ runner.os }}-${{ matrix.replica }}-v${{ hashFiles( format('tests/{0}/install.sh',matrix.replica) ) }}
+        # I am keeping also the older cache (without the -v)
+        restore-keys: 
+          ccache-${{ runner.os }}-${{ matrix.replica }}-v
+          ccache-${{ runner.os }}-${{ matrix.replica }}
 
     - name: Set paths
       run: |
@@ -219,9 +215,7 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
     - uses: actions/checkout@v4
     - name: Download artifacts
       uses: actions/download-artifact@v4
