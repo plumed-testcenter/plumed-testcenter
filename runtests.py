@@ -1,3 +1,4 @@
+#formatted with ruff 0.6.4
 import os
 import sys
 import yaml
@@ -13,13 +14,43 @@ from contextlib import contextmanager
 from PlumedToHTML import test_plumed, get_html
 from runhelper import writeReportForSimulations
 from typing import TextIO, Literal
-#for debugging
+
+# for debugging
 from pprint import pprint
 
 STANDARD_RUN_SETTINGS = [
     {"plumed": "plumed", "printJson": False},
     {"plumed": "plumed_master", "printJson": True, "version": "master"},
 ]
+# tuple becasue I do't want to mutate it and keep the order
+TEST_ORDER = (
+    "natoms",
+    "positions",
+    "cell",
+    "timestep",
+    "mass",
+    "charge",
+    "forces",
+    "virial",
+    "energy",
+    "engforces",
+    "engvir",
+)
+
+# trying to be a little more declarative:
+TEST_DESCRIPTIONS = {
+    "natoms": "MD code number of atoms passed correctly",
+    "positions": "MD code positions passed correctly",
+    "cell": "MD code cell vectors passed correctly",
+    "timestep": "MD timestep passed correctly",
+    "mass": "MD code masses passed correctly",
+    "charge": "MD code charges passed correctly",
+    "forces": "PLUMED forces passed correctly",
+    "virial": "PLUMED virial passed correctly",
+    "energy": "MD code potential energy passed correctly",
+    "engforces": "PLUMED forces on potential energy passed correctly",
+    "engvir": "PLUMED contribution to virial due to force on potential energy passed correctly",
+}
 
 
 @contextmanager
@@ -170,7 +201,7 @@ def runBasicTests(
 ) -> dict:
     """run the (eventual) MD test for position, timestep, mass, and charge"""
     params = runMDCalcSettings["runner"].setParams()
-    results={}
+    results = {}
     basic_md_failed = True
     if (
         info["positions"] == "yes"
@@ -184,9 +215,7 @@ def runBasicTests(
         timeStepStr = ""
         if info["timestep"] == "yes":
             timeStepStr = "t1: TIME\nPRINT ARG=t1 FILE=colvar"
-        params[
-            "plumed"
-        ] = f"""DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz
+        params["plumed"] = f"""DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz
 c: CELL
 PRINT ARG=c.* FILE=cell_data
 {dumpMassesStr}
@@ -242,29 +271,35 @@ PRINT ARG=c.* FILE=cell_data
             basicSR.md_failed = True
             basic_md_failed = True
         # Output results from tests on natoms
-        results.update(basicSR.writeReportAndTable(
-            "natoms",
-            "MD code number of atoms passed correctly",
-            codenatoms,
-            plumednatoms,
-            0.01 * np.ones(codenatoms.shape[0]),
-        ))
+        results.update(
+            basicSR.writeReportAndTable(
+                "natoms",
+                "MD code number of atoms passed correctly",
+                codenatoms,
+                plumednatoms,
+                0.01 * np.ones(codenatoms.shape[0]),
+            )
+        )
         # Output results from tests on positions
-        results.update(basicSR.writeReportAndTable(
-            "positions",
-            "MD code positions passed correctly",
-            codepos,
-            plumedpos,
-            tolerance * np.ones(plumedpos.shape),
-        ))
+        results.update(
+            basicSR.writeReportAndTable(
+                "positions",
+                "MD code positions passed correctly",
+                codepos,
+                plumedpos,
+                tolerance * np.ones(plumedpos.shape),
+            )
+        )
         # Output results from tests on cell
-        results.update(basicSR.writeReportAndTable(
-            "cell",
-            "MD code cell vectors passed correctly",
-            codecell,
-            plumedcell,
-            tolerance * np.ones(plumedcell.shape),
-        ))
+        results.update(
+            basicSR.writeReportAndTable(
+                "cell",
+                "MD code cell vectors passed correctly",
+                codecell,
+                plumedcell,
+                tolerance * np.ones(plumedcell.shape),
+            )
+        )
 
     if info["timestep"] == "yes":
         md_tstep = 0.1
@@ -279,13 +314,15 @@ PRINT ARG=c.* FILE=cell_data
                     ValueError("Timestep should be the same for all MD steps")
 
         # Output results from tests on timestep
-        results.update(basicSR.writeReportAndTable(
-            "timestep",
-            "MD timestep passed correctly",
-            md_tstep,
-            plumed_tstep,
-            0.0001,
-        ))
+        results.update(
+            basicSR.writeReportAndTable(
+                "timestep",
+                "MD timestep passed correctly",
+                md_tstep,
+                plumed_tstep,
+                0.0001,
+            )
+        )
     if info["mass"] == "yes":
         md_masses = np.ones(10)
         pl_masses = np.ones(10)
@@ -294,13 +331,15 @@ PRINT ARG=c.* FILE=cell_data
             pl_masses = np.loadtxt(f"{basicDir}/mq_plumed")[:, 1]
 
         # Output results from tests on mass
-        results.update(basicSR.writeReportAndTable(
-            "mass",
-            "MD code masses passed correctly",
-            md_masses,
-            pl_masses,
-            0.01 * np.ones(pl_masses.shape),
-        ))
+        results.update(
+            basicSR.writeReportAndTable(
+                "mass",
+                "MD code masses passed correctly",
+                md_masses,
+                pl_masses,
+                0.01 * np.ones(pl_masses.shape),
+            )
+        )
 
     if info["charge"] == "yes":
         md_charges = np.ones(10)
@@ -310,19 +349,21 @@ PRINT ARG=c.* FILE=cell_data
             pl_charges = np.loadtxt(f"{basicDir}/mq_plumed")[:, 2]
 
         # Output results from tests on charge
-        results.update(basicSR.writeReportAndTable(
-            "charge",
-            "MD code charges passed correctly",
-            md_charges,
-            pl_charges,
-            tolerance * np.ones(pl_charges.shape),
-        ))
+        results.update(
+            basicSR.writeReportAndTable(
+                "charge",
+                "MD code charges passed correctly",
+                md_charges,
+                pl_charges,
+                tolerance * np.ones(pl_charges.shape),
+            )
+        )
     return results
 
 
 def runForcesTest(
     testout: TextIO, outdir: str, runMDCalcSettings: dict, tolerance: float
-)->dict:
+) -> dict:
     # First run a calculation to find the reference distance between atom 1 and 2
     version = runMDCalcSettings["version"]
     rparams = runMDCalcSettings["runner"].setParams()
@@ -332,8 +373,8 @@ def runForcesTest(
     refrun_fail = runMDCalc("refres", params=rparams, **runMDCalcSettings)
     mdrun_fail = True
     plrun_fail = True
-    results = {"mdrun":{}}
-    results["mdrun"]["reference"]=refrun_fail
+    results = {"mdrun": {}}
+    results["mdrun"]["reference"] = refrun_fail
     if not refrun_fail:
         # Get the reference distance between the atoms
         refdist = np.loadtxt(f"{outdir}/refres_{version}/colvar")[0, 1]
@@ -343,7 +384,7 @@ def runForcesTest(
         rparams["restraint"] = refdist
         rparams["plumed"] = "dd: DISTANCE ATOMS=1,2 \nPRINT ARG=dd FILE=colvar"
         mdrun_fail = runMDCalc("forces1", params=rparams, **runMDCalcSettings)
-        results["mdrun"]["run"]=mdrun_fail
+        results["mdrun"]["run"] = mdrun_fail
         # Run the calculation with the restraint applied by PLUMED
         rparams["restraint"] = -10
         rparams["plumed"] = (
@@ -352,7 +393,7 @@ def runForcesTest(
             "PRINT ARG=dd FILE=colvar\n"
         )
         plrun_fail = runMDCalc("forces2", params=rparams, **runMDCalcSettings)
-        results["mdrun"]["plumed"]=plrun_fail
+        results["mdrun"]["plumed"] = plrun_fail
     # And create our reports from the two runs
     md_failed = mdrun_fail or plrun_fail
     val1 = np.ones(1)
@@ -361,26 +402,27 @@ def runForcesTest(
         val1 = np.loadtxt(f"{outdir}/forces1_{version}/colvar")[:, 1]
         val2 = np.loadtxt(f"{outdir}/forces2_{version}/colvar")[:, 1]
     results.update(
-    writeReportForSimulations(
-        testout,
-        runMDCalcSettings["code"],
-        version,
-        md_failed,
-        ["forces1", "forces2"],
-        prefix=runMDCalcSettings["prefix"],
-    ).writeReportAndTable(
-        "forces",
-        "PLUMED forces passed correctly",
-        val1,
-        val2,
-        tolerance * np.ones(val1.shape),
-    ))
+        writeReportForSimulations(
+            testout,
+            runMDCalcSettings["code"],
+            version,
+            md_failed,
+            ["forces1", "forces2"],
+            prefix=runMDCalcSettings["prefix"],
+        ).writeReportAndTable(
+            "forces",
+            "PLUMED forces passed correctly",
+            val1,
+            val2,
+            tolerance * np.ones(val1.shape),
+        )
+    )
     return results
 
 
 def runVirialTest(
     testout: TextIO, outdir: str, runMDCalcSettings: dict, tolerance: float
-)->dict:
+) -> dict:
     version = runMDCalcSettings["version"]
     params = runMDCalcSettings["runner"].setParams()
     params["nsteps"] = 50
@@ -395,10 +437,10 @@ def runVirialTest(
         "PRINT ARG=vv FILE=volume\n"
     )
     run2_fail = runMDCalc("virial2", params=params, **runMDCalcSettings)
-    results = {"mdrun":{}}
-    results["mdrun"]["run1"]=run1_fail
-    results["mdrun"]["run2"]=run2_fail
-    results["mdrun"]["run3"]=run3_fail
+    results = {"mdrun": {}}
+    results["mdrun"]["run1"] = run1_fail
+    results["mdrun"]["run2"] = run2_fail
+    results["mdrun"]["run3"] = run3_fail
     md_failed = run1_fail or run2_fail or run3_fail
     val1 = np.ones(1)
     val2 = np.ones(1)
@@ -409,21 +451,22 @@ def runVirialTest(
         val2 = np.loadtxt(f"{outdir}/virial2_{version}/volume")[:, 1]
         val3 = np.loadtxt(f"{outdir}/virial3_{version}/volume")[:, 1]
     results.update(
-    writeReportForSimulations(
-        testout,
-        runMDCalcSettings["code"],
-        version,
-        md_failed,
-        ["virial1", "virial2", "virial3"],
-        prefix=runMDCalcSettings["prefix"],
-    ).writeReportAndTable(
-        "virial",
-        "PLUMED virial passed correctly",
-        val1,
-        val2,
-        np.abs(val3 - val1),
-        denominatorTolerance=tolerance,
-    ))
+        writeReportForSimulations(
+            testout,
+            runMDCalcSettings["code"],
+            version,
+            md_failed,
+            ["virial1", "virial2", "virial3"],
+            prefix=runMDCalcSettings["prefix"],
+        ).writeReportAndTable(
+            "virial",
+            "PLUMED virial passed correctly",
+            val1,
+            val2,
+            np.abs(val3 - val1),
+            denominatorTolerance=tolerance,
+        )
+    )
     return results
 
 
@@ -438,7 +481,7 @@ def energyTest(
     runMDCalcSettings: dict,
     tolerance: float = 0.0,
     prerelaxtime: bool = False,
-)->dict:
+) -> dict:
     alpha = sqrtalpha * sqrtalpha
     prefix = runMDCalcSettings["prefix"]
     version = runMDCalcSettings["version"]
@@ -460,10 +503,10 @@ def energyTest(
         f"RESTRAINT AT=0.0 ARG=e SLOPE={alpha - 1}\n"
     )
     run2_fail = runMDCalc(f"{title}2", params=params, **runMDCalcSettings)
-    results = {"mdrun":{}}
-    results["mdrun"]["run1"]=run1_fail
-    results["mdrun"]["run2"]=run2_fail
-    results["mdrun"]["run3"]=run3_fail
+    results = {"mdrun": {}}
+    results["mdrun"]["run1"] = run1_fail
+    results["mdrun"]["run2"] = run2_fail
+    results["mdrun"]["run3"] = run3_fail
     md_failed = run1_fail or run2_fail or run3_fail
     val1 = np.ones(1)
     val2 = np.ones(1)
@@ -474,21 +517,22 @@ def energyTest(
         val2 = np.loadtxt(f"{outdir}/{title}2_{version}/energy")[:, 1:]
         val3 = np.loadtxt(f"{outdir}/{title}3_{version}/energy")[:, 1:]
     results.update(
-    writeReportForSimulations(
-        testout,
-        runMDCalcSettings["code"],
-        version,
-        md_failed,
-        [f"{title}1", f"{title}2", f"{title}3"],
-        prefix=prefix,
-    ).writeReportAndTable(
-        title,
-        docstring,
-        val1,
-        val2,
-        np.abs(val1 - val3),
-        denominatorTolerance=tolerance,
-    ))
+        writeReportForSimulations(
+            testout,
+            runMDCalcSettings["code"],
+            version,
+            md_failed,
+            [f"{title}1", f"{title}2", f"{title}3"],
+            prefix=prefix,
+        ).writeReportAndTable(
+            title,
+            docstring,
+            val1,
+            val2,
+            np.abs(val1 - val3),
+            denominatorTolerance=tolerance,
+        )
+    )
     return results
 
 
@@ -504,7 +548,7 @@ def runEnergyTests(
     params["plumed"] = "e: ENERGY \nPRINT ARG=e FILE=energy"
     md_failed = runMDCalc("energy", params=params, **runMDCalcSettings)
     results = {"energy": {}}
-    results["energy"]["mdrun"]=md_failed
+    results["energy"]["mdrun"] = md_failed
     md_energy = np.ones(1)
     pl_energy = np.ones(1)
 
@@ -515,20 +559,21 @@ def runEnergyTests(
     else:
         md_failed = True
     results["energy"].update(
-    writeReportForSimulations(
-        testout,
-        code,
-        version,
-        md_failed,
-        ["energy"],
-        prefix=prefix,
-    ).writeReportAndTable(
-        "energy",
-        "MD code potential energy passed correctly",
-        md_energy,
-        pl_energy,
-        tolerance * np.ones(len(md_energy)),
-    ))
+        writeReportForSimulations(
+            testout,
+            code,
+            version,
+            md_failed,
+            ["energy"],
+            prefix=prefix,
+        ).writeReportAndTable(
+            "energy",
+            "MD code potential energy passed correctly",
+            md_energy,
+            pl_energy,
+            tolerance * np.ones(len(md_energy)),
+        )
+    )
     # TODO:https://docs.python.org/3/library/string.html#template-strings
     # the .md files can be templated with this string built-in feature,
     # so in the engforces/engvir mds we can change sqrtalpha to an arbitray
@@ -536,7 +581,7 @@ def runEnergyTests(
 
     sqrtalpha = 1.1
     if info["engforces"] == "yes":
-        results["engforces"]=energyTest(
+        results["engforces"] = energyTest(
             testout,
             outdir,
             "engforce",
@@ -550,7 +595,7 @@ def runEnergyTests(
 
     sqrtalpha = 1.1
     if info["engforces"] and info["virial"] == "yes":
-        results["engvir"]=energyTest(
+        results["engvir"] = energyTest(
             testout,
             outdir,
             "engvir",
@@ -563,6 +608,7 @@ def runEnergyTests(
             prerelaxtime=True,
         )
     return results
+
 
 def runTests(
     code: str,
@@ -625,44 +671,46 @@ def runTests(
             prefix=prefix,
             **settingsFor_runMDCalc,
         )
-        basicresults=runBasicTests(testout, outdir, info, runMDCalcSettings, tolerance)
-        
+        basicresults = runBasicTests(
+            testout, outdir, info, runMDCalcSettings, tolerance
+        )
+
         # the next runs are not based on the basic run
         if info["forces"] == "yes":
-            forcesresults=runForcesTest(testout, outdir, runMDCalcSettings, tolerance)
-            
+            forcesresults = runForcesTest(testout, outdir, runMDCalcSettings, tolerance)
 
         if info["virial"] == "yes":
             virialresults = runVirialTest(testout, outdir, runMDCalcSettings, tolerance)
-            
 
         if info["energy"] == "yes":
-            energyresults = runEnergyTests(testout, outdir, info, runMDCalcSettings, tolerance)
-            
+            energyresults = runEnergyTests(
+                testout, outdir, info, runMDCalcSettings, tolerance
+            )
+
         print("Basic results:")
         pprint(basicresults)
-        print("Forces results:")
-        pprint(forcesresults)
-        print("Virial results:")
-        pprint(virialresults)
-        print("Energy results:")
-        pprint(energyresults)
+        # print("Forces results:")
+        # pprint(forcesresults)
+        # print("Virial results:")
+        # pprint(virialresults)
+        # print("Energy results:")
+        # pprint(energyresults)
     # Read output file to get status
     with open(f"{outdir}/" + fname, "r") as ifn:
         inp = ifn.read()
 
-    test_result=""
-    #TODO: postpone the rendering of the badges and report with variables
+    test_result = ""
+    # TODO: postpone the rendering of the badges and report with variables
     if "failed-red.svg" in inp:
-        test_result="broken"
+        test_result = "broken"
     elif "%25-red.svg" in inp:
-        test_result="broken"
+        test_result = "broken"
     elif "%25-green.svg" in inp and ("%25-red.svg" in inp or "%25-yellow.svg" in inp):
-        test_result="partial"
+        test_result = "partial"
     elif "%25-yellow.svg" in inp:
-        test_result="partial"
+        test_result = "partial"
     elif "%25-green.svg" in inp:
-        test_result="working"
+        test_result = "working"
     else:
         raise Exception(
             f"Found no test badges in output for tests on {code} with " + version
@@ -670,7 +718,6 @@ def runTests(
     print(f"Test result for {code} with version {version}: {test_result}")
     with open(f"{outdir}/info.yml", "a") as infoOut:
         infoOut.write(f"test_plumed{version}: {test_result} \n")
-    
 
 
 if __name__ == "__main__":

@@ -177,17 +177,19 @@ class writeReportForSimulations:
         *,
         denominatorTolerance: float = 0.0,
     )->dict:
-        report={}
+        report={
+        "filen" : kind,
+        "code" : self.code,
+        "version" : self.version,
+        "md_fail" : self.md_failed,
+        "zipfiles" : self.simulations,
+        "ref" : val1,
+        "data" : val2,
+        "denom" : val3,
+        "prefix" : self.prefix,
+        }
         writeReportPage(
-            kind,
-            self.code,
-            self.version,
-            self.md_failed,
-            self.simulations,
-            val1,
-            val2,
-            val3,
-            prefix=self.prefix,
+            **report
         )
         failure_rate = check(
             self.md_failed,
