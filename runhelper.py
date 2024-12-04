@@ -2,6 +2,20 @@ from typing import TextIO, Literal
 import numpy as np
 # formatted with ruff 0.6.4
 
+SUCCESS = 5
+PARTIAL = 20
+
+
+def badgeColor(sucess):
+    if sucess < 0:
+        return "red"
+    color = "red"
+    if sucess < SUCCESS:
+        color = "green"
+    elif sucess < PARTIAL:
+        color = "yellow"
+    return color
+
 
 def getBadge(sucess, filen, code, version: str):
     badge = f"[![tested on {version}](https://img.shields.io/badge/{version}-"
@@ -9,9 +23,9 @@ def getBadge(sucess, filen, code, version: str):
         badge += "failed-red.svg"
     else:
         color = "red"
-        if sucess < 5:
+        if sucess < SUCCESS:
             color = "green"
-        elif sucess < 20:
+        elif sucess < PARTIAL:
             color = "yellow"
         else:
             # shoudn't this be red?

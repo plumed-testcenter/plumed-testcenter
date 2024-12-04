@@ -12,7 +12,13 @@ from MDAnalysis.coordinates.XYZ import XYZReader
 from datetime import date
 from contextlib import contextmanager
 from PlumedToHTML import test_plumed, get_html
-from runhelper import writeReportForSimulations, dictToReport, dictToTestoutTableEntry
+from runhelper import (
+    writeReportForSimulations,
+    dictToReport,
+    dictToTestoutTableEntry,
+    badgeColor,
+)
+from runhelper import SUCCESS as SUCCESS_THRESHOLD, PARTIAL as PARTIAL_THRESHOLD
 from typing import TextIO, Literal
 
 # for debugging
@@ -676,50 +682,50 @@ def runTests(
             **settingsFor_runMDCalc,
         )
         results = runBasicTests(testout, outdir, info, runMDCalcSettings, tolerance)
-
+        mddict = results["mdruns"]
         # the next runs are not based on the basic run
         if info["forces"] == "yes":
-            results.update(runForcesTest(testout, outdir, runMDCalcSettings, tolerance))
+            tmp = runForcesTest(testout, outdir, runMDCalcSettings, tolerance)
+            mddict.update(tmp["mdruns"])
+            results.update(tmp)
 
         if info["virial"] == "yes":
-            results.update(runVirialTest(testout, outdir, runMDCalcSettings, tolerance))
+            tmp = runVirialTest(testout, outdir, runMDCalcSettings, tolerance)
+            mddict.update(tmp["mdruns"])
+            results.update(tmp)
 
         if info["energy"] == "yes":
-            results.update(
-                runEnergyTests(testout, outdir, info, runMDCalcSettings, tolerance)
-            )
+            tmp = runEnergyTests(testout, outdir, info, runMDCalcSettings, tolerance)
+            mddict.update(tmp["mdruns"])
+            results.update(tmp)
+        results["mdruns"] = mddict
+        howbad = []
         for test in TEST_ORDER:
             if test in results.keys():
-                print(test)
                 dictToReport(results[test])
+                howbad.append(results[test]["failure_rate"])
                 testout.write(dictToTestoutTableEntry(results[test]))
 
-        # print("Forces results:")
-        pprint(results["mdruns"])
-        # print("Virial results:")
-        # pprint(virialresults)
-        # print("Energy results:")
-        # pprint(energyresults)
-    # Read output file to get status
-    with open(f"{outdir}/" + fname, "r") as ifn:
-        inp = ifn.read()
+        if any(val == -1 for val in howbad):
+            # at least one test is broken
+            test_result = "broken"
+        else:
+            if all(val < SUCCESS_THRESHOLD for val in howbad):
+                # everithyng passes
+                test_result = "working"
+            elif any(val >= PARTIAL_THRESHOLD for val in howbad):
+                # at least one test is failing
+                test_result = "failing"
+                # should I add a failing over total?
+            else:
+                # elif any(howbad<SUCCESS_THRESHOLD):
+                # elif any(SUCCESS_THRESHOLD<val<PARTIAL_THRESHOLD for val in howbad):
+                # no test are failing red (previous if) and
+                # at least one test is partially failing
+                # but there can be green tests
+                # if we are here the if is redundant
+                test_result = "partial"
 
-    test_result = ""
-    # TODO: postpone the rendering of the badges and report with variables
-    if "failed-red.svg" in inp:
-        test_result = "broken"
-    elif "%25-red.svg" in inp:
-        test_result = "broken"
-    elif "%25-green.svg" in inp and ("%25-red.svg" in inp or "%25-yellow.svg" in inp):
-        test_result = "partial"
-    elif "%25-yellow.svg" in inp:
-        test_result = "partial"
-    elif "%25-green.svg" in inp:
-        test_result = "working"
-    else:
-        raise Exception(
-            f"Found no test badges in output for tests on {code} with " + version
-        )
     print(f"Test result for {code} with version {version}: {test_result}")
     with open(f"{outdir}/info.yml", "a") as infoOut:
         infoOut.write(f"test_plumed{version}: {test_result} \n")
