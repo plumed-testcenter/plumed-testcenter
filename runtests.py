@@ -56,69 +56,73 @@ def processMarkdown(
         Path(f"./{directory}").mkdir(parents=True, exist_ok=True)
         shutil.copy(filename, prefix + filename)
         filename = prefix + filename
-    with open(filename, "w+") as ofile:
-        inplumed = False
-        plumed_inp = ""
-        ninputs = 0
-        for line in inp.splitlines():
-            # Detect and copy plumed input files
-            if "```plumed" in line:
-                inplumed = True
-                plumed_inp = ""
-                ninputs += 1
-            # Test plumed input files that have been found in tutorial
-            elif inplumed and "```" in line:
-                inplumed = False
-                solutionfile = f"working{ninputs}.dat"
-                with open(solutionfile, "w+") as sf:
-                    sf.write(plumed_inp)
-                # preparing for get_html
-                successes = []
-                plumed_exec = []
-                versions = []
-                usejson = False
-                for plmd in runSettings:
-                    successes.append(
-                        test_plumed(
-                            plmd["plumed"], solutionfile, printjson=plmd["printJson"]
-                        )
+
+    processed = ""
+    inplumed = False
+    plumed_inp = ""
+    ninputs = 0
+    for line in inp.splitlines():
+        # Detect and copy plumed input files
+        if "```plumed" in line:
+            inplumed = True
+            plumed_inp = ""
+            ninputs += 1
+        # Test plumed input files that have been found in tutorial
+        elif inplumed and "```" in line:
+            inplumed = False
+            solutionfile = f"working{ninputs}.dat"
+            with open(solutionfile, "w+") as sf:
+                sf.write(plumed_inp)
+            # preparing for get_html
+            successes = []
+            plumed_exec = []
+            versions = []
+            usejson = False
+            for plmd in runSettings:
+                successes.append(
+                    test_plumed(
+                        plmd["plumed"], solutionfile, printjson=plmd["printJson"]
                     )
-                    plumed_exec.append(plmd["plumed"])
-                    # if we asked to print json and we suceed we can use json in the get_html
-                    if not usejson and not successes[-1] and plmd["printJson"]:
-                        usejson = True
-
-                    # Get the version
-                    if "version" in plmd:
-                        versions.append(plmd["version"])
-                    else:
-                        versions.append(
-                            subprocess.check_output(
-                                f"{plmd['plumed']} info --version", shell=True
-                            )
-                            .decode("utf-8")
-                            .strip()
-                        )
-
-                # Use PlumedToHTML to create the input with all the bells and whistles
-                html = get_html(
-                    plumed_inp,
-                    solutionfile,
-                    solutionfile,
-                    versions,
-                    successes,
-                    plumed_exec,
-                    usejson=usejson,
                 )
-                # Print the html for the solution
-                ofile.write("{% raw %}\n" + html + "\n {% endraw %} \n")
-            elif inplumed:
-                if "__FILL__" in line:
-                    raise RuntimeError("Should not be incomplete files in this page")
-                plumed_inp += line + "\n"
-            # Just copy any line that isn't part of a plumed input
-            elif not inplumed:
-                ofile.write(line + "\n")
+                plumed_exec.append(plmd["plumed"])
+                # if we asked to print json and we suceed we can use json in the get_html
+                if not usejson and not successes[-1] and plmd["printJson"]:
+                    usejson = True
+
+                # Get the version
+                if "version" in plmd:
+                    versions.append(plmd["version"])
+                else:
+                    versions.append(
+                        subprocess.check_output(
+                            f"{plmd['plumed']} info --version", shell=True
+                        )
+                        .decode("utf-8")
+                        .strip()
+                    )
+
+            # Use PlumedToHTML to create the input with all the bells and whistles
+            html = get_html(
+                plumed_inp,
+                solutionfile,
+                solutionfile,
+                versions,
+                successes,
+                plumed_exec,
+                usejson=usejson,
+            )
+            # Print the html for the solution
+            processed += "{% raw %}\n" + html + "\n {% endraw %} \n"
+        elif inplumed:
+            if "__FILL__" in line:
+                raise RuntimeError("Should not be incomplete files in this page")
+            plumed_inp += line + "\n"
+        # Just copy any line that isn't part of a plumed input
+        elif not inplumed:
+            processed += line + "\n"
+
+    with open(filename, "w+") as ofile:
+        ofile.write(processed)
 
 
 def buildTestPages(
