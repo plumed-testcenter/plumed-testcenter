@@ -706,27 +706,33 @@ if __name__ == "__main__":
 
     code, version, argv = "", "", sys.argv[1:]
     try:
-        opts, args = getopt.getopt(argv, "hc:v:", ["code="])
+        opts, args = getopt.getopt(
+            argv, "hc:v:p", ["version", "prepare-pages", "code="]
+        )
     except getopt.GetoptError as err:
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
         print("runtests.py -c <code> -v <version>")
 
+    preparepages = False
     for opt, arg in opts:
         if opt in ["-h"]:
-            print("runtests.py -c <code>")
+            print("runtests.py -c <code> -v <version>")
             sys.exit()
         elif opt in ["-c", "--code"]:
             code = arg
+        elif opt in ["-p", "--prepare-pages"]:
+            preparepages = True
         elif opt in ["-v", "--version"]:
             version = arg
 
-    # Build all the pages that describe the tests for this code
-    buildTestPages("tests/" + code)
-    # Engforces and engvir share the same procedure
-    shutil.copy("pages/engforces.md", "pages/engvir.md")
-    # Build the default test pages
-    buildTestPages("pages")
+    if preparepages:
+        # Build all the pages that describe the tests for this code
+        buildTestPages("tests/" + code)
+        # Engforces and engvir share the same procedure
+        shutil.copy("pages/engforces.md", "pages/engvir.md")
+        # Build the default test pages
+        buildTestPages("pages")
     # Create an __init__.py module for the desired code
     ipf = open(f"tests/{code}/__init__.py", "w+")
     ipf.write("from .mdcode import mdcode\n")

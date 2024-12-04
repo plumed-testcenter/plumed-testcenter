@@ -199,9 +199,9 @@ jobs:
     - name: Test code
       run: | 
          echo Running tests for ${{matrix.replica}} with PLUMED from  stable branch
-         python runtests.py -c ${{matrix.replica}} -v stable
+         python runtests.py --code=${{matrix.replica}} --version=stable --prepare-pages
          echo Running tests for ${{matrix.replica}} with PLUMED from  master branch
-         python runtests.py -c ${{matrix.replica}} -v master
+         python runtests.py --code=${{matrix.replica}} --version=master
          # Build tarball for upload 
          tar cf testout.tar tests/${{matrix.replica}}/*.md tests/${{matrix.replica}}/*.yml tests/${{matrix.replica}}/*.zip stable_version.md pages
 
