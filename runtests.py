@@ -711,7 +711,7 @@ if __name__ == "__main__":
     code, version, argv = "", "", sys.argv[1:]
     try:
         opts, args = getopt.getopt(
-            argv, "hc:v:p", ["version", "prepare-pages", "code="]
+            argv, "hc:v:p", ["version=", "prepare-pages", "code="]
         )
     except getopt.GetoptError as err:
         # print help information and exit:
