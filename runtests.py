@@ -1,8 +1,6 @@
 # formatted with ruff 0.6.4
 import os
-import sys
 import yaml
-import getopt
 import shutil
 import subprocess
 import numpy as np
@@ -16,13 +14,9 @@ from runhelper import (
     writeReportForSimulations,
     dictToReport,
     dictToTestoutTableEntry,
-    badgeColor,
 )
 from runhelper import SUCCESS as SUCCESS_THRESHOLD, PARTIAL as PARTIAL_THRESHOLD
 from typing import TextIO, Literal
-
-# for debugging
-from pprint import pprint
 
 STANDARD_RUN_SETTINGS = [
     {"plumed": "plumed", "printJson": False},
@@ -180,7 +174,7 @@ def runMDCalc(
 
     print(f'Starting run "{name}"')
     # Now test that the executable exists if it doesn't then the test is broken
-    if shutil.which(params["executible"]) == None:
+    if shutil.which(params["executible"]) is None:
         print(f"Executable {params['executible']} does not exist in current PATH.")
         return True
     # Copy all the input needed for the MD calculation
@@ -638,7 +632,6 @@ def runTests(
     info = ymldata["tests"]
     tolerance = float(ymldata["tolerance"])
     fname = "testout.md"
-    usestable = version == "stable"
 
     if version == "master":
         fname = "testout_" + version + ".md"
@@ -732,10 +725,15 @@ def runTests(
 
 
 if __name__ == "__main__":
+    import sys
+    import getopt
+
     code, version, argv = "", "", sys.argv[1:]
     try:
         opts, args = getopt.getopt(argv, "hc:v:", ["code="])
-    except:
+    except getopt.GetoptError as err:
+        # print help information and exit:
+        print(err)  # will print something like "option -a not recognized"
         print("runtests.py -c <code> -v <version>")
 
     for opt, arg in opts:
