@@ -59,6 +59,7 @@ def localRun(codedir: str, prefix: str, plumed: "list[str]", printJson: bool):
         prefix=prefix,
         settingsFor_runMDCalc=dict(execNameChanged=False, makeArchive=False),
     )
+    writeMDReport(code, "stable", results, prefix=prefix)
 
 
 if __name__ == "__main__":

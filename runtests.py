@@ -16,7 +16,7 @@ from runhelper import (
     dictToTestoutTableEntry,
 )
 from runhelper import SUCCESS as SUCCESS_THRESHOLD, PARTIAL as PARTIAL_THRESHOLD
-from typing import TextIO, Literal
+from typing import Literal
 
 STANDARD_RUN_SETTINGS = [
     {"plumed": "plumed", "printJson": False},
@@ -197,7 +197,7 @@ def runMDCalc(
 
 
 def runBasicTests(
-    testout: TextIO, outdir: str, info: dict, runMDCalcSettings: dict, tolerance: float
+    outdir: str, info: dict, runMDCalcSettings: dict, tolerance: float
 ) -> dict:
     """run the (eventual) MD test for position, timestep, mass, and charge"""
     params = runMDCalcSettings["runner"].setParams()
@@ -225,11 +225,8 @@ PRINT ARG=c.* FILE=cell_data
         params["ensemble"] = "npt"
         basic_md_failed = runMDCalc("basic", params=params, **runMDCalcSettings)
 
-    testout.write("| Description of test | Status | \n")
-    testout.write("|:--------------------|:------:| \n")
     results["mdruns"]["basic"] = basic_md_failed
     basicSR = writeReportForSimulations(
-        testout,
         runMDCalcSettings["code"],
         runMDCalcSettings["version"],
         basic_md_failed,
@@ -361,9 +358,7 @@ PRINT ARG=c.* FILE=cell_data
     return results
 
 
-def runForcesTest(
-    testout: TextIO, outdir: str, runMDCalcSettings: dict, tolerance: float
-) -> dict:
+def runForcesTest(outdir: str, runMDCalcSettings: dict, tolerance: float) -> dict:
     # First run a calculation to find the reference distance between atom 1 and 2
     version = runMDCalcSettings["version"]
     rparams = runMDCalcSettings["runner"].setParams()
@@ -403,7 +398,6 @@ def runForcesTest(
         val2 = np.loadtxt(f"{outdir}/forces2_{version}/colvar")[:, 1]
     results.update(
         writeReportForSimulations(
-            testout,
             runMDCalcSettings["code"],
             version,
             md_failed,
@@ -420,9 +414,7 @@ def runForcesTest(
     return results
 
 
-def runVirialTest(
-    testout: TextIO, outdir: str, runMDCalcSettings: dict, tolerance: float
-) -> dict:
+def runVirialTest(outdir: str, runMDCalcSettings: dict, tolerance: float) -> dict:
     version = runMDCalcSettings["version"]
     params = runMDCalcSettings["runner"].setParams()
     params["nsteps"] = 50
@@ -452,7 +444,6 @@ def runVirialTest(
         val3 = np.loadtxt(f"{outdir}/virial3_{version}/volume")[:, 1]
     results.update(
         writeReportForSimulations(
-            testout,
             runMDCalcSettings["code"],
             version,
             md_failed,
@@ -471,7 +462,6 @@ def runVirialTest(
 
 
 def energyTest(
-    testout: TextIO,
     outdir: str,
     title: str,
     nsteps: int,
@@ -518,7 +508,6 @@ def energyTest(
         val3 = np.loadtxt(f"{outdir}/{title}3_{version}/energy")[:, 1:]
     results.update(
         writeReportForSimulations(
-            testout,
             runMDCalcSettings["code"],
             version,
             md_failed,
@@ -537,7 +526,7 @@ def energyTest(
 
 
 def runEnergyTests(
-    testout: TextIO, outdir: str, info: dict, runMDCalcSettings: dict, tolerance: float
+    outdir: str, info: dict, runMDCalcSettings: dict, tolerance: float
 ) -> dict:
     code = runMDCalcSettings["code"]
     prefix = runMDCalcSettings["prefix"]
@@ -560,7 +549,6 @@ def runEnergyTests(
         md_failed = True
     results.update(
         writeReportForSimulations(
-            testout,
             code,
             version,
             md_failed,
@@ -583,7 +571,6 @@ def runEnergyTests(
     if info["engforces"] == "yes":
         results.update(
             energyTest(
-                testout,
                 outdir,
                 "engforce",
                 50,
@@ -599,7 +586,6 @@ def runEnergyTests(
     if info["engforces"] and info["virial"] == "yes":
         results.update(
             energyTest(
-                testout,
                 outdir,
                 "engvir",
                 150,
@@ -621,7 +607,7 @@ def runTests(
     *,
     prefix: str = "",
     settingsFor_runMDCalc: dict = {},
-):
+) -> dict:
     # Read in the information on the tests that should be run for this code
     basedir = f"tests/{code}"
     outdir = basedir
@@ -631,6 +617,55 @@ def runTests(
     ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)
     info = ymldata["tests"]
     tolerance = float(ymldata["tolerance"])
+
+    ### RUN THE TESTS
+    # sugar with the settings that are always the same for runMDCalc
+    # note that if I modify directly the input `settingsFor_runMDCalc`,
+    # I will change the default parameteres on subsequent calls!!!
+    runMDCalcSettings = dict(
+        code=code,
+        version=version,
+        runner=runner,
+        prefix=prefix,
+        **settingsFor_runMDCalc,
+    )
+    results = runBasicTests(outdir, info, runMDCalcSettings, tolerance)
+    mddict = results["mdruns"]
+    # the next runs are not based on the basic run
+    if info["forces"] == "yes":
+        tmp = runForcesTest(outdir, runMDCalcSettings, tolerance)
+        mddict.update(tmp["mdruns"])
+        results.update(tmp)
+
+    if info["virial"] == "yes":
+        tmp = runVirialTest(outdir, runMDCalcSettings, tolerance)
+        mddict.update(tmp["mdruns"])
+        results.update(tmp)
+
+    if info["energy"] == "yes":
+        tmp = runEnergyTests(outdir, info, runMDCalcSettings, tolerance)
+        mddict.update(tmp["mdruns"])
+        results.update(tmp)
+    results["mdruns"] = mddict
+    return results
+
+
+def writeMDReport(
+    code: str,
+    version: Literal["master", "stable"],
+    results: dict,
+    *,
+    prefix: str = "",
+):
+    # Read in the information on the tests that should be run for this code
+    basedir = f"tests/{code}"
+    outdir = basedir
+    if prefix != "":
+        outdir = f"{prefix}{outdir}"
+        Path(f"./{outdir}").mkdir(parents=True, exist_ok=True)
+    ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)
+    info = ymldata["tests"]
+
     fname = "testout.md"
 
     if version == "master":
@@ -663,42 +698,15 @@ def runTests(
         if "warning" in ymldata.keys():
             for warn in ymldata["warning"]:
                 testout.write(f"WARNING: {warn}\n\n")
-
-        # sugar with the settings that are always the same for runMDCalc
-        # note that if I modify directly the input `settingsFor_runMDCalc`,
-        # I will change the default parameteres on subsequent calls!!!
-        runMDCalcSettings = dict(
-            code=code,
-            version=version,
-            runner=runner,
-            prefix=prefix,
-            **settingsFor_runMDCalc,
-        )
-        results = runBasicTests(testout, outdir, info, runMDCalcSettings, tolerance)
-        mddict = results["mdruns"]
-        # the next runs are not based on the basic run
-        if info["forces"] == "yes":
-            tmp = runForcesTest(testout, outdir, runMDCalcSettings, tolerance)
-            mddict.update(tmp["mdruns"])
-            results.update(tmp)
-
-        if info["virial"] == "yes":
-            tmp = runVirialTest(testout, outdir, runMDCalcSettings, tolerance)
-            mddict.update(tmp["mdruns"])
-            results.update(tmp)
-
-        if info["energy"] == "yes":
-            tmp = runEnergyTests(testout, outdir, info, runMDCalcSettings, tolerance)
-            mddict.update(tmp["mdruns"])
-            results.update(tmp)
-        results["mdruns"] = mddict
+        testout.write("| Description of test | Status | \n")
+        testout.write("|:--------------------|:------:| \n")
         howbad = []
         for test in TEST_ORDER:
             if test in results.keys():
                 dictToReport(results[test])
                 howbad.append(results[test]["failure_rate"])
                 testout.write(dictToTestoutTableEntry(results[test]))
-
+        print(howbad)
         if any(val == -1 for val in howbad):
             # at least one test is broken
             test_result = "broken"
@@ -760,4 +768,5 @@ if __name__ == "__main__":
     # And create the class that interfaces with the MD code output
     runner = myMDcode.mdcode()
     # Now run the tests
-    runTests(code, version, runner)
+    results = runTests(code, version, runner)
+    writeMDReport(code, version, results)

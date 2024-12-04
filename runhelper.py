@@ -166,7 +166,6 @@ class writeReportForSimulations:
 
     def __init__(
         self,
-        testout: TextIO,
         code: str,
         version: str,
         md_failed: "bool | int",
@@ -175,7 +174,6 @@ class writeReportForSimulations:
         prefix="",
     ) -> None:
         # note that the prefix cannot accidentally be set, because it must explicitly named to be set
-        self.testout = testout
         self.code = code
         self.version = version
         self.md_failed = md_failed
@@ -203,7 +201,6 @@ class writeReportForSimulations:
             "denom": val3,
             "prefix": self.prefix,
         }
-        # writeReportPage(**report)
         failure_rate = check(
             self.md_failed,
             val1,
@@ -213,16 +210,6 @@ class writeReportForSimulations:
         )
         report["failure_rate"] = failure_rate
         report["docstring"] = docstring
-        # self.testout.write(
-        #     f"| {docstring} | "
-        #     + getBadge(
-        #         failure_rate,
-        #         kind,
-        #         self.code,
-        #         self.version,
-        #     )
-        #     + " |\n"
-        # )
         # a small preview of the results before the rendering of the pages
         if failure_rate == -1:
             failure_rate = 100
