@@ -717,6 +717,7 @@ if __name__ == "__main__":
         # print help information and exit:
         print(err)  # will print something like "option -a not recognized"
         print("runtests.py -c <code> -v <version>")
+        sys.exit(1)
 
     preparepages = False
     for opt, arg in opts:
