@@ -4,7 +4,6 @@ import yaml
 import shutil
 import subprocess
 import numpy as np
-import importlib
 from pathlib import Path
 from MDAnalysis.coordinates.XYZ import XYZReader
 from datetime import date
@@ -14,8 +13,9 @@ from runhelper import (
     writeReportForSimulations,
     dictToReport,
     dictToTestoutTableEntry,
+    successState,
+    testOpinion,
 )
-from runhelper import SUCCESS as SUCCESS_THRESHOLD, PARTIAL as PARTIAL_THRESHOLD
 from runhelper import TEST_ORDER
 from typing import Literal
 
@@ -23,6 +23,7 @@ STANDARD_RUN_SETTINGS = [
     {"plumed": "plumed", "printJson": False},
     {"plumed": "plumed_master", "printJson": True, "version": "master"},
 ]
+
 
 @contextmanager
 def cd(newdir):
@@ -42,7 +43,9 @@ def yamlToDict(filename, **yamlOpts):
         return ymldata
 
 
-def processMarkdown(filename, prefix="", runSettings=STANDARD_RUN_SETTINGS):
+def processMarkdown(
+    filename, prefix="", runSettings=STANDARD_RUN_SETTINGS, overwrite: bool = True
+):
     if not os.path.exists(filename):
         raise RuntimeError("Found no file called " + filename)
     with open(filename, "r") as f:
@@ -118,10 +121,12 @@ def processMarkdown(filename, prefix="", runSettings=STANDARD_RUN_SETTINGS):
                 ofile.write(line + "\n")
 
 
-def buildTestPages(directory, prefix="", runSettings=STANDARD_RUN_SETTINGS):
+def buildTestPages(
+    directory, prefix="", runSettings=STANDARD_RUN_SETTINGS, overwrite: bool = True
+):
     for page in os.listdir(directory):
         if ".md" in page:
-            processMarkdown(directory + "/" + page, prefix, runSettings)
+            processMarkdown(directory + "/" + page, prefix, runSettings, overwrite)
 
 
 def runMDCalc(
@@ -131,15 +136,14 @@ def runMDCalc(
     runner,
     params: dict,
     *,
+    executible: str,
     prefix: str = "",
     execNameChanged: bool = True,
     makeArchive: bool = True,
 ):
     # Get the name of the executible
     basedir = f"tests/{code}"
-    params["executible"] = yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)[
-        "executible"
-    ]
+    params["executible"] = executible
     if execNameChanged:
         params["executible"] += f"_{version}"
 
@@ -202,10 +206,10 @@ PRINT ARG=c.* FILE=cell_data
         runMDCalcSettings["version"],
         basic_md_failed,
         ["basic"],
-        prefix=runMDCalcSettings["prefix"],
     )
     basicDir = f"{outdir}/basic_{runMDCalcSettings['version']}"
     if info["positions"] == "yes":
+        print('Gathering data for "positions" test')
         plumednatoms = np.empty(0)
         codenatoms = np.empty(0)
         codepos = np.ones(params["nsteps"])
@@ -242,7 +246,6 @@ PRINT ARG=c.* FILE=cell_data
         results.update(
             basicSR.writeReportAndTable(
                 "natoms",
-                "MD code number of atoms passed correctly",
                 codenatoms,
                 plumednatoms,
                 0.01 * np.ones(codenatoms.shape[0]),
@@ -252,7 +255,6 @@ PRINT ARG=c.* FILE=cell_data
         results.update(
             basicSR.writeReportAndTable(
                 "positions",
-                "MD code positions passed correctly",
                 codepos,
                 plumedpos,
                 tolerance * np.ones(plumedpos.shape),
@@ -262,7 +264,6 @@ PRINT ARG=c.* FILE=cell_data
         results.update(
             basicSR.writeReportAndTable(
                 "cell",
-                "MD code cell vectors passed correctly",
                 codecell,
                 plumedcell,
                 tolerance * np.ones(plumedcell.shape),
@@ -270,6 +271,7 @@ PRINT ARG=c.* FILE=cell_data
         )
 
     if info["timestep"] == "yes":
+        print('Gathering data for "timestep" test')
         md_tstep = 0.1
         plumed_tstep = 0.1
         if not basic_md_failed:
@@ -285,13 +287,13 @@ PRINT ARG=c.* FILE=cell_data
         results.update(
             basicSR.writeReportAndTable(
                 "timestep",
-                "MD timestep passed correctly",
                 md_tstep,
                 plumed_tstep,
                 0.0001,
             )
         )
     if info["mass"] == "yes":
+        print('Gathering data for "mass" test')
         md_masses = np.ones(10)
         pl_masses = np.ones(10)
         if not basic_md_failed:
@@ -302,7 +304,6 @@ PRINT ARG=c.* FILE=cell_data
         results.update(
             basicSR.writeReportAndTable(
                 "mass",
-                "MD code masses passed correctly",
                 md_masses,
                 pl_masses,
                 0.01 * np.ones(pl_masses.shape),
@@ -310,6 +311,7 @@ PRINT ARG=c.* FILE=cell_data
         )
 
     if info["charge"] == "yes":
+        print('Gathering data for "charge" test')
         md_charges = np.ones(10)
         pl_charges = np.ones(10)
         if not basic_md_failed:
@@ -320,7 +322,6 @@ PRINT ARG=c.* FILE=cell_data
         results.update(
             basicSR.writeReportAndTable(
                 "charge",
-                "MD code charges passed correctly",
                 md_charges,
                 pl_charges,
                 tolerance * np.ones(pl_charges.shape),
@@ -367,16 +368,15 @@ def runForcesTest(outdir: str, runMDCalcSettings: dict, tolerance: float) -> dic
     if not md_failed:
         val1 = np.loadtxt(f"{outdir}/forces1_{version}/colvar")[:, 1]
         val2 = np.loadtxt(f"{outdir}/forces2_{version}/colvar")[:, 1]
+    print('Gathering data for "forces" test')
     results.update(
         writeReportForSimulations(
             runMDCalcSettings["code"],
             version,
             md_failed,
             ["forces1", "forces2"],
-            prefix=runMDCalcSettings["prefix"],
         ).writeReportAndTable(
             "forces",
-            "PLUMED forces passed correctly",
             val1,
             val2,
             tolerance * np.ones(val1.shape),
@@ -413,16 +413,15 @@ def runVirialTest(outdir: str, runMDCalcSettings: dict, tolerance: float) -> dic
         val1 = np.loadtxt(f"{outdir}/virial1_{version}/volume")[:, 1]
         val2 = np.loadtxt(f"{outdir}/virial2_{version}/volume")[:, 1]
         val3 = np.loadtxt(f"{outdir}/virial3_{version}/volume")[:, 1]
+    print('Gathering data for "virial" test')
     results.update(
         writeReportForSimulations(
             runMDCalcSettings["code"],
             version,
             md_failed,
             ["virial1", "virial2", "virial3"],
-            prefix=runMDCalcSettings["prefix"],
         ).writeReportAndTable(
             "virial",
-            "PLUMED virial passed correctly",
             val1,
             val2,
             np.abs(val3 - val1),
@@ -438,13 +437,11 @@ def energyTest(
     nsteps: int,
     ensemble: str,
     sqrtalpha: float,
-    docstring: str,
     runMDCalcSettings: dict,
     tolerance: float = 0.0,
     prerelaxtime: bool = False,
 ) -> dict:
     alpha = sqrtalpha * sqrtalpha
-    prefix = runMDCalcSettings["prefix"]
     version = runMDCalcSettings["version"]
     params = runMDCalcSettings["runner"].setParams()
     params["nsteps"] = nsteps
@@ -477,16 +474,15 @@ def energyTest(
         val1 = np.loadtxt(f"{outdir}/{title}1_{version}/energy")[:, 1:]
         val2 = np.loadtxt(f"{outdir}/{title}2_{version}/energy")[:, 1:]
         val3 = np.loadtxt(f"{outdir}/{title}3_{version}/energy")[:, 1:]
+    print(f'Gathering data for "{title}" test')
     results.update(
         writeReportForSimulations(
             runMDCalcSettings["code"],
             version,
             md_failed,
             [f"{title}1", f"{title}2", f"{title}3"],
-            prefix=prefix,
         ).writeReportAndTable(
             title,
-            docstring,
             val1,
             val2,
             np.abs(val1 - val3),
@@ -500,7 +496,6 @@ def runEnergyTests(
     outdir: str, info: dict, runMDCalcSettings: dict, tolerance: float
 ) -> dict:
     code = runMDCalcSettings["code"]
-    prefix = runMDCalcSettings["prefix"]
     version = runMDCalcSettings["version"]
     params = runMDCalcSettings["runner"].setParams()
     params["nsteps"] = 150
@@ -518,16 +513,15 @@ def runEnergyTests(
 
     else:
         md_failed = True
+    print('Gathering data for "energy" test')
     results.update(
         writeReportForSimulations(
             code,
             version,
             md_failed,
             ["energy"],
-            prefix=prefix,
         ).writeReportAndTable(
             "energy",
-            "MD code potential energy passed correctly",
             md_energy,
             pl_energy,
             tolerance * np.ones(len(md_energy)),
@@ -547,7 +541,6 @@ def runEnergyTests(
                 50,
                 "nvt",
                 sqrtalpha,
-                "PLUMED forces on potential energy passed correctly",
                 runMDCalcSettings,
                 tolerance,
             )
@@ -562,7 +555,6 @@ def runEnergyTests(
                 150,
                 "npt",
                 sqrtalpha,
-                "PLUMED contribution to virial due to force on potential energy passed correctly",
                 runMDCalcSettings,
                 tolerance,
                 prerelaxtime=True,
@@ -581,6 +573,7 @@ def runTests(
 ) -> dict:
     # Read in the information on the tests that should be run for this code
     basedir = f"tests/{code}"
+    # outdir = is where the byproduct files go
     outdir = basedir
     if prefix != "":
         outdir = f"{prefix}{outdir}"
@@ -588,7 +581,6 @@ def runTests(
     ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)
     info = ymldata["tests"]
     tolerance = float(ymldata["tolerance"])
-
     ### RUN THE TESTS
     # sugar with the settings that are always the same for runMDCalc
     # note that if I modify directly the input `settingsFor_runMDCalc`,
@@ -598,6 +590,7 @@ def runTests(
         version=version,
         runner=runner,
         prefix=prefix,
+        executible=ymldata["executible"],
         **settingsFor_runMDCalc,
     )
     results = runBasicTests(outdir, info, runMDCalcSettings, tolerance)
@@ -674,38 +667,42 @@ def writeMDReport(
         howbad = []
         for test in TEST_ORDER:
             if test in results.keys():
-                dictToReport(results[test])
+                dictToReport(results[test], prefix=prefix)
                 howbad.append(results[test]["failure_rate"])
                 testout.write(dictToTestoutTableEntry(results[test]))
-        print(howbad)
-        if any(val == -1 for val in howbad):
-            # at least one test is broken
-            test_result = "broken"
-        else:
-            if all(val < SUCCESS_THRESHOLD for val in howbad):
-                # everithyng passes
-                test_result = "working"
-            elif any(val >= PARTIAL_THRESHOLD for val in howbad):
-                # at least one test is failing
-                test_result = "failing"
-                # should I add a failing over total?
-            else:
-                # elif any(howbad<SUCCESS_THRESHOLD):
-                # elif any(SUCCESS_THRESHOLD<val<PARTIAL_THRESHOLD for val in howbad):
-                # no test are failing red (previous if) and
-                # at least one test is partially failing
-                # but there can be green tests
-                # if we are here the if is redundant
-                test_result = "partial"
 
-    print(f"Test result for {code} with version {version}: {test_result}")
+        test_result = testOpinion(howbad)
     with open(f"{outdir}/info.yml", "a") as infoOut:
         infoOut.write(f"test_plumed{version}: {test_result} \n")
+
+
+def writeTermReport(
+    code: str, version: Literal["master", "stable"], results: dict, space=80
+):
+    howbad = []
+    description_space = space - len(" failure rate: 123%")
+    for test in TEST_ORDER:
+        if test in results.keys():
+            failure_rate = results[test]["failure_rate"]
+            howbad.append(successState(failure_rate))
+
+            # a small preview of the results before the rendering of the pages
+            if failure_rate == -1:
+                failure_rate = "all"
+            title = " * " + results[test]["docstring"]
+            if len(title) > description_space:
+                title = title[: (description_space - 3)] + "..."
+            print(f"{title:<{description_space}} failure rate: {failure_rate:>3}%")
+
+    test_result = testOpinion(howbad)
+    print()
+    print(f"Test result for {code} with version {version}: {test_result}")
 
 
 if __name__ == "__main__":
     import sys
     import getopt
+    import importlib
 
     code, version, argv = "", "", sys.argv[1:]
     try:
@@ -741,3 +738,4 @@ if __name__ == "__main__":
     # Now run the tests
     results = runTests(code, version, runner)
     writeMDReport(code, version, results)
+    writeTermReport(code, version, results)

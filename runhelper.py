@@ -38,31 +38,56 @@ SUCCESS = 5
 PARTIAL = 20
 
 
-def badgeColor(sucess):
-    if sucess < 0:
-        return "red"
-    color = "red"
-    if sucess < SUCCESS:
-        color = "green"
-    elif sucess < PARTIAL:
-        color = "yellow"
-    return color
+def successState(success: int) -> Literal["broken", "success", "partial", "failure"]:
+    if success < 0:
+        return "broken"
+    if success < SUCCESS:
+        return "success"
+    elif success < PARTIAL:
+        return "partial"
+    return "failure"
 
 
-def getBadge(sucess, filen, code, version: str):
+def badgeColor(success: int) -> Literal["red", "yellow", "green"]:
+    toret = {
+        "broken": "red",
+        "failure": "red",
+        "partial": "yellow",
+        "success": "green",
+    }
+    return toret[successState(success)]
+
+
+def testOpinion(
+    howbad: Literal["broken", "success", "partial", "failure"],
+) -> Literal["broken", "failing", "partial", "working"]:
+    if howbad is str:
+        howbad = [howbad]
+    if "broken" in howbad:
+        # at least one test is broken
+        return "broken"
+    elif "failing" in howbad:
+        # at least one test is failing
+        return "failing"
+        # should I add a failing over total?
+    elif "partial" in howbad:
+        # no test are failing red (previous if) but
+        # at least one test is partially failing
+        return "partial"
+    else:
+        # if is redundant
+        # if all(val == "success" for val in howbad):
+        # everithyng passes
+        return "working"
+
+
+def getBadge(success, filen, version: str):
     badge = f"[![tested on {version}](https://img.shields.io/badge/{version}-"
-    if sucess < 0:
+    if success < 0:
         badge += "failed-red.svg"
     else:
-        color = "red"
-        if sucess < SUCCESS:
-            color = "green"
-        elif sucess < PARTIAL:
-            color = "yellow"
-        else:
-            # shoudn't this be red?
-            color = "red"
-        badge += f"fail%20{sucess}%25-{color}.svg"
+        color = badgeColor(success)
+        badge += f"fail%20{success}%25-{color}.svg"
     return badge + f")]({filen}_{version}.html)"
 
 
@@ -114,7 +139,7 @@ def writeReportPage(
             elif "Results" in line and "#" in line and md_fail:
                 of.write(
                     f"{line}\n"
-                    "Calculations were not sucessful and no data was generated for comparison\n"
+                    "Calculations were not successful and no data was generated for comparison\n"
                 )
             else:
                 of.write(line + "\n")
@@ -165,29 +190,29 @@ def writeReportPage(
 
 def check(
     md_failed: "int|bool",
-    val1: "float|np.ndarray",
-    val2: "float|np.ndarray",
-    val3: "float|np.ndarray",
+    ref: "float|np.ndarray",
+    data: "float|np.ndarray",
+    denom: "float|np.ndarray",
     denominatorTolerance: float = 0.0,
 ) -> int:
     # this may be part of writeReportForSimulations
     if md_failed:
         return -1
-    if hasattr(val2, "__len__") and len(val1) != len(val2):
+    if hasattr(data, "__len__") and len(ref) != len(data):
         return -1
-    if hasattr(val2, "__len__") and len(val3) != len(val2):
+    if hasattr(data, "__len__") and len(denom) != len(data):
         return -1
     percent_diff = 100 * np.divide(
-        np.abs(val1 - val2),
-        val3,
-        out=np.zeros_like(val3),
-        where=val3 > denominatorTolerance,
+        np.abs(ref - data),
+        denom,
+        out=np.zeros_like(denom),
+        where=denom > denominatorTolerance,
     )
     return int(np.round(np.average(percent_diff)))
 
 
 class writeReportForSimulations:
-    """helper class to write the report tof the simulations"""
+    """helper class to write the report of the simulations"""
 
     testout: TextIO
     code: str
@@ -202,23 +227,18 @@ class writeReportForSimulations:
         version: str,
         md_failed: "bool | int",
         simulations: list[str],
-        *,
-        prefix="",
     ) -> None:
-        # note that the prefix cannot accidentally be set, because it must explicitly named to be set
         self.code = code
         self.version = version
         self.md_failed = md_failed
         self.simulations = simulations
-        self.prefix = prefix
 
     def writeReportAndTable(
         self,
         kind: str,
-        docstring: str,
-        val1: "float|np.ndarray",
-        val2: "float|np.ndarray",
-        val3: "float|np.ndarray",
+        ref: "float|np.ndarray",
+        data: "float|np.ndarray",
+        denom: "float|np.ndarray",
         *,
         denominatorTolerance: float = 0.0,
     ) -> dict:
@@ -228,31 +248,23 @@ class writeReportForSimulations:
             "version": self.version,
             "md_fail": self.md_failed,
             "zipfiles": self.simulations,
-            "ref": val1,
-            "data": val2,
-            "denom": val3,
-            "prefix": self.prefix,
+            "ref": ref,
+            "data": data,
+            "denom": denom,
         }
         failure_rate = check(
             self.md_failed,
-            val1,
-            val2,
-            val3,
+            ref,
+            data,
+            denom,
             denominatorTolerance=denominatorTolerance,
         )
         report["failure_rate"] = failure_rate
-        report["docstring"] = docstring
-        # a small preview of the results before the rendering of the pages
-        if failure_rate == -1:
-            failure_rate = 100
-        title = " * " + docstring
-        if len(title) > 61:
-            title = title[:58] + "..."
-        print(f"{title:<61} failure rate: {failure_rate:<3}%")
+        report["docstring"] = TEST_DESCRIPTIONS[kind]
         return {kind: report}
 
 
-def dictToReport(input: dict):
+def dictToReport(input: dict, *, prefix: str = ""):
     # isolates the needed data from the dictionary
     report = {
         "filen": input["filen"],
@@ -263,7 +275,7 @@ def dictToReport(input: dict):
         "ref": input["ref"],
         "data": input["data"],
         "denom": input["denom"],
-        "prefix": input["prefix"],
+        "prefix": prefix,
     }
     writeReportPage(**report)
 
@@ -272,14 +284,12 @@ def dictToTestoutTableEntry(input: dict):
     docstring = input["docstring"]
     failure_rate = input["failure_rate"]
     kind = input["filen"]
-    code = input["code"]
     version = input["version"]
     return (
         f"| {docstring} | "
         + getBadge(
             failure_rate,
             kind,
-            code,
             version,
         )
         + " |\n"
