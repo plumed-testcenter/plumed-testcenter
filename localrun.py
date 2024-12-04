@@ -1,7 +1,7 @@
 # used ruff 0.6.4 to check and format this
 import shutil
 import importlib
-from runtests import buildTestPages, runTests
+from runtests import buildTestPages, runTests, writeMDReport, writeTermReport
 import click
 
 
@@ -18,7 +18,10 @@ import click
     multiple=True,
 )
 @click.option("--printJson", "printJson", is_flag=True, default=False)
-def localRun(codedir: str, prefix: str, plumed: "list[str]", printJson: bool):
+@click.option("--printMarkdown", "printMD", is_flag=True, default=False)
+def localRun(
+    codedir: str, prefix: str, plumed: "list[str]", printJson: bool, printMD: bool
+):
     """Simple local run CLI
 
     Specify the directory in wich the settings for the test are stored as a first argument
@@ -37,12 +40,7 @@ def localRun(codedir: str, prefix: str, plumed: "list[str]", printJson: bool):
     plumedToRun = [{"plumed": p, "printJson": printJson} for p in plumed]
 
     print("Code: " + code)
-    print("Preparing pages")
-    # Engforce and engvir share the same procedure
-    shutil.copy("pages/engforce.md", "pages/engvir.md")
-    buildTestPages(codedir, prefix, plumedToRun)
-    # this usues > 50% of the time
-    buildTestPages("pages", prefix, plumedToRun)
+
     # Create an __init__.py module for the desired code
     with open(codedir + "/__init__.py", "w") as ipf:
         ipf.write("from .mdcode import mdcode\n")
@@ -52,13 +50,22 @@ def localRun(codedir: str, prefix: str, plumed: "list[str]", printJson: bool):
     # Now run the tests
     print("Running the tests on stable")
     # execNameChanged=False because in my case I have compiled qe without changing its suffix
-    runTests(
+    results = runTests(
         code,
         "stable",
         runner,
         prefix=prefix,
         settingsFor_runMDCalc=dict(execNameChanged=False, makeArchive=False),
     )
+    writeTermReport(code, "stable", results)
+    if printMD:
+        print("Preparing pages")
+        # Engforces and engvir share the same procedure
+        shutil.copy("pages/engforces.md", "pages/engvir.md")
+        # buildTestPages(codedir, prefix, plumedToRun)
+        # this usues > 50% of the time
+        buildTestPages("pages", prefix, plumedToRun, overwrite=False)
+        writeMDReport(code, "stable", results, prefix=prefix)
 
 
 if __name__ == "__main__":

@@ -41,7 +41,8 @@ def buildBrowsePage( stable_version, tested ) :
            test_status = info["test_plumed" + tested[i]]
            if test_status=="working" : test_badge = test_badge + 'passing-green.svg'
            elif test_status=="partial" : test_badge = test_badge + 'partial-yellow.svg'
-           elif test_status=="broken" : test_badge = test_badge + 'failed-red.svg'
+           elif test_status=="broken" : test_badge = test_badge + 'broken-red.svg'
+           elif test_status=="failing"  : test_badge = test_badge + 'failed-red.svg'
            if tested[i]!=stable_version : test_badge = test_badge + ')](tests/' + code + '/testout_' + tested[i] + '.html)' 
            else : test_badge = test_badge + ')](tests/' + code + '/testout.html)'
        f.write("| [" + code + "](" + info["link"] +") | " + info["description"] + " | " + compile_badge + " | " + test_badge + " | \n")  
