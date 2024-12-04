@@ -16,42 +16,13 @@ from runhelper import (
     dictToTestoutTableEntry,
 )
 from runhelper import SUCCESS as SUCCESS_THRESHOLD, PARTIAL as PARTIAL_THRESHOLD
+from runhelper import TEST_ORDER
 from typing import Literal
 
 STANDARD_RUN_SETTINGS = [
     {"plumed": "plumed", "printJson": False},
     {"plumed": "plumed_master", "printJson": True, "version": "master"},
 ]
-# tuple becasue I do't want to mutate it and keep the order
-TEST_ORDER = (
-    "natoms",
-    "positions",
-    "cell",
-    "timestep",
-    "mass",
-    "charge",
-    "forces",
-    "virial",
-    "energy",
-    "engforces",
-    "engvir",
-)
-
-# trying to be a little more declarative:
-TEST_DESCRIPTIONS = {
-    "natoms": "MD code number of atoms passed correctly",
-    "positions": "MD code positions passed correctly",
-    "cell": "MD code cell vectors passed correctly",
-    "timestep": "MD timestep passed correctly",
-    "mass": "MD code masses passed correctly",
-    "charge": "MD code charges passed correctly",
-    "forces": "PLUMED forces passed correctly",
-    "virial": "PLUMED virial passed correctly",
-    "energy": "MD code potential energy passed correctly",
-    "engforces": "PLUMED forces on potential energy passed correctly",
-    "engvir": "PLUMED contribution to virial due to force on potential energy passed correctly",
-}
-
 
 @contextmanager
 def cd(newdir):
@@ -572,7 +543,7 @@ def runEnergyTests(
         results.update(
             energyTest(
                 outdir,
-                "engforce",
+                "engforces",
                 50,
                 "nvt",
                 sqrtalpha,
@@ -755,8 +726,8 @@ if __name__ == "__main__":
 
     # Build all the pages that describe the tests for this code
     buildTestPages("tests/" + code)
-    # Engforce and engvir share the same procedure
-    shutil.copy("pages/engforce.md", "pages/engvir.md")
+    # Engforces and engvir share the same procedure
+    shutil.copy("pages/engforces.md", "pages/engvir.md")
     # Build the default test pages
     buildTestPages("pages")
     # Create an __init__.py module for the desired code

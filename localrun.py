@@ -38,8 +38,8 @@ def localRun(codedir: str, prefix: str, plumed: "list[str]", printJson: bool):
 
     print("Code: " + code)
     print("Preparing pages")
-    # Engforce and engvir share the same procedure
-    shutil.copy("pages/engforce.md", "pages/engvir.md")
+    # Engforces and engvir share the same procedure
+    shutil.copy("pages/engforces.md", "pages/engvir.md")
     buildTestPages(codedir, prefix, plumedToRun)
     # this usues > 50% of the time
     buildTestPages("pages", prefix, plumedToRun)

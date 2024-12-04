@@ -2,6 +2,38 @@ from typing import TextIO, Literal
 import numpy as np
 # formatted with ruff 0.6.4
 
+
+# tuple becasue I do't want to mutate it and keep the order
+TEST_ORDER = (
+    "natoms",
+    "positions",
+    "cell",
+    "timestep",
+    "mass",
+    "charge",
+    "forces",
+    "virial",
+    "energy",
+    "engforces",
+    "engvir",
+)
+
+# trying to be a little more declarative:
+TEST_DESCRIPTIONS = {
+    "natoms": "MD code number of atoms passed correctly",
+    "positions": "MD code positions passed correctly",
+    "cell": "MD code cell vectors passed correctly",
+    "timestep": "MD timestep passed correctly",
+    "mass": "MD code masses passed correctly",
+    "charge": "MD code charges passed correctly",
+    "forces": "PLUMED forces passed correctly",
+    "virial": "PLUMED virial passed correctly",
+    "energy": "MD code potential energy passed correctly",
+    "engforces": "PLUMED forces on potential energy passed correctly",
+    "engvir": "PLUMED contribution to virial due to force on potential energy passed correctly",
+}
+
+
 SUCCESS = 5
 PARTIAL = 20
 
