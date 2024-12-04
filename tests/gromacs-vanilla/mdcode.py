@@ -64,7 +64,6 @@ ref-t                    = {mdparams["temperature"]}
         of.close()
         # Work out the script that will run ipi for us
         executible = mdparams["executible"]
-        print(f"Running {executible}")
         # Now run the calculation using subprocess
         with open("stdout", "w") as stdout:
             with open("stderr", "w") as stderr:
