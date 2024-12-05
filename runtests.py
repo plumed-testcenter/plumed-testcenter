@@ -638,19 +638,10 @@ def writeMDReport(
 
     if version == "master":
         fname = "testout_" + version + ".md"
-    elif version != "stable":
-        raise ValueError("version should be master or stable")
 
     with open(f"{outdir}/{fname}", "w+") as testout:
         testout.write(f"Testing {code}\n")
         testout.write("------------------------\n \n")
-        stable_version = (
-            subprocess.check_output("plumed info --version", shell=True)
-            .decode("utf-8")
-            .strip()
-        )
-        if version == "stable":
-            version = "v" + stable_version
         # it looks strange, but strings do not need the + to be concatenated
         testout.write(
             f"The tests described in the following table were performed on "
@@ -708,7 +699,9 @@ if __name__ == "__main__":
     import getopt
     import importlib
 
-    code, version, argv = "", "", sys.argv[1:]
+    code = ""
+    version = ""
+    argv = sys.argv[1:]
     try:
         opts, args = getopt.getopt(
             argv, "hc:v:p", ["version=", "prepare-pages", "code="]
@@ -739,9 +732,16 @@ if __name__ == "__main__":
         # Build the default test pages
         buildTestPages("pages")
     # Create an __init__.py module for the desired code
-    ipf = open(f"tests/{code}/__init__.py", "w+")
-    ipf.write("from .mdcode import mdcode\n")
-    ipf.close()
+    with open(f"tests/{code}/__init__.py", "w+") as ipf:
+        ipf.write("from .mdcode import mdcode\n")
+    
+    if version == "stable":
+            stable_version = (
+            subprocess.check_output("plumed info --version", shell=True)
+            .decode("utf-8")
+            .strip()
+        )
+            version = "v" + stable_version
     # Now import the module
     myMDcode = importlib.import_module("tests." + code, "mdcode")
     # And create the class that interfaces with the MD code output
