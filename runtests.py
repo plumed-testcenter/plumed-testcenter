@@ -511,7 +511,7 @@ def runEnergyTests(
     md_energy = np.ones(1)
     pl_energy = np.ones(1)
 
-    if not md_failed and os.path.exists(f"{outdir}/energy_{version}/ene rgy"):
+    if not md_failed and os.path.exists(f"{outdir}/energy_{version}/energy"):
         md_energy = runMDCalcSettings["runner"].getEnergy(f"{outdir}/energy_{version}")
         pl_energy = np.loadtxt(f"{outdir}/energy_{version}/energy")[:, 1]
 
