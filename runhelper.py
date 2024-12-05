@@ -66,7 +66,7 @@ def testOpinion(
     if "broken" in howbad:
         # at least one test is broken
         return "broken"
-    elif "failing" in howbad:
+    elif "failure" in howbad:
         # at least one test is failing
         return "failing"
         # should I add a failing over total?
@@ -74,11 +74,14 @@ def testOpinion(
         # no test are failing red (previous if) but
         # at least one test is partially failing
         return "partial"
-    else:
-        # if is redundant
-        # if all(val == "success" for val in howbad):
+    elif all(val == "success" for val in howbad):
+        # the if shoudl be redundant
         # everithyng passes
         return "working"
+    raise RuntimeError(
+        'testOpinion arguments should be a list of "broken", "failing", "partial", "success"\n'
+        f"{howbad=}"
+    )
 
 
 def getBadge(success, filen, version: str):
