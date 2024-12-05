@@ -29,9 +29,6 @@ def buildBrowsePage( stable_version, tested ) :
        compile_badge, test_badge = "", ""
        stram=open("tmp/extract/tests/" + code + "/info.yml", "r")
        info=yaml.load(stram,Loader=yaml.BaseLoader)
-       print(code)
-       print(info)
-       print()
        stram.close()
        for i in range(len(tested)):
            compile_badge = compile_badge + ' [![tested on ' + tested[i] + '](https://img.shields.io/badge/' + tested[i] + '-'
