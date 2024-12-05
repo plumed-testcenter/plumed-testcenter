@@ -638,19 +638,10 @@ def writeMDReport(
 
     if version == "master":
         fname = "testout_" + version + ".md"
-    elif version != "stable":
-        raise ValueError("version should be master or stable")
 
     with open(f"{outdir}/{fname}", "w+") as testout:
         testout.write(f"Testing {code}\n")
         testout.write("------------------------\n \n")
-        stable_version = (
-            subprocess.check_output("plumed info --version", shell=True)
-            .decode("utf-8")
-            .strip()
-        )
-        if version == "stable":
-            version = "v" + stable_version
         # it looks strange, but strings do not need the + to be concatenated
         testout.write(
             f"The tests described in the following table were performed on "
@@ -672,7 +663,7 @@ def writeMDReport(
         for test in TEST_ORDER:
             if test in results.keys():
                 dictToReport(results[test], prefix=prefix)
-                howbad.append(results[test]["failure_rate"])
+                howbad.append(successState(results[test]["failure_rate"]))
                 testout.write(dictToTestoutTableEntry(results[test]))
 
         test_result = testOpinion(howbad)
@@ -690,13 +681,14 @@ def writeTermReport(
             failure_rate = results[test]["failure_rate"]
             howbad.append(successState(failure_rate))
 
-            # a small preview of the results before the rendering of the pages
             if failure_rate == -1:
-                failure_rate = "all"
+                failure_rate = "brk "
+            else:
+                failure_rate = f"{failure_rate:>3}%"
             title = " * " + results[test]["docstring"]
             if len(title) > description_space:
                 title = title[: (description_space - 3)] + "..."
-            print(f"{title:<{description_space}} failure rate: {failure_rate:>3}%")
+            print(f"{title:<{description_space}} failure rate: {failure_rate}")
 
     test_result = testOpinion(howbad)
     print()
@@ -708,7 +700,9 @@ if __name__ == "__main__":
     import getopt
     import importlib
 
-    code, version, argv = "", "", sys.argv[1:]
+    code = ""
+    version = ""
+    argv = sys.argv[1:]
     try:
         opts, args = getopt.getopt(
             argv, "hc:v:p", ["version=", "prepare-pages", "code="]
@@ -739,9 +733,16 @@ if __name__ == "__main__":
         # Build the default test pages
         buildTestPages("pages")
     # Create an __init__.py module for the desired code
-    ipf = open(f"tests/{code}/__init__.py", "w+")
-    ipf.write("from .mdcode import mdcode\n")
-    ipf.close()
+    with open(f"tests/{code}/__init__.py", "w+") as ipf:
+        ipf.write("from .mdcode import mdcode\n")
+
+    if version == "stable":
+        stable_version = (
+            subprocess.check_output("plumed info --version", shell=True)
+            .decode("utf-8")
+            .strip()
+        )
+        version = "v" + stable_version
     # Now import the module
     myMDcode = importlib.import_module("tests." + code, "mdcode")
     # And create the class that interfaces with the MD code output
