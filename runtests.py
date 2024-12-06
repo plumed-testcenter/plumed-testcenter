@@ -182,17 +182,12 @@ def runBasicTests(
     params = runMDCalcSettings["runner"].setParams()
     results = {"mdruns": {}}
     basic_md_failed = True
-    if (
-        info["positions"] == "yes"
-        or info["timestep"] == "yes"
-        or info["mass"] == "yes"
-        or info["charge"] == "yes"
-    ):
+    if info["positions"] or info["timestep"] or info["mass"] or info["charge"]:
         dumpMassesStr = ""
-        if info["mass"] == "yes":
+        if info["mass"]:
             dumpMassesStr = f"DUMPMASSCHARGE FILE=mq_plumed {'' if info['charge'] == 'yes' else 'ONLY_MASSES'}"
         timeStepStr = ""
-        if info["timestep"] == "yes":
+        if info["timestep"]:
             timeStepStr = "t1: TIME\nPRINT ARG=t1 FILE=colvar"
         params["plumed"] = f"""DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz
 c: CELL
@@ -212,7 +207,7 @@ PRINT ARG=c.* FILE=cell_data
         ["basic"],
     )
     basicDir = f"{outdir}/basic_{runMDCalcSettings['version']}"
-    if info["positions"] == "yes":
+    if info["positions"]:
         print('Gathering data for "positions" test')
         plumednatoms = np.empty(0)
         codenatoms = np.empty(0)
@@ -274,7 +269,7 @@ PRINT ARG=c.* FILE=cell_data
             )
         )
 
-    if info["timestep"] == "yes":
+    if info["timestep"]:
         print('Gathering data for "timestep" test')
         md_tstep = 0.1
         plumed_tstep = 0.1
@@ -296,7 +291,7 @@ PRINT ARG=c.* FILE=cell_data
                 0.0001,
             )
         )
-    if info["mass"] == "yes":
+    if info["mass"]:
         print('Gathering data for "mass" test')
         md_masses = np.ones(10)
         pl_masses = np.ones(10)
@@ -314,7 +309,7 @@ PRINT ARG=c.* FILE=cell_data
             )
         )
 
-    if info["charge"] == "yes":
+    if info["charge"]:
         print('Gathering data for "charge" test')
         md_charges = np.ones(10)
         pl_charges = np.ones(10)
@@ -537,7 +532,7 @@ def runEnergyTests(
     # value for each code (and postprocess the mds a second time here)
 
     sqrtalpha = 1.1
-    if info["engforces"] == "yes":
+    if info["engforces"]:
         results.update(
             energyTest(
                 outdir,
@@ -551,7 +546,7 @@ def runEnergyTests(
         )
 
     sqrtalpha = 1.1
-    if info["engforces"] and info["virial"] == "yes":
+    if info["engforces"] and info["virial"]:
         results.update(
             energyTest(
                 outdir,
@@ -582,9 +577,9 @@ def runTests(
     if prefix != "":
         outdir = f"{prefix}{outdir}"
         Path(f"./{outdir}").mkdir(parents=True, exist_ok=True)
-    ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)
+    ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.SafeLoader)
     info = ymldata["tests"]
-    tolerance = float(ymldata["tolerance"])
+    tolerance = ymldata["tolerance"]
     ### RUN THE TESTS
     # sugar with the settings that are always the same for runMDCalc
     # note that if I modify directly the input `settingsFor_runMDCalc`,
@@ -600,17 +595,17 @@ def runTests(
     results = runBasicTests(outdir, info, runMDCalcSettings, tolerance)
     mddict = results["mdruns"]
     # the next runs are not based on the basic run
-    if info["forces"] == "yes":
+    if info["forces"]:
         tmp = runForcesTest(outdir, runMDCalcSettings, tolerance)
         mddict.update(tmp["mdruns"])
         results.update(tmp)
 
-    if info["virial"] == "yes":
+    if info["virial"]:
         tmp = runVirialTest(outdir, runMDCalcSettings, tolerance)
         mddict.update(tmp["mdruns"])
         results.update(tmp)
 
-    if info["energy"] == "yes":
+    if info["energy"]:
         tmp = runEnergyTests(outdir, info, runMDCalcSettings, tolerance)
         mddict.update(tmp["mdruns"])
         results.update(tmp)
@@ -664,8 +659,13 @@ def writeMDReport(
                 testout.write(dictToTestoutTableEntry(results[test]))
 
         test_result = testOpinion(howbad)
-    with open(f"{outdir}/info.yml", "a") as infoOut:
-        infoOut.write(f"test_plumed_{version}: {test_result} \n")
+    ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.SafeLoader)
+    if "test_plumed" in ymldata.keys():
+        ymldata["test_plumed"][str(version)] = test_result
+    else:
+        ymldata["test_plumed"] = {str(version): test_result}
+    with open(f"{outdir}/info.yml", "w") as infoOut:
+        infoOut.write(yaml.dump(ymldata, sort_keys=False))
 
 
 def writeTermReport(
