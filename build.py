@@ -59,41 +59,42 @@ def checkWorkflow():
 def buildBrowsePage(stable_version, tested):
     print("Building browse page")
 
-    browse = f"""## Browse the tests
+    browse = f"""## Browse the tests  
    
-   The codes listed below below were tested on __{date.today().strftime("%B %d, %Y")}__. """
-    browse += """PLUMED-TESTCENTER tested whether the current and development versions of the code can be used to complete the tests for each of these codes.
+The codes listed below below were tested on __{date.today().strftime("%B %d, %Y")}__.
+PLUMED-TESTCENTER tested whether the current and development versions of the code can be used to complete the tests for each of these codes.
 | Name of Program  | Short description | Compiles | Passes tests |
 |:-----------------|:------------------|:--------:|:------------:|
 """
-
-    for code in os.listdir("tests"):
-        if  not isTest("tests/" + code):
-            continue
-        compile_badge=""
+    testdirs = [d for d in os.listdir("tests") if isTest("tests/" + d)]
+    testdirs = sorted(testdirs)
+    for code in testdirs:
+        compile_badge = ""
         test_badge = ""
 
         with open("tmp/extract/tests/" + code + "/info.yml", "r") as stream:
             info = yaml.load(stream, Loader=yaml.BaseLoader)
 
-        for i in range(len(tested)):
+        for version in tested:
+            # building the compilation badge
             compile_badge += (
-                f" [![tested on {tested[i]}](https://img.shields.io/badge/{tested[i]}-"
+                f" [![tested on {version}](https://img.shields.io/badge/{version}-"
             )
 
-            compile_status = info["install_plumed_" + tested[i]]
+            compile_status = info["install_plumed_" + version]
             if compile_status == "working":
                 compile_badge += "passing-green.svg"
             elif compile_status == "broken":
                 compile_badge += "failed-red.svg"
             else:
                 raise ValueError(
-                    f"found invalid compilation status for {code}['test_plumed{tested[i]}'] should be 'working' or 'broken', is '{compile_status}'"
+                    f"found invalid compilation status for {code}['test_plumed{version}'] should be 'working' or 'broken', is '{compile_status}'"
                 )
             compile_badge += ")](tests/" + code + "/install.html)"
 
+            # building the tests badge
             test_badge += (
-                f" [![tested on {tested[i]}](https://img.shields.io/badge/{tested[i]}-"
+                f" [![tested on {version}](https://img.shields.io/badge/{version}-"
             )
             test_status = info["test_plumed_" + version]
 
@@ -107,13 +108,10 @@ def buildBrowsePage(stable_version, tested):
                 test_badge += "failed-red.svg"
             else:
                 raise ValueError(
-                    f"found invalid test status for {code}['test_plumed{tested[i]}'] should be 'working', 'partial', 'failing' or 'broken', is '{test_status}'"
+                    f"found invalid test status for {code}['test_plumed{version}'] should be 'working', 'partial', 'failing' or 'broken', is '{test_status}'"
                 )
+            test_badge += f")](tests/{code}/testout_{version}.html)"
 
-            if tested[i] != stable_version:
-                test_badge += f")](tests/{code}/testout_{tested[i]}.html)"
-            else:
-                test_badge = test_badge + ")](tests/" + code + "/testout.html)"
         browse += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {test_badge} | \n"
     browse += " \n"
     browse += """#### Building PLUMED
@@ -145,10 +143,10 @@ if __name__ == "__main__":
     try:
         # Check that the workflow matches with the directories
         checkWorkflow()
-        # Build the page with all the MD codes
+
         with open("tmp/extract/stable_version.md", "r") as vf:
             stable_version = vf.read()
-
+        # Build the page with all the MD codes
         buildBrowsePage("v" + stable_version, ("v" + stable_version, "master"))
     except Exception as e:
         print(e)

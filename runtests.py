@@ -633,11 +633,8 @@ def writeMDReport(
         Path(f"./{outdir}").mkdir(parents=True, exist_ok=True)
     ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)
     info = ymldata["tests"]
-
-    fname = "testout.md"
-
-    if version == "master":
-        fname = "testout_" + version + ".md"
+   
+    fname = "testout_" + version + ".md"
 
     with open(f"{outdir}/{fname}", "w+") as testout:
         testout.write(f"Testing {code}\n")
