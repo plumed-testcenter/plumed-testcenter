@@ -668,7 +668,7 @@ def writeMDReport(
 
         test_result = testOpinion(howbad)
     with open(f"{outdir}/info.yml", "a") as infoOut:
-        infoOut.write(f"test_plumed{version}: {test_result} \n")
+        infoOut.write(f"test_plumed_{version}: {test_result} \n")
 
 
 def writeTermReport(

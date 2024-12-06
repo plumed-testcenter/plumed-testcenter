@@ -95,7 +95,7 @@ def buildBrowsePage(stable_version, tested):
             test_badge += (
                 f" [![tested on {tested[i]}](https://img.shields.io/badge/{tested[i]}-"
             )
-            test_status = info["test_plumed" + tested[i]]
+            test_status = info["test_plumed_" + version]
 
             if test_status == "working":
                 test_badge += "passing-green.svg"
