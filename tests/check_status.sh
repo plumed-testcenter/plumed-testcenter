@@ -40,7 +40,7 @@ if [[ -x $executible ]]; then
      # Or in the case the wrapper has changed between versions and it is not statically linked in the executable
 
      echo "found"
-     echo "install_plumed$suffix: working" >>"$info_yml"
+     python updateYaml.py "$info_yml" install_plumed "${suffix}" working 
      # no need for the extra check, because of the if above
      #if [[ ! -x $executible_suffixed ]]; then
      echo "Copying $executible to $executible_suffixed"
@@ -54,4 +54,4 @@ fi
 
 echo "Something is wrong with the installation of the patched $code with plumed$suffix"
 
-echo "install_plumed$suffix: broken" >>"$info_yml"
+python updateYaml.py "$info_yml" install_plumed "${suffix}" broken 
