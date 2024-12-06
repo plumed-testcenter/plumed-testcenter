@@ -246,3 +246,12 @@ jobs:
           enable_jekyll: true
           user_name: 'PlumedBot'
           user_email: 'giovanni.bussi+plumedbot@gmail.com'
+    - name: Upload a debug artifact
+      if: github.ref != 'refs/heads/main'
+      uses: actions/upload-artifact@v4
+      # for this we do not care about losing permissions
+      with:
+          name: debug-deploy
+          path: ./tmp/deploy
+          compression-level: 9
+          retention-days: 1
