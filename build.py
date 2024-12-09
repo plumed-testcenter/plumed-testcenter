@@ -56,7 +56,7 @@ def checkWorkflow():
             raise ValueError(error)
 
 
-def buildBrowsePage(stable_version, tested):
+def buildBrowsePage(tested):
     print("Building browse page")
 
     browse = f"""## Browse the tests  
@@ -71,7 +71,7 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
     for code in testdirs:
         compile_badge = ""
         test_badge = ""
-
+        print("processing " + code)
         with open("tmp/extract/tests/" + code + "/info.yml", "r") as stream:
             info = yaml.load(stream, Loader=yaml.BaseLoader)
 
@@ -147,7 +147,7 @@ if __name__ == "__main__":
         with open("tmp/extract/stable_version.md", "r") as vf:
             stable_version = vf.read()
         # Build the page with all the MD codes
-        buildBrowsePage("v" + stable_version, ("v" + stable_version, "master"))
+        buildBrowsePage(("v" + stable_version, "master"))
     except Exception as e:
         import traceback
         print ("##################traceback##################")

@@ -22,8 +22,11 @@ executible=$HOME/opt/bin/$executible
 executible_suffixed=${executible}$suffix
 
 echo -n "Looking for executable ${executible_suffixed} or ${executible}..."
+
+#now I need the suffix with no underscores
+suffix=${suffix/_/}
 if [[ -x $executible ]] || [[ -x $executible_suffixed ]]; then
-     suffix=${suffix/_/}
+
      python updateYaml.py "$info_yml" "install_plumed" "${suffix}" working
      if [[ -x $executible_suffixed ]]; then
           echo "found $executible_suffixed"
