@@ -149,5 +149,10 @@ if __name__ == "__main__":
         # Build the page with all the MD codes
         buildBrowsePage("v" + stable_version, ("v" + stable_version, "master"))
     except Exception as e:
+        import traceback
+        print ("##################traceback##################")
+        traceback.print_exc()
+        print ("##################traceback##################")
+        print("Error: ", type(e))
         print(e)
         exit(1)
