@@ -56,7 +56,7 @@ def checkWorkflow():
             raise ValueError(error)
 
 
-def buildBrowsePage(stable_version, tested):
+def buildBrowsePage(tested):
     print("Building browse page")
 
     browse = f"""## Browse the tests  
@@ -71,7 +71,7 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
     for code in testdirs:
         compile_badge = ""
         test_badge = ""
-
+        print("processing " + code)
         with open("tmp/extract/tests/" + code + "/info.yml", "r") as stream:
             info = yaml.load(stream, Loader=yaml.BaseLoader)
 
@@ -81,14 +81,14 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
                 f" [![tested on {version}](https://img.shields.io/badge/{version}-"
             )
 
-            compile_status = info["install_plumed_" + version]
+            compile_status = info["install_plumed"][version]
             if compile_status == "working":
                 compile_badge += "passing-green.svg"
             elif compile_status == "broken":
                 compile_badge += "failed-red.svg"
             else:
                 raise ValueError(
-                    f"found invalid compilation status for {code}['test_plumed{version}'] should be 'working' or 'broken', is '{compile_status}'"
+                    f"found invalid compilation status for {code}['install_plumed']['{version}'] should be 'working' or 'broken', is '{compile_status}'"
                 )
             compile_badge += ")](tests/" + code + "/install.html)"
 
@@ -96,7 +96,7 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
             test_badge += (
                 f" [![tested on {version}](https://img.shields.io/badge/{version}-"
             )
-            test_status = info["test_plumed_" + version]
+            test_status = info["test_plumed"][version]
 
             if test_status == "working":
                 test_badge += "passing-green.svg"
@@ -108,7 +108,7 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
                 test_badge += "failed-red.svg"
             else:
                 raise ValueError(
-                    f"found invalid test status for {code}['test_plumed{version}'] should be 'working', 'partial', 'failing' or 'broken', is '{test_status}'"
+                    f"found invalid test status for {code}['test_plumed']['{version}'] should be 'working', 'partial', 'failing' or 'broken', is '{test_status}'"
                 )
             test_badge += f")](tests/{code}/testout_{version}.html)"
 
@@ -147,7 +147,12 @@ if __name__ == "__main__":
         with open("tmp/extract/stable_version.md", "r") as vf:
             stable_version = vf.read()
         # Build the page with all the MD codes
-        buildBrowsePage("v" + stable_version, ("v" + stable_version, "master"))
+        buildBrowsePage(("v" + stable_version, "master"))
     except Exception as e:
+        import traceback
+        print ("##################traceback##################")
+        traceback.print_exc()
+        print ("##################traceback##################")
+        print("Error: ", type(e))
         print(e)
         exit(1)
