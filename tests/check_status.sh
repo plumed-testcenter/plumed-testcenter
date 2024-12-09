@@ -19,11 +19,11 @@ info_yml=tests/$code/info.yml
 
 executible=$(grep executible "$info_yml" | sed -e 's/executible: //')
 executible=$HOME/opt/bin/$executible
-executible_suffixed=$executible$suffix
+executible_suffixed=${executible}$suffix
 
 echo -n "Looking for executable ${executible_suffixed} or ${executible}..."
 if [[ -x $executible ]] || [[ -x $executible_suffixed ]]; then
-
+     suffix=${suffix/_/}
      python updateYaml.py "$info_yml" "install_plumed" "${suffix}" working
      if [[ -x $executible_suffixed ]]; then
           echo "found $executible_suffixed"
