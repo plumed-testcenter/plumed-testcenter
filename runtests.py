@@ -185,7 +185,10 @@ def runBasicTests(
     if info["positions"] or info["timestep"] or info["mass"] or info["charge"]:
         dumpMassesStr = ""
         if info["mass"]:
-            dumpMassesStr = f"DUMPMASSCHARGE FILE=mq_plumed {'' if info['charge'] == 'yes' else 'ONLY_MASSES'}"
+            ONLY_MASSES = "ONLY_MASSES"
+            if info["charge"]:
+                ONLY_MASSES = ""
+            dumpMassesStr = f"DUMPMASSCHARGE FILE=mq_plumed {ONLY_MASSES}"
         timeStepStr = ""
         if info["timestep"]:
             timeStepStr = "t1: TIME\nPRINT ARG=t1 FILE=colvar"
@@ -628,7 +631,7 @@ def writeMDReport(
         Path(f"./{outdir}").mkdir(parents=True, exist_ok=True)
     ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)
     info = ymldata["tests"]
-   
+
     fname = "testout_" + version + ".md"
 
     with open(f"{outdir}/{fname}", "w+") as testout:
@@ -641,7 +644,7 @@ def writeMDReport(
             f"interface between {code} and "
             f"the {version} version of PLUMED is working correctly.\n\n"
         )
-        if info["virial"] == "no":
+        if not info["virial"]:
             testout.write(
                 f"WARNING: {code} does not pass the virial to PLUMED and it is thus "
                 "not possible to run NPT simulations with this code\n\n"
