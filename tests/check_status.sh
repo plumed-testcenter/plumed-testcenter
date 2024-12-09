@@ -38,7 +38,7 @@ if [[ -x $executible ]] || [[ -x $executible_suffixed ]]; then
 
           # no need for the extra check, because of the if above
           echo "Copying $executible to $executible_suffixed"
-          eco "(this should be set up in the install script)"
+          echo "(this should be set up in the install script)"
           cp "$executible" "$executible_suffixed"
 
           exit 0
