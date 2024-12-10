@@ -1,5 +1,4 @@
 # formatted with ruff 0.6.4
-from tempfile import template
 import yaml
 import os
 from datetime import date
@@ -90,7 +89,7 @@ def versionSort(list_of_version) -> list:
 def buildBrowsePage():
     print("Building browse page")
 
-    table = f"""
+    table = """
 | Name of Program  | Short description | Compiles | Passes tests |
 |:-----------------|:------------------|:--------:|:------------:|
 """
@@ -101,7 +100,7 @@ def buildBrowsePage():
         compile_badge = ""
         test_badge = ""
         print("processing " + code)
-        with open("tmp/extract/tests/{code}/info.yml", "r") as stream:
+        with open(f"tmp/extract/tests/{code}/info.yml", "r") as stream:
             info = yaml.load(stream, Loader=yaml.BaseLoader)
 
         # sorting the versions
@@ -142,7 +141,7 @@ def buildBrowsePage():
             test_badge += f" [![tested on {version}](https://img.shields.io/badge/{version}-{test_badge_color})](tests/{code}/testout_{version}.html)"
 
         table += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {test_badge} | \n"
-    
+
     plumed_installation_script = """When the tests above are run PLUMED is built using the install plumed action.
 ```yaml
 - name: Install plumed
@@ -160,7 +159,14 @@ def buildBrowsePage():
 
     thedate = date.today().strftime("%B %d, %Y")
     with open("browse.md", "w+") as f:
-        f.write(template.format(thedate=thedate, table=table, plumed_installation_script=plumed_installation_script))
+        f.write(
+            template.format(
+                thedate=thedate,
+                table=table,
+                plumed_installation_script=plumed_installation_script,
+            )
+        )
+
 
 if __name__ == "__main__":
     try:
