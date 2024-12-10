@@ -1,4 +1,5 @@
 # formatted with ruff 0.6.4
+from tempfile import template
 import yaml
 import os
 from datetime import date
@@ -89,13 +90,7 @@ def versionSort(list_of_version) -> list:
 def buildBrowsePage():
     print("Building browse page")
 
-    thedate = date.today().strftime("%B %d, %Y")
-    browse = f"""## Browse the tests  
-   
-The codes listed below below were tested on __{thedate}__.
-PLUMED-TESTCENTER tested whether the current and development versions of the code can be used to complete the tests for each of these codes.
-
-
+    table = f"""
 | Name of Program  | Short description | Compiles | Passes tests |
 |:-----------------|:------------------|:--------:|:------------:|
 """
@@ -146,11 +141,9 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
                 )
             test_badge += f" [![tested on {version}](https://img.shields.io/badge/{version}-{test_badge_color})](tests/{code}/testout_{version}.html)"
 
-        browse += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {test_badge} | \n"
-    browse += " \n"
-    browse += """#### Building PLUMED
-
-When the tests above are run PLUMED is built using the install plumed action.
+        table += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {test_badge} | \n"
+    
+    plumed_installation_script = """When the tests above are run PLUMED is built using the install plumed action.
 ```yaml
 - name: Install plumed
       uses: Iximiel/install-plumed@v1
@@ -162,16 +155,12 @@ When the tests above are run PLUMED is built using the install plumed action.
          extra_options: --enable-boost_serialization --enable-fftw --enable-libtorch LDFLAGS=-Wl,-rpath,$LD_LIBRARY_PATH --disable-basic-warnings
 ```
 """
-    # no more necessary
-    # browse+=" \n"
-    # browse+="```bash\n"
-    # sf = open(".ci/install.plumed","r")
-    # inp = sf.read()
-    # for line in inp.splitlines() : f.write( line + "\n")
-    # f.write("```\n")
-    with open("browse.md", "w+") as f:
-        f.write(browse)
+    with open("template/browse.md", "r") as f:
+        template = f.read()
 
+    thedate = date.today().strftime("%B %d, %Y")
+    with open("browse.md", "w+") as f:
+        f.write(template.format(thedate=thedate, table=table, plumed_installation_script=plumed_installation_script))
 
 if __name__ == "__main__":
     try:
