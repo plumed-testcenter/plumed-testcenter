@@ -1,6 +1,5 @@
 import os
 import getopt
-import subprocess
 from zipfile import ZipFile
 
 
@@ -27,14 +26,6 @@ def zip_and_remove(myzipfile, paths):
 
 
 def buildInstallPage(code):
-    stable_version = (
-        subprocess.check_output("plumed info --version", shell=True)
-        .decode("utf-8")
-        .strip()
-    )
-    # Save the stable version of plumed to a file to pass to the update.py script (not classy Gareth)
-    with open("stable_version.md", "w+") as vf:
-        vf.write(stable_version)
     # Zip all the logs
     zip_and_remove(
         f"tests/{code}/stable_output.zip",

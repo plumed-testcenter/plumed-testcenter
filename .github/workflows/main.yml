@@ -203,7 +203,7 @@ jobs:
          echo Running tests for ${{matrix.replica}} with PLUMED from  master branch
          python runtests.py --code=${{matrix.replica}} --version=master
          # Build tarball for upload 
-         tar cf testout.tar tests/${{matrix.replica}}/*.md tests/${{matrix.replica}}/*.yml tests/${{matrix.replica}}/*.zip stable_version.md pages
+         tar cf testout.tar tests/${{matrix.replica}}/*.md tests/${{matrix.replica}}/*.yml tests/${{matrix.replica}}/*.zip pages
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4

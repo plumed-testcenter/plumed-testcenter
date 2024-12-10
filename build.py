@@ -56,12 +56,43 @@ def checkWorkflow():
             raise ValueError(error)
 
 
-def buildBrowsePage(tested):
+def versionSort(list_of_version) -> list:
+    """
+    Sorts a list of strings containing version numbers.
+
+    The function first attempts to parse each version string using
+    packaging.version.parse. If this fails, it appends the version to the
+    list of non parseable versions. It then sorts the list of parsed version numbers
+    using packaging.version.Version, and finally concatenates this to the
+    list of non parseable versions.
+
+    Args:
+        list_of_version (list[str]): A list of strings containing version numbers.
+
+    Returns:
+        list[str]: The sorted list of version numbers.
+    """
+    from packaging.version import Version, InvalidVersion, parse as versionParse
+
+    v2_ = []
+    vmasters = []
+    for version in list_of_version:
+        try:
+            _ = versionParse(version)
+            v2_.append(version)
+        except InvalidVersion as _:
+            vmasters.append(version)
+    tested = sorted(v2_, key=Version) + sorted(vmasters)
+    return tested
+
+
+def buildBrowsePage():
     print("Building browse page")
 
+    thedate = date.today().strftime("%B %d, %Y")
     browse = f"""## Browse the tests  
    
-The codes listed below below were tested on __{date.today().strftime("%B %d, %Y")}__.
+The codes listed below below were tested on __{thedate}__.
 PLUMED-TESTCENTER tested whether the current and development versions of the code can be used to complete the tests for each of these codes.
 
 
@@ -70,12 +101,16 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
 """
     testdirs = [d for d in os.listdir("tests") if isTest("tests/" + d)]
     testdirs = sorted(testdirs)
+
     for code in testdirs:
         compile_badge = ""
         test_badge = ""
         print("processing " + code)
         with open("tmp/extract/tests/" + code + "/info.yml", "r") as stream:
             info = yaml.load(stream, Loader=yaml.BaseLoader)
+
+        # sorting the versions
+        tested = versionSort(info["install_plumed"].keys())
 
         for version in tested:
             # building the compilation badge
@@ -105,7 +140,7 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
             elif test_status == "partial":
                 test_badge += "partial-yellow.svg"
             elif test_status == "broken":
-                test_badge += "broken-red.svg"
+                test_badge += "broken-36454F.svg"
             elif test_status == "failing":
                 test_badge += "failed-red.svg"
             else:
@@ -146,15 +181,14 @@ if __name__ == "__main__":
         # Check that the workflow matches with the directories
         checkWorkflow()
 
-        with open("tmp/extract/stable_version.md", "r") as vf:
-            stable_version = vf.read()
         # Build the page with all the MD codes
-        buildBrowsePage(("v" + stable_version, "master"))
+        buildBrowsePage()
     except Exception as e:
         import traceback
-        print ("##################traceback##################")
+
+        print("##################traceback##################")
         traceback.print_exc()
-        print ("##################traceback##################")
+        print("##################traceback##################")
         print("Error: ", type(e))
         print(e)
         exit(1)
