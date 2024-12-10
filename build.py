@@ -154,7 +154,7 @@ def buildBrowsePage():
          extra_options: --enable-boost_serialization --enable-fftw --enable-libtorch LDFLAGS=-Wl,-rpath,$LD_LIBRARY_PATH --disable-basic-warnings
 ```
 """
-    with open("template/browse.md", "r") as f:
+    with open("templates/browse.md", "r") as f:
         template = f.read()
 
     thedate = date.today().strftime("%B %d, %Y")
