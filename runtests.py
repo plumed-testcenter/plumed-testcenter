@@ -44,18 +44,16 @@ def yamlToDict(filename, **yamlOpts):
 
 
 def processMarkdown(
-    filename, prefix="", runSettings=STANDARD_RUN_SETTINGS, overwrite: bool = True
+    filename, destination, runSettings=STANDARD_RUN_SETTINGS, overwrite: bool = True
 ):
     if not os.path.exists(filename):
         raise RuntimeError("Found no file called " + filename)
     with open(filename, "r") as f:
         inp = f.read()
 
-    if prefix != "":
-        directory = prefix + os.path.dirname(filename)
-        Path(f"./{directory}").mkdir(parents=True, exist_ok=True)
-        shutil.copy(filename, prefix + filename)
-        filename = prefix + filename
+    #creates the directory, if it doesn't exist
+    directory = os.path.dirname(destination)
+    Path(f"./{directory}").mkdir(parents=True, exist_ok=True)
 
     processed = ""
     inplumed = False
@@ -121,17 +119,17 @@ def processMarkdown(
         elif not inplumed:
             processed += line + "\n"
 
-    with open(filename, "w+") as ofile:
+    with open(destination, "w+") as ofile:
         ofile.write(processed)
 
 
 def buildTestPages(
-    directory, prefix="", runSettings=STANDARD_RUN_SETTINGS, overwrite: bool = True
+    directory, destination, runSettings=STANDARD_RUN_SETTINGS, overwrite: bool = True
 ):
     for page in os.listdir(directory):
         if ".md" in page:
-            print(f"Processing {directory}/{page}")
-            processMarkdown(directory + "/" + page, prefix, runSettings, overwrite)
+            print(f"Processing {directory}/{page} into {destination}/{page}")
+            processMarkdown(f"{directory}/{page}", f"{destination}/{page}", runSettings, overwrite)
 
 
 def runMDCalc(
@@ -716,11 +714,11 @@ if __name__ == "__main__":
 
     if preparepages:
         # Build all the pages that describe the tests for this code
-        buildTestPages("tests/" + code)
+        # buildTestPages("tests/" + code)
         # Engforces and engvir share the same procedure
-        shutil.copy("pages/engforces.md", "pages/engvir.md")
+        shutil.copy("templates/engforces.md", "templates/engvir.md")
         # Build the default test pages
-        buildTestPages("pages")
+        buildTestPages("templates","pages")
     # Create an __init__.py module for the desired code
     with open(f"tests/{code}/__init__.py", "w+") as ipf:
         ipf.write("from .mdcode import mdcode\n")

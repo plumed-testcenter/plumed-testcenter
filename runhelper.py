@@ -85,13 +85,12 @@ def testOpinion(
 
 
 def getBadge(success, filen, version: str):
-    badge = f"[![tested on {version}](https://img.shields.io/badge/{version}-"
     if success < 0:
-        badge += "failed-red.svg"
+        badge = "failed-red.svg"
     else:
         color = badgeColor(success)
-        badge += f"fail%20{success}%25-{color}.svg"
-    return badge + f")]({filen}_{version}.html)"
+        badge = f"fail%20{success}%25-{color}.svg"
+    return f"[![tested on {version}](https://img.shields.io/badge/{version}-{badge})]({filen}_{version}.html)"
 
 
 def writeReportPage(

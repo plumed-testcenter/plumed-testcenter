@@ -61,10 +61,10 @@ def localRun(
     if printMD:
         print("Preparing pages")
         # Engforces and engvir share the same procedure
-        shutil.copy("pages/engforces.md", "pages/engvir.md")
+        shutil.copy("templates/engforces.md", "templates/engvir.md")
         # buildTestPages(codedir, prefix, plumedToRun)
         # this usues > 50% of the time
-        buildTestPages("pages", prefix, plumedToRun, overwrite=False)
+        buildTestPages("templates", f"{prefix}pages", plumedToRun, overwrite=False)
         writeMDReport(code, "stable", results, prefix=prefix)
 
 
