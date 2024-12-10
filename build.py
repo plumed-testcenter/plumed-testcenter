@@ -110,7 +110,8 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
             info = yaml.load(stream, Loader=yaml.BaseLoader)
 
         # sorting the versions
-        tested = versionSort(info["install_plumed"].keys())
+        results = info["results"]
+        tested = versionSort(results.keys())
 
         for version in tested:
             # building the compilation badge
@@ -118,14 +119,14 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
                 f" [![tested on {version}](https://img.shields.io/badge/{version}-"
             )
 
-            compile_status = info["install_plumed"][version]
+            compile_status = results[version]["install_plumed"]
             if compile_status == "working":
                 compile_badge += "passing-green.svg"
             elif compile_status == "broken":
                 compile_badge += "failed-red.svg"
             else:
                 raise ValueError(
-                    f"found invalid compilation status for {code}['install_plumed']['{version}'] should be 'working' or 'broken', is '{compile_status}'"
+                    f"found invalid compilation status for {code} with {version} should be 'working' or 'broken', is '{compile_status}'"
                 )
             compile_badge += ")](tests/" + code + "/install.html)"
 
@@ -133,7 +134,7 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
             test_badge += (
                 f" [![tested on {version}](https://img.shields.io/badge/{version}-"
             )
-            test_status = info["test_plumed"][version]
+            test_status = results[version]["test_plumed"]
 
             if test_status == "working":
                 test_badge += "passing-green.svg"
@@ -145,7 +146,7 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
                 test_badge += "failed-red.svg"
             else:
                 raise ValueError(
-                    f"found invalid test status for {code}['test_plumed']['{version}'] should be 'working', 'partial', 'failing' or 'broken', is '{test_status}'"
+                    f"found invalid test status for {code} with {version} should be 'working', 'partial', 'failing' or 'broken', is '{test_status}'"
                 )
             test_badge += f")](tests/{code}/testout_{version}.html)"
 
