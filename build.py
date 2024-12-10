@@ -106,7 +106,7 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
         compile_badge = ""
         test_badge = ""
         print("processing " + code)
-        with open("tmp/extract/tests/" + code + "/info.yml", "r") as stream:
+        with open("tmp/extract/tests/{code}/info.yml", "r") as stream:
             info = yaml.load(stream, Loader=yaml.BaseLoader)
 
         # sorting the versions
@@ -115,40 +115,36 @@ PLUMED-TESTCENTER tested whether the current and development versions of the cod
 
         for version in tested:
             # building the compilation badge
-            compile_badge += (
-                f" [![tested on {version}](https://img.shields.io/badge/{version}-"
-            )
 
             compile_status = results[version]["install_plumed"]
             if compile_status == "working":
-                compile_badge += "passing-green.svg"
+                compile_badge_color = "passing-green.svg"
             elif compile_status == "broken":
-                compile_badge += "failed-red.svg"
+                compile_badge_color = "failed-red.svg"
             else:
                 raise ValueError(
                     f"found invalid compilation status for {code} with {version} should be 'working' or 'broken', is '{compile_status}'"
                 )
-            compile_badge += ")](tests/" + code + "/install.html)"
+
+            compile_badge += f" [![tested on {version}](https://img.shields.io/badge/{version}-{compile_badge_color})](tests/{code}/install.html)"
 
             # building the tests badge
-            test_badge += (
-                f" [![tested on {version}](https://img.shields.io/badge/{version}-"
-            )
+
             test_status = results[version]["test_plumed"]
 
             if test_status == "working":
-                test_badge += "passing-green.svg"
+                test_badge_color = "passing-green.svg"
             elif test_status == "partial":
-                test_badge += "partial-yellow.svg"
-            elif test_status == "broken":
-                test_badge += "broken-36454F.svg"
+                test_badge_color = "partial-yellow.svg"
             elif test_status == "failing":
-                test_badge += "failed-red.svg"
+                test_badge_color = "failed-red.svg"
+            elif test_status == "broken":
+                test_badge_color = "broken-36454F.svg"
             else:
                 raise ValueError(
                     f"found invalid test status for {code} with {version} should be 'working', 'partial', 'failing' or 'broken', is '{test_status}'"
                 )
-            test_badge += f")](tests/{code}/testout_{version}.html)"
+            test_badge += f" [![tested on {version}](https://img.shields.io/badge/{version}-{test_badge_color})](tests/{code}/testout_{version}.html)"
 
         browse += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {test_badge} | \n"
     browse += " \n"
