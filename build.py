@@ -56,69 +56,93 @@ def checkWorkflow():
             raise ValueError(error)
 
 
-def buildBrowsePage(tested):
+def versionSort(list_of_version) -> list:
+    """
+    Sorts a list of strings containing version numbers.
+
+    The function first attempts to parse each version string using
+    packaging.version.parse. If this fails, it appends the version to the
+    list of non parseable versions. It then sorts the list of parsed version numbers
+    using packaging.version.Version, and finally concatenates this to the
+    list of non parseable versions.
+
+    Args:
+        list_of_version (list[str]): A list of strings containing version numbers.
+
+    Returns:
+        list[str]: The sorted list of version numbers.
+    """
+    from packaging.version import Version, InvalidVersion, parse as versionParse
+
+    v2_ = []
+    vmasters = []
+    for version in list_of_version:
+        try:
+            _ = versionParse(version)
+            v2_.append(version)
+        except InvalidVersion as _:
+            vmasters.append(version)
+    tested = sorted(v2_, key=Version) + sorted(vmasters)
+    return tested
+
+
+def buildBrowsePage():
     print("Building browse page")
 
-    browse = f"""## Browse the tests  
-   
-The codes listed below below were tested on __{date.today().strftime("%B %d, %Y")}__.
-PLUMED-TESTCENTER tested whether the current and development versions of the code can be used to complete the tests for each of these codes.
-
-
+    table = """
 | Name of Program  | Short description | Compiles | Passes tests |
 |:-----------------|:------------------|:--------:|:------------:|
 """
     testdirs = [d for d in os.listdir("tests") if isTest("tests/" + d)]
     testdirs = sorted(testdirs)
+
     for code in testdirs:
         compile_badge = ""
         test_badge = ""
         print("processing " + code)
-        with open("tmp/extract/tests/" + code + "/info.yml", "r") as stream:
+        with open(f"tmp/extract/tests/{code}/info.yml", "r") as stream:
             info = yaml.load(stream, Loader=yaml.BaseLoader)
+
+        # sorting the versions
+        results = info["results"]
+        tested = versionSort(results.keys())
 
         for version in tested:
             # building the compilation badge
-            compile_badge += (
-                f" [![tested on {version}](https://img.shields.io/badge/{version}-"
-            )
 
-            compile_status = info["install_plumed"][version]
+            compile_status = results[version]["install_plumed"]
             if compile_status == "working":
-                compile_badge += "passing-green.svg"
+                compile_badge_color = "passing-green.svg"
             elif compile_status == "broken":
-                compile_badge += "failed-red.svg"
+                compile_badge_color = "failed-red.svg"
             else:
                 raise ValueError(
-                    f"found invalid compilation status for {code}['install_plumed']['{version}'] should be 'working' or 'broken', is '{compile_status}'"
+                    f"found invalid compilation status for {code} with {version} should be 'working' or 'broken', is '{compile_status}'"
                 )
-            compile_badge += ")](tests/" + code + "/install.html)"
+
+            compile_badge += f" [![tested on {version}](https://img.shields.io/badge/{version}-{compile_badge_color})](tests/{code}/install.html)"
 
             # building the tests badge
-            test_badge += (
-                f" [![tested on {version}](https://img.shields.io/badge/{version}-"
-            )
-            test_status = info["test_plumed"][version]
+
+            test_status = results[version]["test_plumed"]
 
             if test_status == "working":
-                test_badge += "passing-green.svg"
+                test_badge_color = "passing-green.svg"
             elif test_status == "partial":
-                test_badge += "partial-yellow.svg"
-            elif test_status == "broken":
-                test_badge += "broken-red.svg"
+                test_badge_color = "partial-yellow.svg"
             elif test_status == "failing":
-                test_badge += "failed-red.svg"
+                test_badge_color = "failed-red.svg"
+            elif test_status == "broken":
+                test_badge_color = "broken-36454F.svg"
             else:
                 raise ValueError(
-                    f"found invalid test status for {code}['test_plumed']['{version}'] should be 'working', 'partial', 'failing' or 'broken', is '{test_status}'"
+                    f"found invalid test status for {code} with {version} should be 'working', 'partial', 'failing' or 'broken', is '{test_status}'"
                 )
-            test_badge += f")](tests/{code}/testout_{version}.html)"
+            test_badge += f" [![tested on {version}](https://img.shields.io/badge/{version}-{test_badge_color})](tests/{code}/testout_{version}.html)"
 
-        browse += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {test_badge} | \n"
-    browse += " \n"
-    browse += """#### Building PLUMED
+        table += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {test_badge} | \n"
 
-When the tests above are run PLUMED is built using the install plumed action.
+    plumed_installation_script = """When the tests above are run PLUMED is built using the install plumed action.
 ```yaml
 - name: Install plumed
       uses: Iximiel/install-plumed@v1
@@ -130,15 +154,18 @@ When the tests above are run PLUMED is built using the install plumed action.
          extra_options: --enable-boost_serialization --enable-fftw --enable-libtorch LDFLAGS=-Wl,-rpath,$LD_LIBRARY_PATH --disable-basic-warnings
 ```
 """
-    # no more necessary
-    # browse+=" \n"
-    # browse+="```bash\n"
-    # sf = open(".ci/install.plumed","r")
-    # inp = sf.read()
-    # for line in inp.splitlines() : f.write( line + "\n")
-    # f.write("```\n")
+    with open("templates/browse.md", "r") as f:
+        template = f.read()
+
+    thedate = date.today().strftime("%B %d, %Y")
     with open("browse.md", "w+") as f:
-        f.write(browse)
+        f.write(
+            template.format(
+                thedate=thedate,
+                table=table,
+                plumed_installation_script=plumed_installation_script,
+            )
+        )
 
 
 if __name__ == "__main__":
@@ -146,15 +173,14 @@ if __name__ == "__main__":
         # Check that the workflow matches with the directories
         checkWorkflow()
 
-        with open("tmp/extract/stable_version.md", "r") as vf:
-            stable_version = vf.read()
         # Build the page with all the MD codes
-        buildBrowsePage(("v" + stable_version, "master"))
+        buildBrowsePage()
     except Exception as e:
         import traceback
-        print ("##################traceback##################")
+
+        print("##################traceback##################")
         traceback.print_exc()
-        print ("##################traceback##################")
+        print("##################traceback##################")
         print("Error: ", type(e))
         print(e)
         exit(1)

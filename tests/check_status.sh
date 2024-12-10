@@ -27,7 +27,7 @@ echo -n "Looking for executable ${executible_suffixed} or ${executible}..."
 suffix=${suffix/_/}
 if [[ -x $executible ]] || [[ -x $executible_suffixed ]]; then
 
-     python updateYaml.py "$info_yml" "install_plumed" "${suffix}" working
+     python updateYaml.py "$info_yml" results "${suffix}" "install_plumed" working
      if [[ -x $executible_suffixed ]]; then
           echo "found $executible_suffixed"
           # the install script should have done the homework (see below)
@@ -52,4 +52,4 @@ else
 fi
 echo "Something is wrong with the installation of the patched $code with plumed$suffix"
 
-python updateYaml.py "$info_yml" "install_plumed" "${suffix}" broken
+python updateYaml.py "$info_yml" results "${suffix}" "install_plumed" broken

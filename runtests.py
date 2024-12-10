@@ -130,6 +130,7 @@ def buildTestPages(
 ):
     for page in os.listdir(directory):
         if ".md" in page:
+            print(f"Processing {directory}/{page}")
             processMarkdown(directory + "/" + page, prefix, runSettings, overwrite)
 
 
@@ -663,10 +664,13 @@ def writeMDReport(
 
         test_result = testOpinion(howbad)
     ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.SafeLoader)
-    if "test_plumed" in ymldata.keys():
-        ymldata["test_plumed"][str(version)] = test_result
+    if "results" not in ymldata.keys():
+        ymldata["results"] = {}
+    str_version = str(version)
+    if str_version in ymldata["results"].keys():
+        ymldata["results"][str_version]["test_plumed"] = test_result
     else:
-        ymldata["test_plumed"] = {str(version): test_result}
+        ymldata["results"][str_version] = {"test_plumed": test_result}
     with open(f"{outdir}/info.yml", "w") as infoOut:
         infoOut.write(yaml.dump(ymldata, sort_keys=False))
 
