@@ -3,7 +3,7 @@ import numpy as np
 # formatted with ruff 0.6.4
 
 
-# tuple becasue I do't want to mutate it and keep the order
+# tuple becasue I don't want to mutate it and I want to keep the order
 TEST_ORDER = (
     "natoms",
     "positions",
@@ -264,7 +264,7 @@ class writeReportForSimulations:
         )
         report["failure_rate"] = failure_rate
         report["docstring"] = TEST_DESCRIPTIONS[kind]
-        return {kind: report}
+        return report
 
 
 def dictToReport(input: dict, *, prefix: str = ""):

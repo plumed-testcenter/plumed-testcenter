@@ -246,31 +246,25 @@ PRINT ARG=c.* FILE=cell_data
             basicSR.md_failed = True
             basic_md_failed = True
         # Output results from tests on natoms
-        results.update(
-            basicSR.writeReportAndTable(
-                "natoms",
-                codenatoms,
-                plumednatoms,
-                0.01 * np.ones(codenatoms.shape[0]),
-            )
+        results["natoms"] = basicSR.writeReportAndTable(
+            "natoms",
+            codenatoms,
+            plumednatoms,
+            0.01 * np.ones(codenatoms.shape[0]),
         )
         # Output results from tests on positions
-        results.update(
-            basicSR.writeReportAndTable(
-                "positions",
-                codepos,
-                plumedpos,
-                tolerance * np.ones(plumedpos.shape),
-            )
+        results["positions"] = basicSR.writeReportAndTable(
+            "positions",
+            codepos,
+            plumedpos,
+            tolerance * np.ones(plumedpos.shape),
         )
         # Output results from tests on cell
-        results.update(
-            basicSR.writeReportAndTable(
-                "cell",
-                codecell,
-                plumedcell,
-                tolerance * np.ones(plumedcell.shape),
-            )
+        results["cell"] = basicSR.writeReportAndTable(
+            "cell",
+            codecell,
+            plumedcell,
+            tolerance * np.ones(plumedcell.shape),
         )
 
     if info["timestep"]:
@@ -287,14 +281,13 @@ PRINT ARG=c.* FILE=cell_data
                     ValueError("Timestep should be the same for all MD steps")
 
         # Output results from tests on timestep
-        results.update(
-            basicSR.writeReportAndTable(
-                "timestep",
-                md_tstep,
-                plumed_tstep,
-                0.0001,
-            )
+        results["timestep"] = basicSR.writeReportAndTable(
+            "timestep",
+            md_tstep,
+            plumed_tstep,
+            0.0001,
         )
+
     if info["mass"]:
         print('Gathering data for "mass" test')
         md_masses = np.ones(10)
@@ -304,13 +297,11 @@ PRINT ARG=c.* FILE=cell_data
             pl_masses = np.loadtxt(f"{basicDir}/mq_plumed")[:, 1]
 
         # Output results from tests on mass
-        results.update(
-            basicSR.writeReportAndTable(
-                "mass",
-                md_masses,
-                pl_masses,
-                0.01 * np.ones(pl_masses.shape),
-            )
+        results["mass"] = basicSR.writeReportAndTable(
+            "mass",
+            md_masses,
+            pl_masses,
+            0.01 * np.ones(pl_masses.shape),
         )
 
     if info["charge"]:
@@ -322,13 +313,11 @@ PRINT ARG=c.* FILE=cell_data
             pl_charges = np.loadtxt(f"{basicDir}/mq_plumed")[:, 2]
 
         # Output results from tests on charge
-        results.update(
-            basicSR.writeReportAndTable(
-                "charge",
-                md_charges,
-                pl_charges,
-                tolerance * np.ones(pl_charges.shape),
-            )
+        results["charge"] = basicSR.writeReportAndTable(
+            "charge",
+            md_charges,
+            pl_charges,
+            tolerance * np.ones(pl_charges.shape),
         )
     return results
 
@@ -372,19 +361,18 @@ def runForcesTest(outdir: str, runMDCalcSettings: dict, tolerance: float) -> dic
         val1 = np.loadtxt(f"{outdir}/forces1_{version}/colvar")[:, 1]
         val2 = np.loadtxt(f"{outdir}/forces2_{version}/colvar")[:, 1]
     print('Gathering data for "forces" test')
-    results.update(
-        writeReportForSimulations(
-            runMDCalcSettings["code"],
-            version,
-            md_failed,
-            ["forces1", "forces2"],
-        ).writeReportAndTable(
-            "forces",
-            val1,
-            val2,
-            tolerance * np.ones(val1.shape),
-        )
+    results["forces"] = writeReportForSimulations(
+        runMDCalcSettings["code"],
+        version,
+        md_failed,
+        ["forces1", "forces2"],
+    ).writeReportAndTable(
+        "forces",
+        val1,
+        val2,
+        tolerance * np.ones(val1.shape),
     )
+
     return results
 
 
@@ -417,20 +405,19 @@ def runVirialTest(outdir: str, runMDCalcSettings: dict, tolerance: float) -> dic
         val2 = np.loadtxt(f"{outdir}/virial2_{version}/volume")[:, 1]
         val3 = np.loadtxt(f"{outdir}/virial3_{version}/volume")[:, 1]
     print('Gathering data for "virial" test')
-    results.update(
-        writeReportForSimulations(
-            runMDCalcSettings["code"],
-            version,
-            md_failed,
-            ["virial1", "virial2", "virial3"],
-        ).writeReportAndTable(
-            "virial",
-            val1,
-            val2,
-            np.abs(val3 - val1),
-            denominatorTolerance=tolerance,
-        )
+    results["virial"] = writeReportForSimulations(
+        runMDCalcSettings["code"],
+        version,
+        md_failed,
+        ["virial1", "virial2", "virial3"],
+    ).writeReportAndTable(
+        "virial",
+        val1,
+        val2,
+        np.abs(val3 - val1),
+        denominatorTolerance=tolerance,
     )
+
     return results
 
 
@@ -478,20 +465,19 @@ def energyTest(
         val2 = np.loadtxt(f"{outdir}/{title}2_{version}/energy")[:, 1:]
         val3 = np.loadtxt(f"{outdir}/{title}3_{version}/energy")[:, 1:]
     print(f'Gathering data for "{title}" test')
-    results.update(
-        writeReportForSimulations(
-            runMDCalcSettings["code"],
-            version,
-            md_failed,
-            [f"{title}1", f"{title}2", f"{title}3"],
-        ).writeReportAndTable(
-            title,
-            val1,
-            val2,
-            np.abs(val1 - val3),
-            denominatorTolerance=tolerance,
-        )
+    results[title] = writeReportForSimulations(
+        runMDCalcSettings["code"],
+        version,
+        md_failed,
+        [f"{title}1", f"{title}2", f"{title}3"],
+    ).writeReportAndTable(
+        title,
+        val1,
+        val2,
+        np.abs(val1 - val3),
+        denominatorTolerance=tolerance,
     )
+    results[title]["alpha"] = alpha
     return results
 
 
@@ -517,19 +503,18 @@ def runEnergyTests(
     else:
         md_failed = True
     print('Gathering data for "energy" test')
-    results.update(
-        writeReportForSimulations(
-            code,
-            version,
-            md_failed,
-            ["energy"],
-        ).writeReportAndTable(
-            "energy",
-            md_energy,
-            pl_energy,
-            tolerance * np.ones(len(md_energy)),
-        )
+    results["energy"] = writeReportForSimulations(
+        code,
+        version,
+        md_failed,
+        ["energy"],
+    ).writeReportAndTable(
+        "energy",
+        md_energy,
+        pl_energy,
+        tolerance * np.ones(len(md_energy)),
     )
+
     # TODO:https://docs.python.org/3/library/string.html#template-strings
     # the .md files can be templated with this string built-in feature,
     # so in the engforces/engvir mds we can change sqrtalpha to an arbitray
