@@ -51,7 +51,7 @@ def processMarkdown(
     with open(filename, "r") as f:
         inp = f.read()
 
-    #creates the directory, if it doesn't exist
+    # creates the directory, if it doesn't exist
     directory = os.path.dirname(destination)
     Path(f"./{directory}").mkdir(parents=True, exist_ok=True)
 
@@ -129,7 +129,9 @@ def buildTestPages(
     for page in os.listdir(directory):
         if ".md" in page:
             print(f"Processing {directory}/{page} into {destination}/{page}")
-            processMarkdown(f"{directory}/{page}", f"{destination}/{page}", runSettings, overwrite)
+            processMarkdown(
+                f"{directory}/{page}", f"{destination}/{page}", runSettings, overwrite
+            )
 
 
 def runMDCalc(
@@ -475,7 +477,7 @@ def energyTest(
         np.abs(val1 - val3),
         denominatorTolerance=tolerance,
     )
-    results[title]["alpha"] = alpha
+    results[title]["sqrtalpha"] = sqrtalpha
     return results
 
 
@@ -718,7 +720,7 @@ if __name__ == "__main__":
         # Engforces and engvir share the same procedure
         shutil.copy("templates/engforces.md", "templates/engvir.md")
         # Build the default test pages
-        buildTestPages("templates","pages")
+        buildTestPages("templates", "pages")
     # Create an __init__.py module for the desired code
     with open(f"tests/{code}/__init__.py", "w+") as ipf:
         ipf.write("from .mdcode import mdcode\n")
