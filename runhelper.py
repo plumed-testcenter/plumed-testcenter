@@ -96,9 +96,6 @@ def getBadge(success, filen, version: str):
 def writeReportPage(
     filen, code, version, md_fail, zipfiles, ref, data, denom, *, prefix="", extra={}
 ):
-    # Read in the file
-    with open(f"{prefix}pages/{filen}.md", "r") as f:
-        inp = f.read()
     output = {
         # this is a workaround for not modify plumed2html
         # the oder brackets have been "doubled" {{}}
@@ -183,6 +180,10 @@ def writeReportPage(
             )
     if "sqrtalpha" in extra:
         output["sqrtalpha"] = extra["sqrtalpha"]
+    # Read in the file template
+    with open(f"{prefix}pages/{filen}.md", "r") as f:
+        inp = f.read()
+    # And output it:
     with open(f"{prefix}tests/{code}/{filen}_{version}.md", "w+") as of:
         of.write(inp.format(**output))
 
