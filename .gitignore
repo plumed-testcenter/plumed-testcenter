@@ -12,6 +12,7 @@ local*/
 /*_restraint
 /tests/*/__init__.py
 ######## this is copyed from engforces.md, when they diverge THIS must be changed
-/pages/engvir.md
+/templates/engvir.md
+/pages/
 ########
 tmp/

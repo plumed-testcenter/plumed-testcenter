@@ -11,7 +11,11 @@ DUMPATOMS ATOMS=@mdatoms FILE=plumed.xyz
 
 # Trajectory
 
+{Trajectory}
+
 # Results
+
+{Results}
 
 The first two columns of the table below contains the number of atoms that were in the structure the MD trajectory started from and the number of atomic positions
 that were output by the command above.  If the PLUMED interface is working correctly these two numbers should be identical. 

@@ -3,7 +3,7 @@ import numpy as np
 # formatted with ruff 0.6.4
 
 
-# tuple becasue I do't want to mutate it and keep the order
+# tuple becasue I don't want to mutate it and I want to keep the order
 TEST_ORDER = (
     "natoms",
     "positions",
@@ -85,79 +85,73 @@ def testOpinion(
 
 
 def getBadge(success, filen, version: str):
-    badge = f"[![tested on {version}](https://img.shields.io/badge/{version}-"
     if success < 0:
-        badge += "failed-red.svg"
+        badge = "failed-red.svg"
     else:
         color = badgeColor(success)
-        badge += f"fail%20{success}%25-{color}.svg"
-    return badge + f")]({filen}_{version}.html)"
+        badge = f"fail%20{success}%25-{color}.svg"
+    return f"[![tested on {version}](https://img.shields.io/badge/{version}-{badge})]({filen}_{version}.html)"
 
 
 def writeReportPage(
-    filen, code, version, md_fail, zipfiles, ref, data, denom, *, prefix=""
+    filen, code, version, md_fail, zipfiles, ref, data, denom, *, prefix="", extra={}
 ):
-    # Read in the file
-    with open(f"{prefix}pages/{filen}.md", "r") as f:
-        inp = f.read()
+    output = {
+        # this is a workaround for not modify plumed2html
+        # the oder brackets have been "doubled" {{}}
+        "% raw %": "{% raw %}",
+        "% endraw %": "{% endraw %}",
+    }
+    # Now prepare the file output
 
-    # Now output the file
-    with open(f"{prefix}tests/{code}/{filen}_{version}.md", "w+") as of:
-        for line in inp.splitlines():
-            if "Trajectory" in line and "#" in line:
-                if len(zipfiles) != 1:
-                    raise ValueError("wrong number of trajectories")
-                of.write(
-                    f"{line}\n"
-                    "Input and output files for the test calculation are available in "
-                    f"this [zip archive]({zipfiles[0]}_{version}.zip)\n\n"
-                )
-            elif "Trajectories" in line and "#" in line:
-                if len(zipfiles) == 2:
-                    of.write(
-                        f"{line}\n"
-                        "1. Input and output files for the calculation where the restraint "
-                        "is applied by the MD code available in "
-                        f"this [zip archive]({zipfiles[0]}_{version}.zip)\n"
-                        "2. Input and output files for the calculation where the restraint "
-                        "is applied by PLUMED are available in t"
-                        f"his [zip archive]({zipfiles[1]}_{version}.zip)\n\n"
-                    )
-                elif len(zipfiles) == 3:
-                    of.write(
-                        f"{line}\n"
-                        "1. Input and output files for the unpeturbed calculation "
-                        "are available in "
-                        f"this [zip archive]({zipfiles[0]}_{version}.zip)\n"
-                        "2. Input and output files for the peturbed calculation "
-                        "are available in "
-                        f"this [zip archive]({zipfiles[2]}_{version}.zip)\n\n"
-                        "3. Input and output files for the peturbed calculation in "
-                        "which a PLUMED restraint is used to undo the effect of the "
-                        "changed MD parameters are available in "
-                        f"this [zip archive]({zipfiles[1]}_{version}.zip)\n\n"
-                    )
-                else:
-                    raise ValueError("wrong number of trajectories")
-            elif "Results" in line and "#" in line and md_fail:
-                of.write(
-                    f"{line}\n"
-                    "Calculations were not successful and no data was generated for comparison\n"
-                )
-            else:
-                of.write(line + "\n")
-        if not md_fail and hasattr(data, "__len__"):
-            if len(zipfiles) == 1:
-                of.write(
-                    "\n| MD code output | PLUMED output | Tolerance | % Difference | \n"
-                )
-            else:
-                of.write(
-                    "\n| Original result | Result with PLUMED | Effect of peturbation | % Difference | \n"
-                )
-            of.write(
-                "|:-------------|:--------------|:--------------|:--------------| \n"
+    # if the file template contains the wrong keyword the format function will throw
+    if len(zipfiles) == 1:
+        output["Trajectory"] = (
+            f"Input and output files for the test calculation are available in"
+            f"this [zip archive]({zipfiles[0]}_{version}.zip)"
+        )
+
+    elif len(zipfiles) == 2:
+        output["Trajectories"] = (
+            " 1. Input and output files for the calculation where the restraint"
+            f" is applied by the MD code available in this [zip archive]({zipfiles[0]}_{version}.zip)\n\n"
+            " 2. Input and output files for the calculation where the restraint"
+            f" is applied by PLUMED are available in this [zip archive]({zipfiles[1]}_{version}.zip"
+        )
+
+    elif len(zipfiles) == 3:
+        output["Trajectories"] = (
+            " 1. Input and output files for the unpeturbed calculation are available in "
+            f"this [zip archive]({zipfiles[0]}_{version}.zip)\n\n"
+            " 2. Input and output files for the peturbed calculation are available in "
+            f"this [zip archive]({zipfiles[2]}_{version}.zip)\n\n"
+            " 3. Input and output files for the peturbed calculation in which a PLUMED restraint is used to undo the effect of the "
+            "changed MD parameters are available in "
+            f"this [zip archive]({zipfiles[1]}_{version}.zip)\n"
+        )
+    else:
+        raise ValueError("wrong number of trajectories")
+
+    if md_fail:
+        output["Results"] = (
+            "Calculations were not successful and no data was generated for comparison"
+        )
+
+    else:
+        if len(zipfiles) == 1:
+            output["Results"] = (
+                "| MD code output | PLUMED output | Tolerance | % Difference | \n"
             )
+        else:
+            output["Results"] = (
+                "\n| Original result | Result with PLUMED | Effect of peturbation | % Difference | \n"
+            )
+
+        output["Results"] += (
+            "|:-------------|:--------------|:--------------|:--------------| \n"
+        )
+        if hasattr(data, "__len__"):
+            # then I would like to set up an image
             nlines = min(20, len(ref))
             percent_diff = 100 * np.divide(
                 np.abs(ref - data), denom, out=np.zeros_like(denom), where=denom != 0
@@ -168,27 +162,30 @@ def writeReportPage(
                     data_strings = " ".join([f"{x:.4f}" for x in data[i]])
                     denom_strings = " ".join([f"{x:.4f}" for x in denom[i]])
                     pp_strings = " ".join([f"{x:.4f}" for x in percent_diff[i]])
-                    of.write(
+
+                    output["Results"] += (
                         f"| {ref_strings} | {data_strings} | {denom_strings} | {pp_strings} | \n"
                     )
+
                 else:
                     # TODO:ask if also this needs formatting (just append ":.4f")
-                    of.write(
+
+                    output["Results"] += (
                         f"| {ref[i]} | {data[i]} | {denom[i]} | {percent_diff[i]} |\n"
                     )
-        elif not md_fail:
-            if len(zipfiles) == 1:
-                of.write(
-                    "\n| MD code output | PLUMED output | Tolerance | % Difference | \n"
-                )
-            else:
-                of.write(
-                    "| Original result | Result with PLUMED | Effect of peturbation | % Difference | \n"
-                )
-            of.write(
-                "|:-------------|:--------------|:--------------|:--------------| \n"
+
+        else:
+            output["Results"] += (
                 f"| {ref} | {data} | {denom} | {100 * np.abs(ref - data) / denom} | \n"
             )
+    if "sqrtalpha" in extra:
+        output["sqrtalpha"] = extra["sqrtalpha"]
+    # Read in the file template
+    with open(f"{prefix}pages/{filen}.md", "r") as f:
+        inp = f.read()
+    # And output it:
+    with open(f"{prefix}tests/{code}/{filen}_{version}.md", "w+") as of:
+        of.write(inp.format(**output))
 
 
 def check(
@@ -264,7 +261,7 @@ class writeReportForSimulations:
         )
         report["failure_rate"] = failure_rate
         report["docstring"] = TEST_DESCRIPTIONS[kind]
-        return {kind: report}
+        return report
 
 
 def dictToReport(input: dict, *, prefix: str = ""):
@@ -280,7 +277,7 @@ def dictToReport(input: dict, *, prefix: str = ""):
         "denom": input["denom"],
         "prefix": prefix,
     }
-    writeReportPage(**report)
+    writeReportPage(**report, extra=input)
 
 
 def dictToTestoutTableEntry(input: dict):
