@@ -8,4 +8,11 @@ updates:
   - "dependabot"
   commit-message:
     prefix: dependabot-ci
-    
+- package-ecosystem: "pip"
+  directory: "/"
+  schedule:
+    interval: "weekly"
+  labels:
+  - "dependabot"
+  commit-message:
+    prefix: dependabot-pip
