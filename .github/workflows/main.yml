@@ -202,7 +202,9 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: testout-content-${{matrix.replica}}
-        # If a wildcard pattern is used, the path hierarchy will be preserved after the first wildcard pattern:
+         # From the manual:
+         # If a wildcard pattern is used, the path hierarchy will be preserved after the first wildcard pattern:
+         # So we add the ** at the start to preserve the test/code path
         path: |
           **/tests/${{matrix.replica}}/*.md
           **/tests/${{matrix.replica}}/*.yml
