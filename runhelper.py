@@ -96,6 +96,7 @@ def getBadge(success, filen, version: str):
 def writeReportPage(
     filen, code, version, md_fail, zipfiles, ref, data, denom, *, prefix="", extra={}
 ):
+    with_image=False
     output = {
         # this is a workaround for not modify plumed2html
         # the oder brackets have been "doubled" {{}}
@@ -167,7 +168,23 @@ def writeReportPage(
                         f"| {ref_strings} | {data_strings} | {denom_strings} | {pp_strings} | \n"
                     )
 
-                else:
+            else:
+                import matplotlib.pyplot as plt
+                from matplotlib.ticker import MaxNLocator
+                with_image=True
+                fig, ax = plt.subplots()
+                ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+                x = np.arange(len(ref),dtype=int)
+                diff = np.abs(np.array(ref) - np.array(data))
+                ax.plot(x, diff, label="$|| ($MD code output$) - ($PLUMED output $)||$")
+                ax.plot(x, denom, label="Tolerance")
+                ax2 = ax.twinx()
+                ax2.plot(x, percent_diff, label="% Difference", color="tab:red")
+                ax2.set_ylabel("% Difference", color="tab:red")
+
+                fig.legend(loc="outside upper center", ncol=3)
+                fig.savefig(f"{prefix}tests/{code}/{filen}_{version}.png")
+                for i in range(nlines):
                     # TODO:ask if also this needs formatting (just append ":.4f")
 
                     output["Results"] += (
@@ -186,6 +203,10 @@ def writeReportPage(
     # And output it:
     with open(f"{prefix}tests/{code}/{filen}_{version}.md", "w+") as of:
         of.write(inp.format(**output))
+        if with_image:
+            of.write("### Graphical representation (_beta_)\n")
+            of.write("A visualization of the table above:  \n")
+            of.write(f"![{filen}_{version}](./{filen}_{version}.png)\n")
 
 
 def check(
