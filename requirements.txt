@@ -1,4 +1,4 @@
-PyYAML==6.0.2
-numpy==2.1.3
+PyYAML==6.0.1
+numpy==1.26.4
 PlumedToHTML==0.98
-MDAnalysis==2.8.0
+MDAnalysis==2.7.0
