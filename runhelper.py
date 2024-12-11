@@ -140,14 +140,14 @@ def writeReportPage(
 
     else:
         if len(zipfiles) == 1:
-            output["Results"] = (
-                "| MD code output | PLUMED output | Tolerance | % Difference | \n"
-            )
+            col1 = "MD code output"
+            col2 = "PLUMED output"
+            col3 = "Tolerance"
         else:
-            output["Results"] = (
-                "\n| Original result | Result with PLUMED | Effect of peturbation | % Difference | \n"
-            )
-
+            col1 = "Original"
+            col2 = "With PLUMED"
+            col3 = "Effect of peturbation"
+        output["Results"] = f"| {col1} | {col2} | {col3} | % Difference | \n"
         output["Results"] += (
             "|:-------------|:--------------|:--------------|:--------------| \n"
         )
@@ -157,8 +157,8 @@ def writeReportPage(
             percent_diff = 100 * np.divide(
                 np.abs(ref - data), denom, out=np.zeros_like(denom), where=denom != 0
             )
-            for i in range(nlines):
-                if hasattr(ref[i], "__len__"):
+            if hasattr(ref[0], "__len__"):
+                for i in range(nlines):
                     ref_strings = " ".join([f"{x:.4f}" for x in ref[i]])
                     data_strings = " ".join([f"{x:.4f}" for x in data[i]])
                     denom_strings = " ".join([f"{x:.4f}" for x in denom[i]])
@@ -177,10 +177,12 @@ def writeReportPage(
                 ax.xaxis.set_major_locator(MaxNLocator(integer=True))
                 x = np.arange(len(ref), dtype=int)
                 diff = np.abs(np.array(ref) - np.array(data))
-                ax.plot(x, diff, label="$|| ($MD code output$) - ($PLUMED output $)||$")
-                ax.plot(x, denom, label="Tolerance")
+                ax.plot(x, diff, label=f"$|| (${col1}$) - (${col2}$)||$")
+                ax.plot(x, denom, label=col3)
                 ax2 = ax.twinx()
                 ax2.plot(x, percent_diff, label="% Difference", color="tab:red")
+                if ax2.get_ylim()[1] < 1:
+                    ax2.set_ylim(0, 1)
                 ax2.set_ylabel("% Difference", color="tab:red")
 
                 fig.legend(loc="outside upper center", ncol=3)

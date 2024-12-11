@@ -54,6 +54,8 @@ def processMarkdown(
     # creates the directory, if it doesn't exist
     directory = os.path.dirname(destination)
     Path(f"./{directory}").mkdir(parents=True, exist_ok=True)
+    if not overwrite and Path(destination).exists():
+        return
 
     processed = ""
     inplumed = False
