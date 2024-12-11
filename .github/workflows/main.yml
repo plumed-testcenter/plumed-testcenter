@@ -1,5 +1,14 @@
 name: CI
-on: [push, pull_request]
+
+
+on: 
+  push:
+  pull_request:
+  schedule:
+    #weekly scheduled
+    - cron: '0 0 * * 0'
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
   # setting up the python cache
   setup-python:
