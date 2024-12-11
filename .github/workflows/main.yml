@@ -202,10 +202,11 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: testout-content-${{matrix.replica}}
+        # If a wildcard pattern is used, the path hierarchy will be preserved after the first wildcard pattern:
         path: |
-          tests/${{matrix.replica}}/*.md
-          tests/${{matrix.replica}}/*.yml
-          tests/${{matrix.replica}}/*.zip
+          **/tests/${{matrix.replica}}/*.md
+          **/tests/${{matrix.replica}}/*.yml
+          **/tests/${{matrix.replica}}/*.zip
         retention-days: 1
 
   # This is the job that uploads the website
