@@ -96,7 +96,7 @@ def getBadge(success, filen, version: str):
 def writeReportPage(
     filen, code, version, md_fail, zipfiles, ref, data, denom, *, prefix="", extra={}
 ):
-    with_image=False
+    with_image = False
     output = {
         # this is a workaround for not modify plumed2html
         # the oder brackets have been "doubled" {{}}
@@ -171,10 +171,11 @@ def writeReportPage(
             else:
                 import matplotlib.pyplot as plt
                 from matplotlib.ticker import MaxNLocator
-                with_image=True
+
+                with_image = True
                 fig, ax = plt.subplots()
                 ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-                x = np.arange(len(ref),dtype=int)
+                x = np.arange(len(ref), dtype=int)
                 diff = np.abs(np.array(ref) - np.array(data))
                 ax.plot(x, diff, label="$|| ($MD code output$) - ($PLUMED output $)||$")
                 ax.plot(x, denom, label="Tolerance")
