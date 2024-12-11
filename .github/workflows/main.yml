@@ -191,34 +191,21 @@ jobs:
         echo tests/${{matrix.replica}}/info.yml
         cat tests/${{matrix.replica}}/info.yml
 
-    # when uncommenting these steps remember to comment os.remove(path) in setupInstall.py
-    # - name: compile output for stable
-    #   run: | 
-    #     echo "stderr stable"
-    #     cat tests/${{matrix.replica}}/stderr.txt
-    #     echo "stdout stable"
-    #     cat tests/${{matrix.replica}}/stdout.txt
-
-    # - name: compile output for master
-    #   run: | 
-    #     echo "stderr master"
-    #     cat tests/${{matrix.replica}}/stderr_master.txt
-    #     echo "stdout master"
-    #     cat tests/${{matrix.replica}}/stdout_master.txt
     - name: Test code
       run: | 
          echo Running tests for ${{matrix.replica}} with PLUMED from  stable branch
          python runtests.py --code=${{matrix.replica}} --version=stable --prepare-pages
          echo Running tests for ${{matrix.replica}} with PLUMED from  master branch
          python runtests.py --code=${{matrix.replica}} --version=master
-         # Build tarball for upload 
-         tar cf testout.tar tests/${{matrix.replica}}/*.md tests/${{matrix.replica}}/*.yml tests/${{matrix.replica}}/*.zip
 
     - name: Upload artifact
       uses: actions/upload-artifact@v4
       with:
-        name: testout-content${{matrix.replica}}
-        path: testout.tar
+        name: testout-content=${{matrix.replica}}
+        path: |
+          tests/${{matrix.replica}}/*.md
+          tests/${{matrix.replica}}/*.yml
+          tests/${{matrix.replica}}/*.zip
         retention-days: 1
 
   # This is the job that uploads the website
@@ -232,12 +219,11 @@ jobs:
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
-        pattern: testout-content*
-        #merge-multiple: true
+        pattern: testout-content-*
+        path: ./tmp/extract
+        merge-multiple: true
     - name: Prepare for upload
       run: |
-        # This extracts the data that was uploaded to the artifacts
-        bash .ci/extract
         # This builds the page with the results of the tests
         python build.py
         # This pushes everything to the final website 
