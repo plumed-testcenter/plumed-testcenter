@@ -11,7 +11,11 @@ DUMPMASSCHARGE FILE=mq_plumed
 
 # Trajectory
 
-# Results 
+{Trajectory}
+
+# Results
+
+{Results}
 
 The table below includes some of the results from the calculation.  The columns contain:
 
