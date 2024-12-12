@@ -1,4 +1,4 @@
-from typing import TextIO, Literal
+from typing import Literal
 import numpy as np
 # formatted with ruff 0.6.4
 
@@ -110,7 +110,7 @@ def writeReportPage(
     with_image = False
     output = {
         # this is a workaround for not modify plumed2html
-        # the oder brackets have been "doubled" {{}}
+        # the other brackets have been "doubled" {{}}
         "% raw %": "{% raw %}",
         "% endraw %": "{% endraw %}",
     }
@@ -170,7 +170,7 @@ def writeReportPage(
             )
             if hasattr(ref[0], "__len__"):
                 for i in range(nlines):
-                    if filen == "cell":
+                    if len(ref[0]) == 9:
                         ref_strings = tabulate3x3(ref[i])
                         data_strings = tabulate3x3(data[i])
                         denom_strings = tabulate3x3(denom[i])
@@ -255,7 +255,6 @@ def check(
 class writeReportForSimulations:
     """helper class to write the report of the simulations"""
 
-    testout: TextIO
     code: str
     version: Literal["master", "stable"]
     md_failed: "bool | int"
