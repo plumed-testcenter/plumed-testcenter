@@ -96,9 +96,9 @@ def getBadge(success, filen, version: str):
 def tabulate3x3(data, fmt="{x:.4f}"):
     mytable = r"$\begin{array}{ccc} "
     mytable += " & ".join([fmt.format(x=x) for x in data[0:3]])
-    mytable += r" \\ "
+    mytable += r" \\\\ "
     mytable += " & ".join([fmt.format(x=x) for x in data[3:6]])
-    mytable += r" \\ "
+    mytable += r" \\\\ "
     mytable += " & ".join([fmt.format(x=x) for x in data[6:9]])
     mytable += r" \end{array}$"
     return mytable
