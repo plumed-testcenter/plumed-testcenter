@@ -1,5 +1,8 @@
 from typing import Literal
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+from matplotlib.ticker import MaxNLocator
 # formatted with ruff 0.6.4
 
 
@@ -104,6 +107,31 @@ def tabulate3x3(data, fmt="{x:.4f}"):
     return mytable
 
 
+def figure_cell(ax, data, ref, tolerance):
+    cmap = mpl.cm.viridis.with_extremes(over="k")
+    diff = np.abs(data - ref)
+    norm = mpl.colors.Normalize(vmin=0.0, vmax=tolerance)
+    # tolerance is denom[0,0]
+    im = ax.imshow(diff.T, cmap=cmap, norm=norm)
+    ax.set_xlabel("Timestep")
+
+    ax.set_yticks(
+        range(9),
+        labels=[f"[{x},{y}]" for x in [0, 1, 2] for y in [0, 1, 2]],
+    )
+    ax.set_ylabel("Cell diff (components)")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.figure.colorbar(
+        im,  # cmap=mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
+        ax=ax,
+        # cax=ax.inset_axes([1.05, 0, 0.05, 1]),
+        # orientation="horizontal",
+        extend="max",
+        label="Error up to tolerance",
+    )
+    return ax
+
+
 def writeReportPage(
     filen, code, version, md_fail, zipfiles, ref, data, denom, *, prefix="", extra={}
 ):
@@ -169,6 +197,13 @@ def writeReportPage(
                 np.abs(ref - data), denom, out=np.zeros_like(denom), where=denom != 0
             )
             if hasattr(ref[0], "__len__"):
+                if filen == "cell":
+                    with_image = True
+                    fig, ax = plt.subplots()
+                    figure_cell(ax, data, ref, denom[0, 0])
+                    fig.tight_layout()
+                    fig.savefig(f"{prefix}tests/{code}/{filen}_{version}.png")
+
                 for i in range(nlines):
                     if len(ref[0]) == 9:
                         ref_strings = tabulate3x3(ref[i])
@@ -186,9 +221,6 @@ def writeReportPage(
                     )
 
             else:
-                import matplotlib.pyplot as plt
-                from matplotlib.ticker import MaxNLocator
-
                 with_image = True
                 fig, ax = plt.subplots()
                 ax.xaxis.set_major_locator(MaxNLocator(integer=True))
