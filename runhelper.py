@@ -1,4 +1,4 @@
-from typing import Literal
+from typing import TextIO, Literal
 import numpy as np
 # formatted with ruff 0.6.4
 
@@ -93,24 +93,13 @@ def getBadge(success, filen, version: str):
     return f"[![tested on {version}](https://img.shields.io/badge/{version}-{badge})]({filen}_{version}.html)"
 
 
-def tabulate3x3(data, fmt="{x:.4f}"):
-    mytable = r"$\begin{array}{ccc} "
-    mytable += " & ".join([fmt.format(x=x) for x in data[0:3]])
-    mytable += r" \\ "
-    mytable += " & ".join([fmt.format(x=x) for x in data[3:6]])
-    mytable += r" \\ "
-    mytable += " & ".join([fmt.format(x=x) for x in data[6:9]])
-    mytable += r" \end{array}$"
-    return mytable
-
-
 def writeReportPage(
     filen, code, version, md_fail, zipfiles, ref, data, denom, *, prefix="", extra={}
 ):
     with_image = False
     output = {
         # this is a workaround for not modify plumed2html
-        # the other brackets have been "doubled" {{}}
+        # the oder brackets have been "doubled" {{}}
         "% raw %": "{% raw %}",
         "% endraw %": "{% endraw %}",
     }
@@ -170,16 +159,10 @@ def writeReportPage(
             )
             if hasattr(ref[0], "__len__"):
                 for i in range(nlines):
-                    if len(ref[0]) == 9:
-                        ref_strings = tabulate3x3(ref[i])
-                        data_strings = tabulate3x3(data[i])
-                        denom_strings = tabulate3x3(denom[i])
-                        pp_strings = tabulate3x3(percent_diff[i])
-                    else:
-                        ref_strings = " ".join([f"{x:.4f}" for x in ref[i]])
-                        data_strings = " ".join([f"{x:.4f}" for x in data[i]])
-                        denom_strings = " ".join([f"{x:.4f}" for x in denom[i]])
-                        pp_strings = " ".join([f"{x:.4f}" for x in percent_diff[i]])
+                    ref_strings = " ".join([f"{x:.4f}" for x in ref[i]])
+                    data_strings = " ".join([f"{x:.4f}" for x in data[i]])
+                    denom_strings = " ".join([f"{x:.4f}" for x in denom[i]])
+                    pp_strings = " ".join([f"{x:.4f}" for x in percent_diff[i]])
 
                     output["Results"] += (
                         f"| {ref_strings} | {data_strings} | {denom_strings} | {pp_strings} | \n"
@@ -255,6 +238,7 @@ def check(
 class writeReportForSimulations:
     """helper class to write the report of the simulations"""
 
+    testout: TextIO
     code: str
     version: Literal["master", "stable"]
     md_failed: "bool | int"
