@@ -1,5 +1,8 @@
 from typing import Literal
 import numpy as np
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+from matplotlib.ticker import MaxNLocator
 # formatted with ruff 0.6.4
 
 
@@ -104,6 +107,52 @@ def tabulate3x3(data, fmt="{x:.4f}"):
     return mytable
 
 
+def figure_cell(ax, data, ref, tolerance):
+    cmap = mpl.cm.viridis.with_extremes(over="k")
+    diff = np.abs(data - ref)
+    norm = mpl.colors.Normalize(vmin=0.0, vmax=tolerance)
+    # tolerance is denom[0,0]
+    im = ax.imshow(diff.T, cmap=cmap, norm=norm)
+    ax.set_xlabel("Timestep")
+
+    ax.set_yticks(
+        range(9),
+        labels=[f"[{x},{y}]" for x in [0, 1, 2] for y in [0, 1, 2]],
+    )
+    ax.set_ylabel("Cell diff (components)")
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    ax.figure.colorbar(
+        im,  # cmap=mpl.cm.ScalarMappable(cmap=cmap, norm=norm),
+        ax=ax,
+        # cax=ax.inset_axes([1.05, 0, 0.05, 1]),
+        # orientation="horizontal",
+        extend="max",
+        label="Error up to tolerance",
+    )
+    ax.set_ylim(bottom=0)
+    return ax
+
+
+def figure_engforces(ax, xmd, xpl, xmd_xmdp):
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+    x = np.arange(len(xmd), dtype=int)
+    delta = np.abs(xmd - xpl)
+    ax.plot(x, delta, label=r"$\vert x_{md} - x_{pl}\vert$")
+    ax.plot(x, xmd_xmdp, label=r"$\vert x_{md}'-x_{md}\vert$ (perturbation)")
+    ax2 = ax.twinx()
+    divlabel = r"$100*\frac{\vert x_{md} - x_{pl} \vert}{\vert x_{md}'-x_{md}\vert}$"
+    ax2.plot(
+        x,
+        100 * np.divide(delta, xmd_xmdp, out=np.zeros_like(delta), where=xmd_xmdp != 0),
+        label=divlabel,
+        color="tab:red",
+    )
+    ax2.set_ylabel(divlabel, color="tab:red")
+
+    ax.legend(loc="upper left")
+    return ax
+
+
 def writeReportPage(
     filen, code, version, md_fail, zipfiles, ref, data, denom, *, prefix="", extra={}
 ):
@@ -169,8 +218,25 @@ def writeReportPage(
                 np.abs(ref - data), denom, out=np.zeros_like(denom), where=denom != 0
             )
             if hasattr(ref[0], "__len__"):
+                if filen == "cell":
+                    with_image = True
+                    fig, ax = plt.subplots()
+                    figure_cell(ax, data, ref, denom[0, 0])
+                    fig.tight_layout()
+                    fig.savefig(f"{prefix}tests/{code}/{filen}_{version}.png")
+                if filen == "engvir" or filen == "engforces":
+                    with_image = True
+                    fig, axes = plt.subplots(2, sharex=True)
+                    figure_engforces(axes[0], data[:, 0], ref[:, 0], denom[:, 0])
+                    axes[0].set_ylabel("Energy")
+                    figure_engforces(axes[1], data[:, 1], ref[:, 1], denom[:, 1])
+                    axes[1].set_ylabel("Volume")
+                    axes[1].set_xlabel("Timesteps")
+                    fig.tight_layout()
+                    fig.savefig(f"{prefix}tests/{code}/{filen}_{version}.png")
+
                 for i in range(nlines):
-                    if len(ref[0]) == 9:
+                    if ref.shape[1] == 9:
                         ref_strings = tabulate3x3(ref[i])
                         data_strings = tabulate3x3(data[i])
                         denom_strings = tabulate3x3(denom[i])
@@ -186,9 +252,6 @@ def writeReportPage(
                     )
 
             else:
-                import matplotlib.pyplot as plt
-                from matplotlib.ticker import MaxNLocator
-
                 with_image = True
                 fig, ax = plt.subplots()
                 ax.xaxis.set_major_locator(MaxNLocator(integer=True))
@@ -224,7 +287,7 @@ def writeReportPage(
     with open(f"{prefix}tests/{code}/{filen}_{version}.md", "w+") as of:
         of.write(inp.format(**output))
         if with_image:
-            of.write("### Graphical representation (_beta_)\n")
+            of.write("\n### Graphical representation (_beta_)\n")
             of.write("A visualization of the table above:  \n")
             of.write(f"![{filen}_{version}](./{filen}_{version}.png)\n")
 
