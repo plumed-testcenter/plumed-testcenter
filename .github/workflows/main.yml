@@ -81,7 +81,7 @@ jobs:
           mkdir -p ~/.ccache/ccache
           .ci/install.libtorch
       - name: Install plumed
-        uses: Iximiel/install-plumed@v1
+        uses: plumed/install-plumed@v1
         with:
           CC: "ccache mpicc"
           CXX: "ccache mpic++"
