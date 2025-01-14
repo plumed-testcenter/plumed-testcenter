@@ -72,10 +72,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install dependencies
         run: |
-          sudo apt update
-          sudo apt install mpi-default-bin mpi-default-dev
-          sudo apt install libfftw3-dev gsl-bin libgsl0-dev libboost-serialization-dev
-          sudo apt install ccache
+          sudo apt-get update
+          sudo apt-get install mpi-default-bin mpi-default-dev
+          sudo apt-get install libfftw3-dev gsl-bin libgsl0-dev libboost-serialization-dev
+          sudo apt-get install ccache
           ccache -p
           ccache -s
           mkdir -p ~/.ccache/ccache
@@ -161,11 +161,10 @@ jobs:
 
     - name: Setup PLUMED software
       run: |
-        sudo apt update
-        sudo apt install ccache
-        sudo apt install mpi-default-bin mpi-default-dev gfortran
-        sudo apt install libfftw3-dev gsl-bin libgsl0-dev libboost-serialization-dev
         sudo apt-get update
+        sudo apt-get install ccache
+        sudo apt-get install mpi-default-bin mpi-default-dev gfortran
+        sudo apt-get install libfftw3-dev gsl-bin libgsl0-dev libboost-serialization-dev
         pip install -r requirements.txt
         mkdir -p ~/.ccache/ccache
         .ci/install.libtorch
