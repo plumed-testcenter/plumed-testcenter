@@ -209,6 +209,8 @@ jobs:
           **/tests/${{matrix.replica}}/*.yml
           **/tests/${{matrix.replica}}/*.zip
           **/tests/${{matrix.replica}}/*.png
+          **/tests/${{matrix.replica}}/*.js
+          **/tests/${{matrix.replica}}/*.css
         retention-days: 1
         # is more or less only text (or compressed text)
         compression-level: 9
