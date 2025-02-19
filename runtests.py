@@ -54,6 +54,12 @@ def processMarkdown(
     # creates the directory, if it doesn't exist
     directory = os.path.dirname(destination)
     Path(f"./{directory}").mkdir(parents=True, exist_ok=True)
+    if not overwrite and not Path(f"./{directory}/plumedtohtml.js").exists() :
+       # Print the js for plumedToHTML to a file
+       with open(f"{directory}/plumedtohtml.js", "w+") as jf : jf.write( get_javascript() )
+    if not overwrite and not Path(f"{directory}/plumedtohtml.css").exists() :
+       # Print the css for plumedToHTML to a file
+       with open(f"{directory}/plumedtohtml.css", "w+") as jf : jf.write( get_css() )
     if not overwrite and Path(destination).exists():
         return
 
@@ -128,10 +134,6 @@ def processMarkdown(
 def buildTestPages(
     directory, destination, runSettings=STANDARD_RUN_SETTINGS, overwrite: bool = True
 ):
-    # Print the js for plumedToHTML to a file
-    with open( destination + "/plumedtohtml.js", "w+") as jf : jf.write( get_javascript() )
-    # Print the css for plumed to html to a file
-    with open( destination + "/plumedtohtml.css", "w+") as cf : cf.write( get_css() )
     for page in os.listdir(directory):
         if ".md" in page:
             print(f"Processing {directory}/{page} into {destination}/{page}")
