@@ -169,7 +169,22 @@ def buildBrowsePage():
 
 
 if __name__ == "__main__":
+    from PlumedToHTML import (
+        get_css as PlumedToHTML_css,
+        get_javascript as PlumedToHTML_js,
+    )
+    from pathlib import Path
+
     try:
+        # this puts the assets in the right places:
+
+        Path(f"./js/").mkdir(parents=True, exist_ok=True)
+        # Print the js for plumedToHTML to a file
+        with open(f"./js/plumedtohtml.js", "w+") as jf:
+            jf.write(PlumedToHTML_js())
+        with open(f"./assets/css/plumedtohtml.css", "w+") as jf:
+            jf.write(PlumedToHTML_css())
+
         # Check that the workflow matches with the directories
         checkWorkflow()
 

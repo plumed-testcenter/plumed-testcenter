@@ -209,8 +209,6 @@ jobs:
           **/tests/${{matrix.replica}}/*.yml
           **/tests/${{matrix.replica}}/*.zip
           **/tests/${{matrix.replica}}/*.png
-          **/tests/${{matrix.replica}}/*.js
-          **/tests/${{matrix.replica}}/*.css
         retention-days: 1
         # is more or less only text (or compressed text)
         compression-level: 9
@@ -223,6 +221,11 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+    - name: Set up Python 3.9
+      uses: actions/setup-python@v5
+      with:
+        python-version: 3.9
+        cache: 'pip'
     - name: Download artifacts
       uses: actions/download-artifact@v4
       with:
@@ -231,10 +234,11 @@ jobs:
         merge-multiple: true
     - name: Prepare for upload
       run: |
+        pip install -r requirements.txt
         # This builds the page with the results of the tests
         python build.py
         # This pushes everything to the final website 
-        bash .ci/prepare _config.yml _layouts _data assets pigeon.png plumed.md nest.png contribute.md browse.md Info.md treadmill.png
+        bash .ci/prepare _config.yml _layouts _data assets js pigeon.png plumed.md nest.png contribute.md browse.md Info.md treadmill.png
   
     - name: Deploy to GitHub Pages
       uses: peaceiris/actions-gh-pages@v4
