@@ -225,6 +225,7 @@ def writeReportPage(
                     fig.tight_layout()
                     fig.savefig(f"{prefix}tests/{code}/{filen}_{version}.png")
                 if filen == "engvir" or filen == "engforces":
+                    #TODO: separate also the table
                     with_image = True
                     fig, axes = plt.subplots(2, sharex=True)
                     figure_engforces(axes[0], data[:, 0], ref[:, 0], denom[:, 0])
