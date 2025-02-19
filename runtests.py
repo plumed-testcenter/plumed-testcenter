@@ -8,7 +8,7 @@ from pathlib import Path
 from MDAnalysis.coordinates.XYZ import XYZReader
 from datetime import date
 from contextlib import contextmanager
-from PlumedToHTML import test_plumed, get_html
+from PlumedToHTML import test_plumed, get_html, get_javascript, get_css
 from runhelper import (
     writeReportForSimulations,
     dictToReport,
@@ -128,6 +128,10 @@ def processMarkdown(
 def buildTestPages(
     directory, destination, runSettings=STANDARD_RUN_SETTINGS, overwrite: bool = True
 ):
+    # Print the js for plumedToHTML to a file
+    with open( destination + "/plumedtohtml.js", "w+") as jf : jf.write( get_javascript() )
+    # Print the css for plumed to html to a file
+    with open( destination + "/plumedtohtml.css", "w+") as cf : cf.write( get_css() )
     for page in os.listdir(directory):
         if ".md" in page:
             print(f"Processing {directory}/{page} into {destination}/{page}")
