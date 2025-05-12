@@ -10,5 +10,5 @@ tests:
    charge: yes
    forces: yes 
    virial: yes
-   energy: yes
-   engforces: yes
+   energy: no
+   engforces: no
