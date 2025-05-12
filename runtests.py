@@ -617,6 +617,7 @@ def writeMDReport(
         Path(f"./{outdir}").mkdir(parents=True, exist_ok=True)
     ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.BaseLoader)
     info = ymldata["tests"]
+    print("In writeMDReport info: ", info )
 
     fname = "testout_" + version + ".md"
 
@@ -630,12 +631,12 @@ def writeMDReport(
             f"interface between {code} and "
             f"the {version} version of PLUMED is working correctly.\n\n"
         )
-        if not info["virial"] : 
+        if not info["virial"]: 
             testout.write(
                 f"WARNING: {code} does not pass the virial to PLUMED and it is thus "
                 "not possible to run NPT simulations with this code\n\n"
             )
-        if not info["energy"] : 
+        if not info["energy"]: 
             testout.write(
                 f"WARNING: {code} does not pass the energy to PLUMED \n\n"
             )
@@ -654,7 +655,7 @@ def writeMDReport(
         test_basic_result = testOpinion(howbad)
  
         test_virial_result = "unavailable" 
-        if info["virial"] :
+        if info["virial"]:
             testout.write("\n## Tests on virial\n\n") 
             testout.write("| Description of test | Status | \n")
             testout.write("|:--------------------|:------:| \n")
@@ -667,7 +668,7 @@ def writeMDReport(
             test_virial_result = testOpinion(howbad)
 
         test_energy_result = "unavailable"
-        if info["energy"] :
+        if info["energy"]:
             testout.write("\n\n## Tests on energy\n\n")
             testout.write("| Description of test | Status | \n")
             testout.write("|:--------------------|:------:| \n")
