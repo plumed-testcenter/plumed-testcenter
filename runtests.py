@@ -697,7 +697,7 @@ def writeTermReport(
 ):
     howbad = []
     description_space = space - len(" failure rate: 123%")
-    for test in TEST_BASIC_ORDER:
+    for test in BASIC_TEST_ORDER:
         if test in results.keys():
             failure_rate = results[test]["failure_rate"]
             howbad.append(successState(failure_rate))
