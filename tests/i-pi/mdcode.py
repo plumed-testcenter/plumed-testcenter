@@ -36,7 +36,7 @@ class mdcode :
        inp = inp + "  </ffsocket>\n"
        inp = inp + "  <ffplumed name='plumed'>\n"
        inp = inp + "   <file mode='xyz'> structure.xyz </file>\n"
-       inp = inp + "   <plumeddat> plumed.dat </plumeddat>\n"
+       inp = inp + "   <plumed_dat> plumed.dat </plumed_dat>\n"
        inp = inp + "  </ffplumed>\n"
        inp = inp + "  <system>\n"
        inp = inp + "    <initialize nbeads='1'>\n"

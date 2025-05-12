@@ -8,6 +8,9 @@ git clone --depth 1 https://github.com/i-pi/i-pi.git
    make
 )
 
+# Install ase
+pip install ase
+
 # Copy i-pi to $HOME/opt
 cp -pr i-pi "$HOME/opt"
 
