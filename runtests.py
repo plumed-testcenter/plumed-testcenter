@@ -630,6 +630,15 @@ def writeMDReport(
             f"interface between {code} and "
             f"the {version} version of PLUMED is working correctly.\n\n"
         )
+        if not info["virial"] : 
+            testout.write(
+                f"WARNING: {code} does not pass the virial to PLUMED and it is thus "
+                "not possible to run NPT simulations with this code\n\n"
+            )
+        if not info["energy"] : 
+            testout.write(
+                f"WARNING: {code} does not pass the energy to PLUMED \n\n"
+            )
         if "warning" in ymldata.keys():
             for warn in ymldata["warning"]:
                 testout.write(f"WARNING: {warn}\n\n")
@@ -644,14 +653,9 @@ def writeMDReport(
                 testout.write(dictToTestoutTableEntry(results[test]))
         test_basic_result = testOpinion(howbad)
  
-        testout.write("\n## Tests on virial\n\n")
-        if not info["virial"]:
-            testout.write(
-                f"WARNING: {code} does not pass the virial to PLUMED and it is thus "
-                "not possible to run NPT simulations with this code\n\n"
-            )
-            test_virial_result = "unavailable"
-        else : 
+        test_virial_result = "unavailable" 
+        if info["virial"] :
+            testout.write("\n## Tests on virial\n\n") 
             testout.write("| Description of test | Status | \n")
             testout.write("|:--------------------|:------:| \n")
             howbad = []
@@ -662,13 +666,9 @@ def writeMDReport(
                     testout.write(dictToTestoutTableEntry(results[test]))
             test_virial_result = testOpinion(howbad)
 
-        testout.write("\n## Tests on energy\n\n")
-        if not info["energy"] :
-            testout.write(
-                f"WARNING: {code} does not pass the energy to PLUMED \n\n" 
-            )
-            test_energy_result = "unavailable"
-        else :
+        test_energy_result = "unavailable"
+        if info["energy"] :
+            testout.write("\n\n## Tests on energy\n\n")
             testout.write("| Description of test | Status | \n")
             testout.write("|:--------------------|:------:| \n")
             howbad = []

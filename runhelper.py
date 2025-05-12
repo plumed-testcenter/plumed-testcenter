@@ -14,11 +14,11 @@ BASIC_TEST_ORDER = (
     "timestep",
     "mass",
     "charge",
-    "forces"
+    "forces",
 )
  
 VIRIAL_TEST_ORDER = (
-   "virial"
+   "virial",
 )
 
 ENERGY_TEST_ORDER = (

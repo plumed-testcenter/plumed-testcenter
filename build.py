@@ -85,8 +85,10 @@ def versionSort(list_of_version) -> list:
     tested = sorted(v2_, key=Version) + sorted(vmasters)
     return tested
 
-def getTestBadge( test_status, version, code ) :
-    if test_status == "working":
+def getTestBadge( compile_status, test_status, version, code ) :
+    if compile_status="broken" :
+        test_badge_color = "broken-36454F.svg"
+    elif test_status == "working":
         test_badge_color = "passing-green.svg"
     elif test_status == "unavailable" :
         test_badge_color = "unavailable-blue.svg"
@@ -142,9 +144,9 @@ def buildBrowsePage():
 
             # building the tests badge
             if results[version]["test_plumed"]["basic"]=="unavailable" : raise Exception("no tests performed for {code}")
-            basic_badge += getTestBadge( results[version]["test_plumed"]["basic"], version, code ) 
-            virial_badge += getTestBadge( results[version]["test_plumed"]["virial"], version, code )
-            energy_badge += getTestBadge( results[version]["test_plumed"]["energy"], version, code )
+            basic_badge += getTestBadge( compile_status, results[version]["test_plumed"]["basic"], version, code ) 
+            virial_badge += getTestBadge( compile_status, results[version]["test_plumed"]["virial"], version, code )
+            energy_badge += getTestBadge( compile_status, results[version]["test_plumed"]["energy"], version, code )
 
         table += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {basic_badge} | {virial_badge} | {energy_badge} | \n"
 
