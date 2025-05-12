@@ -7,15 +7,21 @@ from matplotlib.ticker import MaxNLocator
 
 
 # tuple becasue I don't want to mutate it and I want to keep the order
-TEST_ORDER = (
+BASIC_TEST_ORDER = (
     "natoms",
     "positions",
     "cell",
     "timestep",
     "mass",
     "charge",
-    "forces",
-    "virial",
+    "forces"
+)
+ 
+VIRIAL_TEST_ORDER = (
+   "virial"
+)
+
+ENERGY_TEST_ORDER = (
     "energy",
     "engforces",
     "engvir",

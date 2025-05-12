@@ -85,20 +85,38 @@ def versionSort(list_of_version) -> list:
     tested = sorted(v2_, key=Version) + sorted(vmasters)
     return tested
 
+def getTestBadge( test_status, version, code ) :
+    if test_status == "working":
+        test_badge_color = "passing-green.svg"
+    elif test_status == "unavailable" :
+        test_badge_color = "unavailable-blue.svg"
+    elif test_status == "partial":
+        test_badge_color = "partial-yellow.svg"
+    elif test_status == "failing":
+        test_badge_color = "failed-red.svg"
+    elif test_status == "broken":
+        test_badge_color = "broken-36454F.svg"
+    else:
+        raise ValueError(
+            f"found invalid test status for {code} with {version} should be 'working', 'partial', 'failing' or 'broken', is '{test_status}'"
+        )
+    return f" [![tested on {version}](https://img.shields.io/badge/{version}-{test_badge_color})](tests/{code}/testout_{version}.html)"
 
 def buildBrowsePage():
     print("Building browse page")
 
     table = """
-| Name of Program  | Short description | Compiles | Passes tests |
-|:-----------------|:------------------|:--------:|:------------:|
+| Name of Program  | Short description | Compiles | Basic tests | Virial tests | Energy tests |
+|:-----------------|:------------------|:--------:|:-----------:|:------------:|:------------:|
 """
     testdirs = [d for d in os.listdir("tests") if isTest("tests/" + d)]
     testdirs = sorted(testdirs)
 
     for code in testdirs:
         compile_badge = ""
-        test_badge = ""
+        basic_badge = ""
+        virial_badge = ""
+        energy_badge = ""
         print("processing " + code)
         with open(f"tmp/extract/tests/{code}/info.yml", "r") as stream:
             info = yaml.load(stream, Loader=yaml.BaseLoader)
@@ -123,24 +141,12 @@ def buildBrowsePage():
             compile_badge += f" [![tested on {version}](https://img.shields.io/badge/{version}-{compile_badge_color})](tests/{code}/install.html)"
 
             # building the tests badge
+            if results[verstion]["test_plumed"]["basic"]=="unavailable" : raise Exception("no tests performed for {code}")
+            basic_badge += getTestBadge( results[verstion]["test_plumed"]["basic"], version, code ) 
+            virial_badge += getTestBadge( results[version]["test_plumed"]["virial"], version, code )
+            energy_badge += getTestBadge( results[version]["test_plumed"]["energy"], version, code )
 
-            test_status = results[version]["test_plumed"]
-
-            if test_status == "working":
-                test_badge_color = "passing-green.svg"
-            elif test_status == "partial":
-                test_badge_color = "partial-yellow.svg"
-            elif test_status == "failing":
-                test_badge_color = "failed-red.svg"
-            elif test_status == "broken":
-                test_badge_color = "broken-36454F.svg"
-            else:
-                raise ValueError(
-                    f"found invalid test status for {code} with {version} should be 'working', 'partial', 'failing' or 'broken', is '{test_status}'"
-                )
-            test_badge += f" [![tested on {version}](https://img.shields.io/badge/{version}-{test_badge_color})](tests/{code}/testout_{version}.html)"
-
-        table += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {test_badge} | \n"
+        table += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {basic_badge} | {virial_badge} | {energy_badge} | \n"
 
     plumed_installation_script = """When the tests above are run PLUMED is built using the install plumed action.
 ```yaml

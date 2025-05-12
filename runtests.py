@@ -16,7 +16,7 @@ from runhelper import (
     successState,
     testOpinion,
 )
-from runhelper import TEST_ORDER
+from runhelper import BASIC_TEST_ORDER, VIRIAL_TEST_ORDER, ENERGY_TEST_ORDER 
 from typing import Literal
 
 STANDARD_RUN_SETTINGS = [
@@ -630,32 +630,64 @@ def writeMDReport(
             f"interface between {code} and "
             f"the {version} version of PLUMED is working correctly.\n\n"
         )
+        if "warning" in ymldata.keys():
+            for warn in ymldata["warning"]:
+                testout.write(f"WARNING: {warn}\n\n")
+        testout.write("## Basic functionalities\n\n")
+        testout.write("| Description of test | Status | \n")
+        testout.write("|:--------------------|:------:| \n")
+        howbad = []
+        for test in BASIC_TEST_ORDER:
+            if test in results.keys():
+                dictToReport(results[test], prefix=prefix)
+                howbad.append(successState(results[test]["failure_rate"]))
+                testout.write(dictToTestoutTableEntry(results[test]))
+        test_basic_result = testOpinion(howbad)
+ 
+        testout.write("\n## Tests on virial\n\n")
         if not info["virial"]:
             testout.write(
                 f"WARNING: {code} does not pass the virial to PLUMED and it is thus "
                 "not possible to run NPT simulations with this code\n\n"
             )
-        if "warning" in ymldata.keys():
-            for warn in ymldata["warning"]:
-                testout.write(f"WARNING: {warn}\n\n")
-        testout.write("| Description of test | Status | \n")
-        testout.write("|:--------------------|:------:| \n")
-        howbad = []
-        for test in TEST_ORDER:
-            if test in results.keys():
-                dictToReport(results[test], prefix=prefix)
-                howbad.append(successState(results[test]["failure_rate"]))
-                testout.write(dictToTestoutTableEntry(results[test]))
+            test_virial_result = "unavailable"
+        else : 
+            testout.write("| Description of test | Status | \n")
+            testout.write("|:--------------------|:------:| \n")
+            howbad = []
+            for test in VIRIAL_TEST_ORDER:
+                if test in results.keys():
+                    dictToReport(results[test], prefix=prefix)
+                    howbad.append(successState(results[test]["failure_rate"]))
+                    testout.write(dictToTestoutTableEntry(results[test]))
+            test_virial_result = testOpinion(howbad)
 
-        test_result = testOpinion(howbad)
+        testout.write("\n## Tests on energy\n\n")
+        if not info["energy"] :
+            testout.write(
+                f"WARNING: {code} does not pass the energy to PLUMED \n\n" 
+            )
+            test_energy_result = "unavailable"
+        else :
+            testout.write("| Description of test | Status | \n")
+            testout.write("|:--------------------|:------:| \n")
+            howbad = []
+            for test in ENERGY_TEST_ORDER:
+                if test in results.keys():
+                    dictToReport(results[test], prefix=prefix)
+                    howbad.append(successState(results[test]["failure_rate"]))
+                    testout.write(dictToTestoutTableEntry(results[test]))
+            test_energy_result = testOpinion(howbad)
+
     ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.SafeLoader)
     if "results" not in ymldata.keys():
         ymldata["results"] = {}
     str_version = str(version)
+    result_dict = {"basic": test_basic_result, "virial": test_virial_result, "energy": test_energy_result}
     if str_version in ymldata["results"].keys():
-        ymldata["results"][str_version]["test_plumed"] = test_result
+        ymldata["results"][str_version]["test_plumed"] = result_dict 
     else:
-        ymldata["results"][str_version] = {"test_plumed": test_result}
+        ymldata["results"][str_version] = {"test_plumed": result_dict}
     with open(f"{outdir}/info.yml", "w") as infoOut:
         infoOut.write(yaml.dump(ymldata, sort_keys=False))
 
@@ -665,7 +697,7 @@ def writeTermReport(
 ):
     howbad = []
     description_space = space - len(" failure rate: 123%")
-    for test in TEST_ORDER:
+    for test in TEST_BASIC_ORDER:
         if test in results.keys():
             failure_rate = results[test]["failure_rate"]
             howbad.append(successState(failure_rate))
