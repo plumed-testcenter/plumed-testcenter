@@ -86,7 +86,7 @@ def versionSort(list_of_version) -> list:
     return tested
 
 def getTestBadge( compile_status, test_status, version, code ) :
-    if compile_status="broken" :
+    if compile_status=="broken" :
         test_badge_color = "broken-36454F.svg"
     elif test_status == "working":
         test_badge_color = "passing-green.svg"
