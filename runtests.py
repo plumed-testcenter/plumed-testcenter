@@ -569,6 +569,7 @@ def runTests(
     ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.SafeLoader)
     info = ymldata["tests"]
     tolerance = ymldata["tolerance"]
+    print("In runtests info: ", info )
     ### RUN THE TESTS
     # sugar with the settings that are always the same for runMDCalc
     # note that if I modify directly the input `settingsFor_runMDCalc`,
@@ -626,20 +627,24 @@ def writeMDReport(
         testout.write("------------------------\n \n")
         # it looks strange, but strings do not need the + to be concatenated
         testout.write(
-            f"The tests described in the following table were performed on "
+            f"The tests described in the following tables were performed on "
             f"__{date.today().strftime('%B %d, %Y')}__ to test whether the "
             f"interface between {code} and "
             f"the {version} version of PLUMED is working correctly.\n\n"
         )
-        if not info["virial"]: 
+        if info["virial"]=="false": 
             testout.write(
                 f"WARNING: {code} does not pass the virial to PLUMED and it is thus "
                 "not possible to run NPT simulations with this code\n\n"
             )
-        if not info["energy"]: 
+        elif info["virial"]!="true":
+            raise Exception('invalid value for info[virial]')
+        if info["energy"]=="false": 
             testout.write(
                 f"WARNING: {code} does not pass the energy to PLUMED \n\n"
             )
+        elif info["energy"]!="true":
+            raise Exception('invalid value for info[energy]')
         if "warning" in ymldata.keys():
             for warn in ymldata["warning"]:
                 testout.write(f"WARNING: {warn}\n\n")
@@ -655,7 +660,7 @@ def writeMDReport(
         test_basic_result = testOpinion(howbad)
  
         test_virial_result = "unavailable" 
-        if info["virial"]:
+        if info["virial"]=="true":
             testout.write("\n## Tests on virial\n\n") 
             testout.write("| Description of test | Status | \n")
             testout.write("|:--------------------|:------:| \n")
@@ -668,7 +673,7 @@ def writeMDReport(
             test_virial_result = testOpinion(howbad)
 
         test_energy_result = "unavailable"
-        if info["energy"]:
+        if info["energy"]=="true":
             testout.write("\n\n## Tests on energy\n\n")
             testout.write("| Description of test | Status | \n")
             testout.write("|:--------------------|:------:| \n")
