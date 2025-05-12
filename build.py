@@ -141,8 +141,8 @@ def buildBrowsePage():
             compile_badge += f" [![tested on {version}](https://img.shields.io/badge/{version}-{compile_badge_color})](tests/{code}/install.html)"
 
             # building the tests badge
-            if results[verstion]["test_plumed"]["basic"]=="unavailable" : raise Exception("no tests performed for {code}")
-            basic_badge += getTestBadge( results[verstion]["test_plumed"]["basic"], version, code ) 
+            if results[version]["test_plumed"]["basic"]=="unavailable" : raise Exception("no tests performed for {code}")
+            basic_badge += getTestBadge( results[version]["test_plumed"]["basic"], version, code ) 
             virial_badge += getTestBadge( results[version]["test_plumed"]["virial"], version, code )
             energy_badge += getTestBadge( results[version]["test_plumed"]["energy"], version, code )
 
