@@ -177,6 +177,7 @@ jobs:
          echo Building ${{matrix.replica}} with stable plumed
          # Build static interface to latest stable version of PLUMED
          ./install.sh mode=static > tests/${{matrix.replica}}/stdout.txt 2> tests/${{matrix.replica}}/stderr.txt
+         cat tests/${{matrix.replica}}/stdout.txt
          ./tests/check_status.sh code=${{matrix.replica}} 
          echo Building ${{matrix.replica}} with master plumed
          # Build runtime interface to (what will be) master version of PLUMED
