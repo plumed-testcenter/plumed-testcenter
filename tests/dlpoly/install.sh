@@ -10,10 +10,13 @@ echo building dlpoly
 cd dl-poly$suffix
 mkdir build-mpi
 echo created dlpoly directory
-cmake ../ -DCMAKE_BUILD_TYPE=Release -DWITH_PLUMED=ON -DINTERNAL_PLUMED=OFF
+cmake ../ -DCMAKE_BUILD_TYPE=Release -DWITH_PLUMED=ON -DINTERNAL_PLUMED=OFF &> cmake.log
 echo ran cmake
-make
+cat cmake.log
+echo Making code
+make &> make.log
 echo built dlpoly
+cat make.log
 
 if [[ -x bin/DLPOLY.Z ]]; then
    cp bin/DLPOLY.Z "$HOME/opt/bin/DLPOLY.Z$exeSuffix"
