@@ -106,7 +106,7 @@ jobs:
       - setup-plumed
     strategy:
       matrix:
-        replica: ["simplemd", "lammps", "quantum_espresso", "i-pi", "gromacs", "gromacs-vanilla"]
+        replica: ["simplemd", "lammps", "quantum_espresso", "i-pi", "gromacs", "gromacs-vanilla", "dlpoly"]
         # TODO: separate master and stable versions for running tests
         # plumed-version:
         #   - master
