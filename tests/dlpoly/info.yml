@@ -1,6 +1,6 @@
 name: dlpoly
 description: A general purpose parallel molecular dynamics simulation package developed at Daresbury Laboratory
-executible: DL_POLY.Z
+executible: DLPOLY.Z
 tolerance: 0.001
 link: https://ccp5.gitlab.io/dl-poly/index.html
 tests: 
