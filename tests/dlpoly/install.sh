@@ -9,8 +9,9 @@ echo cloned dlpoly repository
 echo building dlpoly
 cd dl-poly$suffix
 mkdir build-mpi
+cd build-mpi
 echo created dlpoly directory
-cmake ../ -DCMAKE_BUILD_TYPE=Release -DWITH_PLUMED=ON -DINTERNAL_PLUMED=OFF &> cmake.log
+cmake .. -DCMAKE_BUILD_TYPE=Release -DWITH_PLUMED=ON -DINTERNAL_PLUMED=OFF &> cmake.log
 echo ran cmake
 cat cmake.log
 echo Making code
