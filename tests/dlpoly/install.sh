@@ -5,6 +5,9 @@ echo cloning dlpoly repository
 git clone --depth 1 "$repo" "$sourcedir"
 echo cloned dlpoly repository
 
+# Add plumed to PKG_CONFIG_PATH
+export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$HOME/opt/lib/pkgconfig
+
 # Change to dl-poly directory
 echo building dlpoly
 cd dl-poly$suffix
