@@ -4,10 +4,10 @@ executible: DLPOLY.Z
 tolerance: 0.001
 link: https://ccp5.gitlab.io/dl-poly/index.html
 tests: 
-   positions: no
-   timestep: no
-   mass: no
-   charge: no
+   positions: yes
+   timestep: yes
+   mass: yes
+   charge: yes
    forces: no 
    virial: no
    energy: no
