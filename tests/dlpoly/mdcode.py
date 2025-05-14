@@ -17,14 +17,14 @@ class mdcode :
        ensemble_stuff = f"""
 ensemble                      nvt
 ensemble_method               hoover
-ensemble_thermostat_coupling  {mdparams["relaxtime"} ps
+ensemble_thermostat_coupling  {mdparams["relaxtime"]} ps
 """
        if mdparams["ensemble"]=="npt" :
           ensemble_stuff = f"""
 ensemble                      npt
 ensemble_method               hoover
-ensemble_thermostat_coupling  {mdparams["relaxtime"} ps
-ensemble_barostat_coupling    {mdparams["pelaxtime"} ps
+ensemble_thermostat_coupling  {mdparams["relaxtime"]} ps
+ensemble_barostat_coupling    {mdparams["pelaxtime"]} ps
 """
        inp = f"""
 title                 PLUMED test calc
