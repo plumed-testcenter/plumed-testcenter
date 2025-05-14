@@ -14,19 +14,19 @@ class mdcode :
        return params
  
    def runMD( self, mdparams ) :
-       ensemble_stuff = """
+       ensemble_stuff = f"""
 ensemble                      nvt
 ensemble_method               hoover
 ensemble_thermostat_coupling  {mdparams["relaxtime"} ps
 """
        if mdparams["ensemble"]=="npt" :
-          ensemble_stuff = """
+          ensemble_stuff = f"""
 ensemble                      npt
 ensemble_method               hoover
 ensemble_thermostat_coupling  {mdparams["relaxtime"} ps
 ensemble_barostat_coupling    {mdparams["pelaxtime"} ps
 """
-       inp = """
+       inp = f"""
 title                 PLUMED test calc
 io_file_config        CONFIG
 io_file_field         FIELD
