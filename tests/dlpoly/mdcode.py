@@ -49,7 +49,7 @@ time_equilibration    0 steps
 time_job              3600.0 s
 time_close            100.0 s
 timestep              {mdparams["tstep"]} ps
-pressure_hydrostatic  {mdparams["pressure"]} katm
+pressure_hydrostatic  {mdparams["pressure"]} bar
 traj_calculate        on
 traj_start            0 steps
 traj_interval         1 steps
