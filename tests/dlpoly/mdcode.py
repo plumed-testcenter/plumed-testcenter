@@ -8,7 +8,7 @@ class mdcode :
          "temperature": 300,
          "tstep": 0.001,
          "relaxtime": 0.5,
-         "pressure": 0.0,
+         "pressure": 1.0,
          "prelaxtime": 1 
        }
        return params
@@ -24,7 +24,7 @@ ensemble_thermostat_coupling  {mdparams["relaxtime"]} ps
 ensemble                      npt
 ensemble_method               hoover
 ensemble_thermostat_coupling  {mdparams["relaxtime"]} ps
-ensemble_barostat_coupling    {mdparams["pelaxtime"]} ps
+ensemble_barostat_coupling    {mdparams["prelaxtime"]} ps
 """
        inp = f"""
 title                 PLUMED test calc
@@ -49,8 +49,7 @@ time_equilibration    0 steps
 time_job              3600.0 s
 time_close            100.0 s
 timestep              {mdparams["tstep"]} ps
-pressure_hydrostatic  0.0 katm
-rescale_frequency     10 steps
+pressure_hydrostatic  {mdparams["pressure"]} katm
 {ensemble_stuff}
 """
        cf = open("CONTROL","w+")
