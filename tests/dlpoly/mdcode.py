@@ -50,6 +50,9 @@ time_job              3600.0 s
 time_close            100.0 s
 timestep              {mdparams["tstep"]} ps
 pressure_hydrostatic  {mdparams["pressure"]} katm
+traj_calculate        on
+traj_start            0 steps
+traj_interval         1 steps
 {ensemble_stuff}
 """
        cf = open("CONTROL","w+")
@@ -79,7 +82,12 @@ pressure_hydrostatic  {mdparams["pressure"]} katm
        return pos
 
    def getCell( self, rundir ) :
-       cell = np.zeros([nframes,9])
+       first, traj = True, mda.coordinates.DLPoly.HistoryReader( rundir + "/HISTORY" )
+       for frame in traj.trajectory : 
+           mycell = np.zeros(9)
+           mycell[0], mycell[4], mycell[8] = frame.dimensions[0], frame.dimensions[1], frame.dimensions[2]
+           if first : cell, first = 0.1*mycell, False
+           else : cell = np.concatenate( (cell, 0.1*mycell), axis=0 )          
        return cell
 
    def getMasses( self, rundir ) :
@@ -101,4 +109,11 @@ pressure_hydrostatic  {mdparams["pressure"]} katm
        return charges
 
    def getEnergy( self, rundir ) :
-       return 1
+       f = open( rundir + "/STATIS", "r")
+       statisdata = f.readlines()
+       f.close()
+       nframes = int( (len(statisdata)-2) / 11 )
+       energy = []
+       for i in range(nframes) :
+           energy.append( 1E-4*statisdata[2+i*11 + 1].split()[2] )
+       return energy

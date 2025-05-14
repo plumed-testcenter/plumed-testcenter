@@ -9,6 +9,6 @@ tests:
    mass: yes
    charge: yes
    forces: no 
-   virial: no
-   energy: no
-   engforces: no
+   virial: yes
+   energy: yes
+   engforces: yes
