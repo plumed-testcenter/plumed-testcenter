@@ -53,6 +53,9 @@ pressure_hydrostatic  0.0 katm
 rescale_frequency     10 steps
 {ensemble_stuff}
 """
+       cf = open("CONTROL","w+")
+       cf.write(inp)
+       cf.close()
        # Work out the name of the dlpoly executable
        executible = mdparams["executible"]
        # Now run the calculation using subprocess
