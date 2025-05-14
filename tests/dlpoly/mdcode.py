@@ -115,5 +115,5 @@ traj_interval         1 steps
        nframes = int( (len(statisdata)-2) / 11 )
        energy = []
        for i in range(nframes) :
-           energy.append( 1E-4*statisdata[2+i*11 + 1].split()[2] )
+           energy.append( 1E-4*float(statisdata[2+i*11 + 1].split()[2]) )
        return energy
