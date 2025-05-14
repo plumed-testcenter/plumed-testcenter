@@ -82,12 +82,10 @@ traj_interval         1 steps
        return pos
 
    def getCell( self, rundir ) :
-       first, traj = True, mda.coordinates.DLPoly.HistoryReader( rundir + "/HISTORY" )
-       for frame in traj.trajectory : 
-           mycell = np.zeros(9)
-           mycell[0], mycell[4], mycell[8] = frame.dimensions[0], frame.dimensions[1], frame.dimensions[2]
-           if first : cell, first = 0.1*mycell, False
-           else : cell = np.concatenate( (cell, 0.1*mycell), axis=0 )          
+       traj = mda.coordinates.DLPoly.HistoryReader( rundir + "/HISTORY" )
+       cell = np.zeros( [len(traj.trajectory),9] )
+       for i, frame in enumerate(traj.trajectory) : 
+           cell[i,0], cell[i,4], cell[i,8] = 0.1*frame.dimensions[0], 0.1*frame.dimensions[1], 0.1*frame.dimensions[2]
        return cell
 
    def getMasses( self, rundir ) :
