@@ -92,8 +92,8 @@ traj_interval         1 steps
        masses = np.zeros(4*64)
        for i in range(64) : 
            masses[4*i+0] = 107.868
-           masses[4*i+1] = 126.905
-           masses[4*i+2] = 107.868
+           masses[4*i+1] = 107.868 
+           masses[4*i+2] = 126.905
            masses[4*i+3] = 126.905  
        return masses
 
@@ -101,8 +101,8 @@ traj_interval         1 steps
        charges = np.zeros(4*64)
        for i in range(64) : 
            charges[4*i+0] = 0.6 
-           charges[4*i+1] = -0.6 
-           charges[4*i+2] = 0.6 
+           charges[4*i+1] = 0.6 
+           charges[4*i+2] = -0.6 
            charges[4*i+3] = -0.6  
        return charges
 
