@@ -1,5 +1,5 @@
 PyYAML==6.0.3
-numpy==1.26.4
+numpy==2.3.3
 PlumedToHTML==0.123
 MDAnalysis==2.7.0
 matplotlib==3.9.4
