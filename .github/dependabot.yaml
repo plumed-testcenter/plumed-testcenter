@@ -16,3 +16,5 @@ updates:
   - "dependabot"
   commit-message:
     prefix: dependabot-pip
+  #first try with "increase if necessary", if not satisfactory it is better to move on "widen"
+  versioning-strategy: increase-if-necessary
