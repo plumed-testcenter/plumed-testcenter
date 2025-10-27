@@ -123,7 +123,7 @@ jobs:
         python-version: 3.9
         cache: 'pip'
     - name: Download artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         pattern: plumed-*
         #merge multiple should merge the two directories
@@ -227,7 +227,7 @@ jobs:
         python-version: 3.9
         cache: 'pip'
     - name: Download artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         pattern: testout-content-*
         path: ./tmp/extract
