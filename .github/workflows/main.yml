@@ -18,8 +18,8 @@ jobs:
   setup-python:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
     - name: Set up Python ${{ env.python-version }}
+    - uses: actions/checkout@v6
       uses: actions/setup-python@v6
       with:
         python-version: "${{ env.python-version }}"
@@ -73,7 +73,7 @@ jobs:
             # needed to avoid MPI warning
             echo "OMPI_MCA_btl=^openib" >> $GITHUB_ENV
       #we need to checkout to access .ci/install.libtorch
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - name: Install dependencies
         run: |
           sudo apt-get update
@@ -98,7 +98,7 @@ jobs:
           tar cf plumed-${{matrix.version}}.tar opt/
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: plumed-${{matrix.version}}
           path: ~/plumed-${{matrix.version}}.tar
@@ -119,15 +119,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v5
-
+    - uses: actions/checkout@v6
     - name: Set up Python ${{ env.python-version }}
       uses: actions/setup-python@v6
       with:
         python-version: "${{ env.python-version }}"
         cache: 'pip'
     - name: Download artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         pattern: plumed-*
         #merge multiple should merge the two directories
@@ -202,7 +201,7 @@ jobs:
          python runtests.py --code=${{matrix.replica}} --version=master
 
     - name: Upload artifact
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       with:
         name: testout-content-${{matrix.replica}}
          # From the manual:
@@ -224,14 +223,14 @@ jobs:
     needs: build
 
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: Set up Python ${{ env.python-version }}
       uses: actions/setup-python@v6
       with:
         python-version: "${{ env.python-version }}"
         cache: 'pip'
     - name: Download artifacts
-      uses: actions/download-artifact@v5
+      uses: actions/download-artifact@v6
       with:
         pattern: testout-content-*
         path: ./tmp/extract
@@ -258,7 +257,7 @@ jobs:
           user_email: 'giovanni.bussi+plumedbot@gmail.com'
     - name: Upload a debug artifact
       if: github.ref != 'refs/heads/main'
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v5
       # for this we do not care about losing permissions
       with:
           name: debug-deploy
