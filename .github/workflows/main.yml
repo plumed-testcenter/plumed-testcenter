@@ -126,7 +126,7 @@ jobs:
         python-version: "${{ env.python-version }}"
         cache: 'pip'
     - name: Download artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         pattern: plumed-*
         #merge multiple should merge the two directories
@@ -230,7 +230,7 @@ jobs:
         python-version: "${{ env.python-version }}"
         cache: 'pip'
     - name: Download artifacts
-      uses: actions/download-artifact@v6
+      uses: actions/download-artifact@v7
       with:
         pattern: testout-content-*
         path: ./tmp/extract
