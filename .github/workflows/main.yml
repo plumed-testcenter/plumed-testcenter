@@ -55,7 +55,7 @@ jobs:
           echo "branch=$branch" >> $GITHUB_OUTPUT
           echo "suffix=" >> $GITHUB_OUTPUT
           fi
-      - uses: actions/cache@v4
+      - uses: actions/cache@v5
         with:
           path: |
             ~/.ccache
@@ -139,7 +139,7 @@ jobs:
         tar xf ~/plumed-stable.tar
 
     - name: Set up ccache for the host program
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.ccache
         # here I assume that the version of your code is hardcode in the install.sh
