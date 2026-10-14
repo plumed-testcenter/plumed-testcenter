@@ -22,11 +22,12 @@ done
 exeSuffix=$suffix
 
 #two plumed versions coexists, I think this is needed
-plumedKernel=$HOME/opt/lib/libplumedKernel.so
+#the kernel of plumed$suffix: the runtime builds (and the native GROMACS module) load it from PLUMED_KERNEL
+plumedKernel=$HOME/opt/lib/libplumed_masterKernel.so
 
 if [[ $suffix != _master ]]; then
   exeSuffix=_v$("plumed$suffix" info --version)
-  plumedKernel=$HOME/opt/lib/libplumed_masterKernel.so
+  plumedKernel=$HOME/opt/lib/libplumedKernel.so
 fi
 
 # cat the body of your install script here
