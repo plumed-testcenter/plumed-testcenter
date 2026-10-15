@@ -2,7 +2,7 @@
 # Cloning the gromacs repository
 # formatted with shfmt_v3.6.0
 # Clone direclty into the wanted gromacs version
-git clone --depth 1 --branch v2024.2 https://gitlab.com/gromacs/gromacs.git "gromacs$suffix"
+git clone --depth 1 --branch v2024.3 https://gitlab.com/gromacs/gromacs.git "gromacs$suffix"
 
 cd "gromacs$suffix" || {
    echo "Something failed with cloning gromacs into gromacs$suffix" >&2
@@ -11,7 +11,7 @@ cd "gromacs$suffix" || {
 }
 
 # Patch with PLUMED
-"plumed$suffix" patch --engine gromacs-2024.2 -p --mode "$mode"
+"plumed$suffix" patch --engine gromacs-2024.3 -p --mode "$mode"
 
 prefix=$HOME/opt/gromacs$suffix
 
