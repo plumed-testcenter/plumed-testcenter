@@ -174,6 +174,8 @@ Two further tests are then done based on the values of the keywords:
 1. If __forces__ and __energy__ are set to yes then we test whether PLUMED can set forces on the energy correctly in a simulation run in the nvt ensemble.
 2. If __virial__ and __energy__ are set to yes then we test whether PLUMED can set forces on the energy correctly in a simulation run in the npt ensemble.
 
+You can also add the optional keyword __regtests__: if it is set to yes, the regression tests of your code are run as well (see [below](#writing-regression-tests-for-your-code)).
+
 ## Recovering data from the MD code for comparison
 
 Having described the tests that are performed by the testcenter we can now describe the other functions that must be written in the `mdcode.py` file. These functions recover various quantities from the MD code so that a comparison can be performed between the values that are passed to PLUMED and the values that the MD code outputs. The various functions you need to write are described in the code snippet below:
@@ -227,3 +229,26 @@ class mdcode :
 
 These functions are used in the tests on __positions__, __timestep__, __masses__, __charges__ and __energy__.
 All other tests are general for all MD codes as we can use output from PLUMED.
+
+## Writing regression tests for your code
+
+The tests above are the same for all MD codes.
+If your code passes more than positions, forces, the virial and the energy to PLUMED (e.g. it runs with domain decomposition, multiple time steps or replica exchange, or it lets PLUMED stop the simulation), you can test these features with regression tests that are specific to your code.
+To do so, set `regtests: yes` in the `info.yml` file and add a function `runRegtests` to the class in `mdcode.py`:
+
+```python
+class mdcode :
+   def runRegtests( self, executible, rundir ) -> dict:
+       # Run the regression tests in the directory rundir, with the executible that the install.sh script
+       # wrote for the version of PLUMED being tested, and return a dictionary with one entry for each test:
+       #   { "name of the test": { "status": "PASS" or "FAIL" or "SKIP",
+       #                           "message": "what was measured, e.g. the largest difference from the reference",
+       #                           "description": "what the test checks" }, ... }
+       # A test is skipped (SKIP) when this version of the code does not have the feature that it tests.
+```
+
+The results are shown in the column __Regression tests__ of [the dashboard](browse.md), and each test is listed in the page with the results for your code.
+The files that the tests write in `rundir` are made available in a zip archive, except trajectories, energy files, run inputs, checkpoints and structures (`.trr`, `.xtc`, `.edr`, `.tpr`, `.cpt`, `.gro`, `.g96` and `.pdb` files).
+If possible, write tests that check properties that must hold for any version of PLUMED and of your code (for example, a bias applied by PLUMED must act as the same bias applied by your code, or the same simulation must give the same results in two ways of running it), rather than tests that compare with reference results.
+The regression tests of GROMACS, in `tests/gromacs/regtests`, are an example: they are also used to test `gromacs-vanilla`, and can be run on any patched GROMACS.
+

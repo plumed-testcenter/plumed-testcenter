@@ -8,6 +8,7 @@ from pathlib import Path
 from MDAnalysis.coordinates.XYZ import XYZReader
 from datetime import date
 from contextlib import contextmanager
+from zipfile import ZipFile, ZIP_DEFLATED
 from PlumedToHTML import test_plumed, get_html
 from runhelper import (
     writeReportForSimulations,
@@ -17,6 +18,7 @@ from runhelper import (
     testOpinion,
 )
 from runhelper import BASIC_TEST_ORDER, VIRIAL_TEST_ORDER, ENERGY_TEST_ORDER 
+from runhelper import regtestToTestoutTableEntry, writeRegtestsReport
 from typing import Literal
 
 STANDARD_RUN_SETTINGS = [
@@ -551,6 +553,36 @@ def runEnergyTests(
     return results
 
 
+def runRegtests(outdir: str, runMDCalcSettings: dict) -> dict:
+    """run the regression tests of the code (runRegtests in mdcode.py), if the executable exists"""
+    version = runMDCalcSettings["version"]
+    executible = runMDCalcSettings["executible"]
+    if runMDCalcSettings.get("execNameChanged", True):
+        executible += f"_{version}"
+    print("Starting the regression tests")
+    if shutil.which(executible) is None:
+        print(f"Executable {executible} does not exist in current PATH.")
+        return {}
+    rundir = f"{outdir}/regtests_{version}"
+    try:
+        results = runMDCalcSettings["runner"].runRegtests(executible, rundir)
+    except Exception as e:
+        # an error of the harness of the code must not lose the results of the other tests
+        print(f"The regression tests stopped with an error: {e!r}")
+        results = {
+            "regtests": {"status": "FAIL", "description": "the regression tests run", "message": repr(e)}
+        }
+    # Make a zip archive with the inputs, logs and PLUMED output of the runs (not trajectories, energy files, run
+    # inputs, checkpoints and structures)
+    binary = [".trr", ".xtc", ".edr", ".tpr", ".cpt", ".gro", ".g96", ".pdb"]
+    if runMDCalcSettings.get("makeArchive", True) and os.path.isdir(rundir):
+        with ZipFile(f"{rundir}.zip", "w", compression=ZIP_DEFLATED, compresslevel=9) as archive:
+            for f in sorted(Path(rundir).rglob("*")):
+                if f.is_file() and f.suffix not in binary:
+                    archive.write(f, f.relative_to(rundir))
+    return results
+
+
 def runTests(
     code: str,
     version: Literal["master", "stable"],
@@ -599,6 +631,9 @@ def runTests(
         tmp = runEnergyTests(outdir, info, runMDCalcSettings, tolerance)
         mddict.update(tmp["mdruns"])
         results.update(tmp)
+
+    if info.get("regtests", False):
+        results["regtests"] = runRegtests(outdir, runMDCalcSettings)
     results["mdruns"] = mddict
     return results
 
@@ -685,11 +720,40 @@ def writeMDReport(
                     testout.write(dictToTestoutTableEntry(results[test]))
             test_energy_result = testOpinion(howbad)
 
+        test_regtests_result = "unavailable"
+        if str(info.get("regtests", "false")).lower() in ["true", "yes"]:
+            testout.write("\n\n## Regression tests\n\n")
+            testout.write(
+                f"Tests specific to {code}: the results and the numbers are in "
+                f"[this report](regtests_{version}.html).\n\n"
+            )
+            testout.write("| Description of test | Status | \n")
+            testout.write("|:--------------------|:------:| \n")
+            regtests = results.get("regtests", {})
+            howbad = []
+            for name, result in regtests.items():
+                testout.write(regtestToTestoutTableEntry(name, result, version))
+                if result["status"] != "SKIP":
+                    howbad.append("success" if result["status"] == "PASS" else "failure")
+            if not regtests:
+                testout.write(
+                    "| The regression tests did not run | "
+                    f"![broken on {version}](https://img.shields.io/badge/{version}-broken-36454F.svg) | \n"
+                )
+                howbad = ["broken"]
+            writeRegtestsReport(code, version, regtests, prefix=prefix)
+            test_regtests_result = testOpinion(howbad)
+
     ymldata = yamlToDict(f"{basedir}/info.yml", Loader=yaml.SafeLoader)
     if "results" not in ymldata.keys():
         ymldata["results"] = {}
     str_version = str(version)
-    result_dict = {"basic": test_basic_result, "virial": test_virial_result, "energy": test_energy_result}
+    result_dict = {
+        "basic": test_basic_result,
+        "virial": test_virial_result,
+        "energy": test_energy_result,
+        "regtests": test_regtests_result,
+    }
     if str_version in ymldata["results"].keys():
         ymldata["results"][str_version]["test_plumed"] = result_dict 
     else:
@@ -720,6 +784,13 @@ def writeTermReport(
     test_result = testOpinion(howbad)
     print()
     print(f"Test result for {code} with version {version}: {test_result}")
+    if "regtests" in results:
+        regtests = results["regtests"]
+        failed = [name for name, r in regtests.items() if r["status"] == "FAIL"]
+        print(
+            f"Regression tests: {len(regtests) - len(failed)} of {len(regtests)} passed or skipped"
+            + (f", failed: {' '.join(failed)}" if failed else "")
+        )
 
 
 if __name__ == "__main__":

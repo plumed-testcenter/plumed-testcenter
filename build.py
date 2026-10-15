@@ -108,8 +108,8 @@ def buildBrowsePage():
     print("Building browse page")
 
     table = """
-| Name of Program  | Short description | Compiles | Basic tests | Virial tests | Energy tests |
-|:-----------------|:------------------|:--------:|:-----------:|:------------:|:------------:|
+| Name of Program  | Short description | Compiles | Basic tests | Virial tests | Energy tests | Regression tests |
+|:-----------------|:------------------|:--------:|:-----------:|:------------:|:------------:|:----------------:|
 """
     testdirs = [d for d in os.listdir("tests") if isTest("tests/" + d)]
     testdirs = sorted(testdirs)
@@ -119,6 +119,7 @@ def buildBrowsePage():
         basic_badge = ""
         virial_badge = ""
         energy_badge = ""
+        regtests_badge = ""
         print("processing " + code)
         with open(f"tmp/extract/tests/{code}/info.yml", "r") as stream:
             info = yaml.load(stream, Loader=yaml.BaseLoader)
@@ -147,8 +148,11 @@ def buildBrowsePage():
             basic_badge += getTestBadge( compile_status, results[version]["test_plumed"]["basic"], version, code ) 
             virial_badge += getTestBadge( compile_status, results[version]["test_plumed"]["virial"], version, code )
             energy_badge += getTestBadge( compile_status, results[version]["test_plumed"]["energy"], version, code )
+            # the regression tests are optional (and results written before them do not have the key)
+            regtests_status = results[version]["test_plumed"].get("regtests", "unavailable")
+            regtests_badge += getTestBadge( compile_status, regtests_status, version, code )
 
-        table += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {basic_badge} | {virial_badge} | {energy_badge} | \n"
+        table += f"| [{code}]({info['link']}) | {info['description']} | {compile_badge} | {basic_badge} | {virial_badge} | {energy_badge} | {regtests_badge} | \n"
 
     plumed_installation_script = """When the tests above are run PLUMED is built using the install plumed action.
 ```yaml

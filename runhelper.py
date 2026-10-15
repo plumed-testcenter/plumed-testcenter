@@ -1,3 +1,4 @@
+import re
 from typing import Literal
 import numpy as np
 import matplotlib.pyplot as plt
@@ -403,3 +404,42 @@ def dictToTestoutTableEntry(input: dict):
         )
         + " |\n"
     )
+
+
+# regression tests: {name: {"status": "PASS" | "FAIL" | "SKIP", "message": str, "description": str}}
+REGTEST_BADGES = {"PASS": "passed-green", "FAIL": "failed-red", "SKIP": "skipped-lightgrey"}
+
+
+def markdownEscape(text: str) -> str:
+    """text that is shown as it is in markdown, also in a table cell"""
+    return re.sub(r"([\\`*_|<>\[\]])", r"\\\1", text)
+
+
+def regtestBadge(status: str, version: str) -> str:
+    return f"https://img.shields.io/badge/{version}-{REGTEST_BADGES[status]}.svg"
+
+
+def regtestToTestoutTableEntry(name: str, result: dict, version: str) -> str:
+    badge = regtestBadge(result["status"], version)
+    return (
+        f"| {markdownEscape(name)}: {markdownEscape(result['description'])} | "
+        f"[![{name} on {version}]({badge})](regtests_{version}.html) |\n"
+    )
+
+
+def writeRegtestsReport(code: str, version: str, regtests: dict, *, prefix: str = ""):
+    if regtests:
+        table = "| Test | What it checks | Status | Result |\n"
+        table += "|:-----|:---------------|:------:|:-------|\n"
+        for name, r in regtests.items():
+            badge = f"![{r['status']}]({regtestBadge(r['status'], version)})"
+            table += (
+                f"| {markdownEscape(name)} | {markdownEscape(r['description'])} | {badge} | "
+                f"{markdownEscape(r['message'])} |\n"
+            )
+    else:
+        table = "The regression tests did not run (see the output of the job).\n"
+    with open(f"{prefix}pages/regtests.md", "r") as f:
+        template = f.read()
+    with open(f"{prefix}tests/{code}/regtests_{version}.md", "w+") as of:
+        of.write(template.format(code=code, version=version, results=table))
