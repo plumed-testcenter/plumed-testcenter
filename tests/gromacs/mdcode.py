@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import numpy as np
 import MDAnalysis as mda
@@ -122,3 +123,11 @@ ref-t                    = {mdparams["temperature"]}
    def getEnergy( self, rundir ) :
        eng = np.loadtxt( rundir + "/energy.xvg", comments=["#","@"] )
        return eng[:,1]
+
+   def runRegtests( self, executible, rundir ) :
+       # The regression tests in regtests/: executible runs gmx_mpi with its arguments, with the PLUMED kernel
+       # of the version being tested
+       sys.path.insert( 0, os.path.join( os.path.dirname( os.path.abspath(__file__) ), "regtests" ) )
+       import regtest
+       return regtest.run( executible, None, rundir )
+

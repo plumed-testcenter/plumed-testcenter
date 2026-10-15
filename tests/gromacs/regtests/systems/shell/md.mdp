@@ -1,0 +1,12 @@
+integrator = md
+dt = 0.0005
+nsteps = 20
+cutoff-scheme = Verlet
+coulombtype = reaction-field
+rcoulomb = 1.0
+rvdw = 1.0
+nstcalcenergy = 1
+nstenergy = 1
+nstlog = 1
+emtol = 0.1
+niter = 50

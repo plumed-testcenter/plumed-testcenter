@@ -12,3 +12,4 @@ tests:
    virial: yes
    energy: no
    engforces: no
+   regtests: yes

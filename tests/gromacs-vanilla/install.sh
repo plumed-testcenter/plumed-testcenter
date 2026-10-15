@@ -20,8 +20,9 @@ cd build || {
    exit 0
 }
 
-# this more or less works with thread_mpi IF you keep ONLY one thread
-cmake .. -DGMX_USE_PLUMED=ON -DGMX_BUILD_OWN_FFTW=ON -DCMAKE_INSTALL_PREFIX="$prefix" -DGMX_ENABLE_CCACHE=ON  -Wno-dev
+# with MPI, as the patched gromacs: the regression tests run on several ranks and simulations
+# (with thread-MPI, the PLUMED module only works with one rank)
+cmake .. -DGMX_USE_PLUMED=ON -DGMX_MPI=ON -DGMX_BUILD_OWN_FFTW=ON -DCMAKE_INSTALL_PREFIX="$prefix" -DGMX_ENABLE_CCACHE=ON  -Wno-dev
 #I want plumed on
 cmake . -DGMX_USE_PLUMED=ON
 
@@ -30,18 +31,20 @@ cmake --build . -j11
 cmake --install .
 
 # plumedKernel is defined in the header that will be prepended to this by the CI
-if [ -x "${prefix}/bin/gmx" ]; then
+if [ -x "${prefix}/bin/gmx_mpi" ]; then
    # Write a script to execute gromacs calculations
    executible=$HOME/opt/bin/gromacs$exeSuffix
    cat <<EOF >"$executible"
 #!/bin/bash
 export PLUMED_KERNEL=$plumedKernel
-mygmx=$prefix/bin/gmx
+mygmx=$prefix/bin/gmx_mpi
+# with arguments, run gmx_mpi with them (the regression tests do this)
+if [ \$# -gt 0 ]; then exec "\$mygmx" "\$@"; fi
 "\$mygmx" grompp -p topol.top -c conf.gro -f md.mdp
-"\$mygmx" mdrun -nt 1 -plumed plumed.dat
+"\$mygmx" mdrun -plumed plumed.dat
 echo 5 | "\$mygmx" energy
 EOF
    chmod u+x "$executible"
 else
-   echo "${prefix}/bin/gmx" have not been compiled or is not executable
+   echo "${prefix}/bin/gmx_mpi" have not been compiled or is not executable
 fi

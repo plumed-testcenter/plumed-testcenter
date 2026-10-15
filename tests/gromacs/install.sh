@@ -36,6 +36,8 @@ if [ -x "${prefix}/bin/gmx_mpi" ]; then
 #!/bin/bash
 export PLUMED_KERNEL=$plumedKernel
 mygmx=$prefix/bin/gmx_mpi
+# with arguments, run gmx_mpi with them (the regression tests do this)
+if [ \$# -gt 0 ]; then exec "\$mygmx" "\$@"; fi
 "\$mygmx" grompp -p topol.top -c conf.gro -f md.mdp
 "\$mygmx" mdrun -plumed plumed.dat
 echo 5 | "\$mygmx" energy
