@@ -6,9 +6,9 @@ for each GROMACS version, and these tests check the rest of the interface: force
 virtual sites, multiple time stepping, domain decomposition, checkpoints, stop requests, reruns, energy
 minimization, replica exchange, multiple walkers, expanded ensemble and shells.
 
-The testcenter runs them (`runRegtests` in `mdcode.py`) on `gromacs`, patched with the patch of each PLUMED
-version, and on `gromacs-vanilla`, the PLUMED module of GROMACS without patches. `gromacs-vanilla` fails the
-tests of the features that only the patches of PLUMED add, e.g. `ENERGY`, `COMMITTOR` and multiple walkers.
+The testcenter runs them (`runRegtests` in `mdcode.py`) on `gromacs`, GROMACS 2026 patched with the patch of each
+PLUMED version, and on `gromacs-vanilla`, the PLUMED module of GROMACS 2026 without patches, which fails the tests
+of the features that only the patches of PLUMED add, e.g. `ENERGY`, `COMMITTOR` and the checkpoints of PLUMED.
 
 ## Approach
 

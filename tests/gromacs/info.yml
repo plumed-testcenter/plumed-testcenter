@@ -1,5 +1,5 @@
 name: gromacs
-description: A free and open-source software suite for high-performance molecular dynamics and output analysis.
+description: A free and open-source software suite for high-performance molecular dynamics and output analysis. Here GROMACS 2026, patched with PLUMED.
 executible: gromacs
 tolerance: 0.001
 link: https://www.gromacs.org 

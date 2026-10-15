@@ -1,6 +1,6 @@
 # Cloning the gromacs repository
 # shellcheck disable=SC2154,2148
-git clone --depth 1 https://gitlab.com/gromacs/gromacs.git --branch release-2025 --single-branch "gromacs$suffix"
+git clone --depth 1 https://gitlab.com/gromacs/gromacs.git --branch release-2026 --single-branch "gromacs$suffix"
 # Checkout the correct version of gromacs
 cd "gromacs$suffix" || {
    echo "Something failed with cloning gromacs into gromacs$suffix" >&2

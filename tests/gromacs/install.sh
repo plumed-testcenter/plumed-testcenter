@@ -1,8 +1,16 @@
 # shellcheck disable=SC2154,2148
 # Cloning the gromacs repository
 # formatted with shfmt_v3.6.0
+# GROMACS 2026: the patch of this version of PLUMED for it, and the GROMACS version the patch is for
+engine=$("plumed$suffix" patch --list-engines | grep -o "gromacs-2026\.[0-9]*" | sort -V | tail -n 1)
+version=${engine#gromacs-}
+if [ -z "$engine" ]; then
+   echo "plumed$suffix has no patch for GROMACS 2026" >&2
+   # we want to build the site regardless
+   exit 0
+fi
 # Clone direclty into the wanted gromacs version
-git clone --depth 1 --branch v2024.3 https://gitlab.com/gromacs/gromacs.git "gromacs$suffix"
+git clone --depth 1 --branch "v$version" https://gitlab.com/gromacs/gromacs.git "gromacs$suffix"
 
 cd "gromacs$suffix" || {
    echo "Something failed with cloning gromacs into gromacs$suffix" >&2
@@ -11,7 +19,7 @@ cd "gromacs$suffix" || {
 }
 
 # Patch with PLUMED
-"plumed$suffix" patch --engine gromacs-2024.3 -p --mode "$mode"
+"plumed$suffix" patch --engine "$engine" -p --mode "$mode"
 
 prefix=$HOME/opt/gromacs$suffix
 
