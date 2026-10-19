@@ -18,8 +18,8 @@ jobs:
   setup-python:
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Python ${{ env.python-version }}
     - uses: actions/checkout@v6
+    - name: Set up Python ${{ env.python-version }}
       uses: actions/setup-python@v6
       with:
         python-version: "${{ env.python-version }}"

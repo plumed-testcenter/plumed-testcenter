@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import numpy as np
 import MDAnalysis as mda
@@ -21,10 +22,13 @@ class mdcode :
    def runMD( self, mdparams ) : 
        npt_stuff = ""
        if mdparams["ensemble"]=="npt" : 
+          # The box mass of Parrinello-Rahman goes as compressibility/tau_p^2: the energy tests shorten tau_p
+          # together with the timestep, so the compressibility follows tau_p^2 to keep the same box mass
+          compressibility = 4.46e-5 * (mdparams["prelaxtime"] / self.setParams()["prelaxtime"])**2
           npt_stuff = f"""
 pcoupl                   = Parrinello-Rahman
 tau_p                    = {mdparams["prelaxtime"]}
-compressibility          = 4.46e-5
+compressibility          = {compressibility}
 ref_p                    = {mdparams["pressure"]}
 """
 
@@ -55,9 +59,15 @@ tcoupl                   = v-rescale
 tc-grps                  = System
 tau-t                    = {mdparams["relaxtime"]}
 ref-t                    = {mdparams["temperature"]}
+ld-seed                  = 4321
 
 {npt_stuff}
 """
+       # The energy tests compare runs at temperatures T and alpha*T, which must start from velocities scaled by
+       # sqrt(alpha), and have the same thermostat noise (ld-seed)
+       t0 = self.setParams()["temperature"]
+       if mdparams["temperature"] != t0 :
+          self.scaleVelocities( np.sqrt( mdparams["temperature"] / t0 ) )
        of = open("md.mdp", "w+")
        of.write(inp)
        of.close()
@@ -68,6 +78,18 @@ ref-t                    = {mdparams["temperature"]}
         with open("stderr","w") as stderr:
            out = subprocess.run([executible], text=True, input=inp, stdout=stdout, stderr=stderr )
        return out.returncode
+
+   def scaleVelocities( self, factor ) :
+       # conf.gro, with the velocities multiplied by factor, written with more decimals so that the scaling is
+       # exact (GROMACS takes the precision from the distance between the decimal points of the positions)
+       with open("conf.gro") as f : lines = f.readlines()
+       natoms = int(lines[1])
+       for i in range(2, 2 + natoms) :
+          line = lines[i]
+          x = [float(line[20 + 8*k:28 + 8*k]) for k in range(3)]
+          v = [factor * float(line[44 + 8*k:52 + 8*k]) for k in range(3)]
+          lines[i] = line[:20] + "".join(f"{a:12.7f}" for a in x) + "".join(f"{a:12.8f}" for a in v) + "\n"
+       with open("conf.gro", "w") as f : f.writelines(lines)
 
    def getTimestep( self ) :
        return 0.002
@@ -122,3 +144,11 @@ ref-t                    = {mdparams["temperature"]}
    def getEnergy( self, rundir ) :
        eng = np.loadtxt( rundir + "/energy.xvg", comments=["#","@"] )
        return eng[:,1]
+
+   def runRegtests( self, executible, rundir ) :
+       # The regression tests in regtests/: executible runs gmx_mpi with its arguments, with the PLUMED kernel
+       # of the version being tested
+       sys.path.insert( 0, os.path.join( os.path.dirname( os.path.abspath(__file__) ), "regtests" ) )
+       import regtest
+       return regtest.run( executible, None, rundir )
+
